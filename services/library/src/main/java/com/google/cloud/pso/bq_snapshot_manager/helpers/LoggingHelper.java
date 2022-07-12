@@ -19,7 +19,6 @@ package com.google.cloud.pso.bq_snapshot_manager.helpers;
 import com.google.cloud.pso.bq_snapshot_manager.entities.ApplicationLog;
 import com.google.cloud.pso.bq_snapshot_manager.entities.FunctionLifeCycleEvent;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TagHistoryLogEntry;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
@@ -37,7 +36,7 @@ public class LoggingHelper {
     // Used to create a trace
     private final String projectId;
 
-    private final String applicationName = "bq-pii-classifier";
+    private final String applicationName = "bq-snapshot-manager";
 
     public LoggingHelper(String loggerName, Integer functionNumber, String projectId) {
         this.loggerName = loggerName;
@@ -65,29 +64,6 @@ public class LoggingHelper {
 
     private void logWithTracker(ApplicationLog log, String tracker, String msg, Level level) {
         logWithTracker(log, tracker, msg, level, new Object[]{});
-    }
-
-    public void logTagHistory(TagHistoryLogEntry l, String tracker){
-
-        Object [] attributes = new Object[]{
-                kv("tag_history_log_project_id", l.getTableSpec().getProject()),
-                kv("tag_history_log_dataset_id", l.getTableSpec().getDataset()),
-                kv("tag_history_log_table_id", l.getTableSpec().getTable()),
-                kv("tag_history_log_field_name", l.getFieldName()),
-                kv("tag_history_log_existing_policy_tag_id", l.getExistingPolicyTagId()),
-                kv("tag_history_log_new_policy_tag_id", l.getNewPolicyTagId()),
-                kv("tag_history_log_column_tagging_action", l.getColumnTaggingAction().toString()),
-                kv("tag_history_log_description", l.getNewPolicyTagId()),
-        };
-
-        logWithTracker(
-                ApplicationLog.TAG_HISTORY_LOG,
-                tracker,
-                l.toLogString(),
-                l.getLogLevel(),
-                attributes
-        );
-
     }
 
     // used by Tagging Dispatcher

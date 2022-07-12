@@ -1,8 +1,8 @@
 # /usr/bin/python
 
 # Usage:
-# python -m venv /tmp/venv/bq-pii-classifier
-# source /tmp/venv/bq-pii-classifier/bin/activate
+# python -m venv /tmp/venv/bq-snapshot-manager
+# source /tmp/venv/bq-snapshot-manager/bin/activate
 # pip install google-cloud-bigquery
 # python scripts/cancel_running_bq_jobs.py
 

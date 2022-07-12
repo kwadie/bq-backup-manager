@@ -22,20 +22,21 @@ set -e
 # set the working dir as the scripts directory
 cd "$(dirname "$0")"
 
-# resume the created schedule in order for terraform to update them
-./schedulers_action.sh "resume"
+## resume the created schedule in order for terraform to update them
+#./schedulers_action.sh "resume"
 
 cd ../terraform
 
 terraform init \
     -backend-config="bucket=${BUCKET_NAME}" \
-    -backend-config="prefix=terraform-state"
+    -backend-config="prefix=terraform-state" \
+    -backend-config="impersonate_service_account=${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com"
 
 terraform workspace select "${CONFIG}"
 
 terraform apply -lock=false -var-file="${VARS}" -auto-approve
 
 # set the working dir as the scripts directory
-cd ../scripts
-# pause the created schedulers to fake on-demand schedulers
-./schedulers_action.sh "pause"
+#cd ../scripts
+## pause the created schedulers to fake on-demand schedulers
+#./schedulers_action.sh "pause"

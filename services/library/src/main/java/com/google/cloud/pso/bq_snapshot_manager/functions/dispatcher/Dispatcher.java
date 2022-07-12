@@ -16,7 +16,10 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.functions.dispatcher;
 
-import com.google.cloud.pso.bq_snapshot_manager.entities.*;
+import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Operation;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
@@ -25,9 +28,8 @@ import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMess
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.SuccessPubSubMessage;
-import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 import com.google.cloud.pso.bq_snapshot_manager.services.scan.*;
-
+import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -203,29 +205,7 @@ public class Dispatcher {
                     String projectId = tokens.get(0);
                     String datasetId = tokens.get(1);
 
-                    String datasetLocation = bqService.getDatasetLocation(projectId, datasetId);
-
-                /*
-                 TODO: Support tagging in multiple locations
-
-                 to support all locations:
-                 1- Taxonomies/PolicyTags have to be created in each required location
-                 2- Update the Tagger Cloud Function to read one mapping per location
-
-                 For now, we don't submit tasks for tables in other locations than the PolicyTag location
-                 */
-                    if (!datasetLocation.toLowerCase().equals(dataRegionId.toLowerCase())) {
-                        logger.logWarnWithTracker(runId,
-                                String.format(
-                                        "Ignoring dataset %s in location %s. Only location %s is configured",
-                                        dataset,
-                                        datasetLocation,
-                                        dataRegionId)
-                        );
-                        continue;
-                    }
-
-                    // get all tables that have DLP findings
+                    // get all tables under dataset
                     List<String> datasetTables = scanner.listChildren(projectId, datasetId);
                     tablesIncludeList.addAll(datasetTables);
 
@@ -270,7 +250,7 @@ public class Dispatcher {
 
                 if (projectDatasets.isEmpty()) {
                     String msg = String.format(
-                            "No datasets found under project '%s'.",
+                            "No datasets found under project '%s' or no enough permissions to list BigQuery resources.",
                             project);
 
                     logger.logWarnWithTracker(runId, msg);

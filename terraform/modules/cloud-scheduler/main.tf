@@ -14,11 +14,11 @@ resource "google_cloud_scheduler_job" "scheduler_job" {
     # topic.id is the topic's full resource name.
     topic_name = var.target_uri
     data       = base64encode(jsonencode({
-      tableIncludeList = var.tables_include_list
-      datasetIncludeList = var.datasets_include_list
-      projectIncludeList = var.projects_include_list
-      datasetExcludeList = var.datasets_exclude_list
-      tableExcludeList = var.tables_exclude_list
+      tableIncludeList = lookup(var.scope, "tables_include_list")
+      datasetIncludeList = lookup(var.scope, "datasets_include_list")
+      projectIncludeList = lookup(var.scope, "projects_include_list")
+      datasetExcludeList = lookup(var.scope, "datasets_exclude_list")
+      tableExcludeList = lookup(var.scope, "tables_exclude_list")
     }))
   }
 }

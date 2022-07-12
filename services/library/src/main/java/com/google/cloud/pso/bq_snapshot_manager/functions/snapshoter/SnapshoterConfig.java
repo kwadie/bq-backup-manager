@@ -20,27 +20,54 @@ public class SnapshoterConfig {
 
 
     private String projectId;
-    private String regionId;
+    private String computeRegionId;
+    private String dataRegionId;
+    private String snapshotPolicyJson;
+    private Boolean isDryRun;
+    private String outputTopic;
 
-    public SnapshoterConfig(String projectId, String regionId, String bqResultsDataset, String bqResultsTable, String dlpNotificationTopic, String minLikelihood, Integer maxFindings, Integer samplingMethod, String dlpInspectionTemplateId, String tableScanLimitsJsonConfig) {
+    public SnapshoterConfig(String projectId, String computeRegionId, String dataRegionId, String snapshotPolicyJson, Boolean isDryRun, String outputTopic) {
         this.projectId = projectId;
-        this.regionId = regionId;
+        this.computeRegionId = computeRegionId;
+        this.dataRegionId = dataRegionId;
+        this.snapshotPolicyJson = snapshotPolicyJson;
+        this.isDryRun = isDryRun;
+        this.outputTopic = outputTopic;
     }
 
     public String getProjectId() {
         return projectId;
     }
 
-    public String getRegionId() {
-        return regionId;
+    public String getComputeRegionId() {
+        return computeRegionId;
     }
 
+    public String getDataRegionId() {
+        return dataRegionId;
+    }
+
+    public String getSnapshotPolicyJson() {
+        return snapshotPolicyJson;
+    }
+
+    public Boolean getDryRun() {
+        return isDryRun;
+    }
+
+    public String getOutputTopic() {
+        return outputTopic;
+    }
 
     @Override
     public String toString() {
-        return "InspectorConfig{" +
+        return "SnapshoterConfig{" +
                 "projectId='" + projectId + '\'' +
-                ", regionId='" + regionId + '\'' +
+                ", computeRegionId='" + computeRegionId + '\'' +
+                ", dataRegionId='" + dataRegionId + '\'' +
+                ", snapshotPolicyJson='" + snapshotPolicyJson + '\'' +
+                ", isDryRun=" + isDryRun +
+                ", outputTopic='" + outputTopic + '\'' +
                 '}';
     }
 }

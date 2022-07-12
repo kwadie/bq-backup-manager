@@ -18,13 +18,12 @@ package com.google.cloud.pso.bq_snapshot_manager.tagger;
 import com.google.cloud.pso.bq_snapshot_manager.functions.tagger.TaggerConfig;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 
-import java.util.HashSet;
-
 public class Environment {
 
     public TaggerConfig toConfig (){
         return new TaggerConfig(
                 getProjectId(),
+                getTagTemplateId(),
                 getIsDryRun()
         );
     }
@@ -35,6 +34,10 @@ public class Environment {
 
     public Boolean getIsDryRun(){
         return Boolean.valueOf(Utils.getConfigFromEnv("IS_DRY_RUN", true));
+    }
+
+    public String getTagTemplateId(){
+        return Utils.getConfigFromEnv("TAG_TEMPLATE_ID", true);
     }
 
     public String getGcsFlagsBucket(){

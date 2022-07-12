@@ -1,8 +1,6 @@
 package com.google.cloud.pso.bq_snapshot_manager.services.set;
 
 import com.google.cloud.storage.*;
-import com.google.cloud.storage.Storage;
-import com.google.cloud.storage.StorageOptions;
 
 public class GCSPersistentSetImpl implements PersistentSet {
 

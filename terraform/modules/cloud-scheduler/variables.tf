@@ -4,9 +4,13 @@ variable "scheduler_name" {}
 variable "target_uri" {}
 variable "cron_expression" {}
 
-# DLP scanning scope
-variable "tables_include_list" {}
-variable "tables_exclude_list" {}
-variable "datasets_include_list" {}
-variable "datasets_exclude_list" {}
-variable "projects_include_list" {}
+# BigQuery Scope
+# Fromat:
+//# {
+//tables_include_list = []
+//datasets_include_list = []
+//projects_include_list = []
+//datasets_exclude_list = []
+//tables_exclude_list = []
+//}
+variable "scope" {}

@@ -16,16 +16,17 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.functions.tagger;
 
-import java.util.Set;
-
 public class TaggerConfig {
 
     private String projectId;
+    private String tagTemplateId;
     private Boolean isDryRun;
 
     public TaggerConfig(String projectId,
+                        String tagTemplateId,
                         Boolean isDryRun) {
         this.projectId = projectId;
+        this.tagTemplateId = tagTemplateId;
         this.isDryRun = isDryRun;
     }
 
@@ -37,11 +38,15 @@ public class TaggerConfig {
         return projectId;
     }
 
+    public String getTagTemplateId() {
+        return tagTemplateId;
+    }
 
     @Override
     public String toString() {
         return "TaggerConfig{" +
                 "projectId='" + projectId + '\'' +
+                ", tagTemplateId='" + tagTemplateId + '\'' +
                 ", isDryRun=" + isDryRun +
                 '}';
     }

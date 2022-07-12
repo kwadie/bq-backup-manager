@@ -19,11 +19,11 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.dispatcher;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.Operation;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.scan.StandardDlpResultsScannerImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMessage;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMessage;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.SuccessPubSubMessage;
+import com.google.cloud.pso.bq_snapshot_manager.services.scan.BigQueryScannerImpl;
 import com.google.common.collect.Lists;
 import org.junit.Before;
 import org.junit.Test;
@@ -48,7 +48,7 @@ import static org.mockito.Mockito.mock;
 public class DispatcherTest {
 
     @Mock
-    StandardDlpResultsScannerImpl dlpResultsService;
+    BigQueryScannerImpl bqScanner;
     @Mock BigQueryServiceImpl bqServiceMock;
     @Mock DispatcherConfig config = new DispatcherConfig(
             "testProjectId",
@@ -66,36 +66,30 @@ public class DispatcherTest {
         // mock dlpResultsService
 
         // use lenient() to disable strict stubbing. Mockito detects that the stubs are not used by they actually are!
-        lenient().when(dlpResultsService.listParents("p1")).thenReturn(
+        lenient().when(bqScanner.listParents("p1")).thenReturn(
                 Arrays.asList("p1.d1","p1.d2")
         );
-        lenient().when(dlpResultsService.listParents("p2")).thenReturn(
+        lenient().when(bqScanner.listParents("p2")).thenReturn(
                 Arrays.asList("p2.d1","p2.d2")
         );
 
         // list p1 tables
-        lenient().when(dlpResultsService.listChildren("p1", "d1")).thenReturn(
+        lenient().when(bqScanner.listChildren("p1", "d1")).thenReturn(
                 Arrays.asList("p1.d1.t1", "p1.d1.t2")
         );
 
-        lenient().when(dlpResultsService.listChildren("p1", "d2")).thenReturn(
+        lenient().when(bqScanner.listChildren("p1", "d2")).thenReturn(
                 Arrays.asList("p1.d2.t1", "p1.d2.t2")
         );
 
         // list p2 tables
-        lenient().when(dlpResultsService.listChildren("p2", "d1")).thenReturn(
+        lenient().when(bqScanner.listChildren("p2", "d1")).thenReturn(
                 Arrays.asList("p2.d1.t1", "p2.d1.t2")
         );
 
-        lenient().when(dlpResultsService.listChildren("p2", "d2")).thenReturn(
+        lenient().when(bqScanner.listChildren("p2", "d2")).thenReturn(
                 Arrays.asList("p2.d2.t1")
         );
-
-        // Mock bqService
-        lenient().when(bqServiceMock.getDatasetLocation(anyString(), anyString())).thenReturn("supported-region");
-        lenient().when(bqServiceMock.getDatasetLocation("p2", "d2")).thenReturn("unsupported-region");
-
-
     }
 
     @Test

@@ -26,15 +26,11 @@ public class Environment {
 
         return new SnapshoterConfig(
                 getProjectId(),
-                getRegionId(),
-                getBqResultsDataset(),
-                getBqResultsTable(),
-                getDlpNotificationTopic(),
-                getMinLikelihood(),
-                Integer.parseInt(getMaxFindings()),
-                Integer.parseInt(getSamplingMethod()),
-                getDlpInspectionTemplateId(),
-                getTableScanLimitsJsonConfig()
+                getComputeRegionId(),
+                getDataRegionId(),
+                getSnapshotPolicyJson(),
+                getIsDryRun(),
+                getOutputTopic()
         );
     }
 
@@ -43,41 +39,23 @@ public class Environment {
         return Utils.getConfigFromEnv("PROJECT_ID", true);
     }
 
-    public String getRegionId(){
-        return Utils.getConfigFromEnv("REGION_ID", true);
+    public String getComputeRegionId(){
+        return Utils.getConfigFromEnv("COMPUTE_REGION_ID", true);
     }
 
-    public String getBqResultsDataset(){
-        return Utils.getConfigFromEnv("BQ_RESULTS_DATASET", true);
+    public String getDataRegionId(){
+        return Utils.getConfigFromEnv("DATA_REGION_ID", true);
     }
 
-    public String getBqResultsTable(){
-        return Utils.getConfigFromEnv("BQ_RESULTS_TABLE", true);
+    public String getSnapshotPolicyJson(){
+        return Utils.getConfigFromEnv("SNAPSHOT_POLICY_JSON", true);
     }
 
-    public String getDlpNotificationTopic(){
-        return Utils.getConfigFromEnv("DLP_NOTIFICATION_TOPIC", true);
+    public Boolean getIsDryRun(){
+        return Boolean.valueOf(Utils.getConfigFromEnv("IS_DRY_RUN", true));
     }
 
-    public String getMinLikelihood(){
-        return Utils.getConfigFromEnv("MIN_LIKELIHOOD", true);
-    }
-
-    public String getMaxFindings(){
-        return Utils.getConfigFromEnv("MAX_FINDINGS_PER_ITEM", true);
-    }
-
-    public String getSamplingMethod(){
-        return Utils.getConfigFromEnv("SAMPLING_METHOD", true);
-    }
-
-    public String getDlpInspectionTemplateId(){
-        return Utils.getConfigFromEnv("DLP_INSPECTION_TEMPLATE_ID", true);
-    }
-
-    public String getTableScanLimitsJsonConfig(){
-        return Utils.getConfigFromEnv("TABLE_SCAN_LIMITS_JSON_CONFIG", true);
-    }
+    public String getOutputTopic() { return Utils.getConfigFromEnv("OUTPUT_TOPIC", true); }
 
     public String getGcsFlagsBucket(){
         return Utils.getConfigFromEnv("GCS_FLAGS_BUCKET", true);

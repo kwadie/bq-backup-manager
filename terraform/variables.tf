@@ -93,7 +93,7 @@ variable "tagger_pubsub_sub" {
 }
 
 variable "gcs_flags_bucket_name" {
-  default = "bq-pii-classifier-flags"
+  default = "bq-snapshot-mgr-flags"
 }
 
 # Images
@@ -194,6 +194,9 @@ variable "tagger_subscription_message_retention_duration" {
   default = "86400s" # 24h
 }
 
+variable "schedulers" {}
+
+variable "snapshot_policy" {}
 
 
 

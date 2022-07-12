@@ -17,26 +17,26 @@
 package com.google.cloud.pso.bq_snapshot_manager.dispatcher;
 
 
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
 import com.google.cloud.pso.bq_snapshot_manager.functions.dispatcher.BigQueryScope;
 import com.google.cloud.pso.bq_snapshot_manager.functions.dispatcher.Dispatcher;
-import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.scan.BigQueryScannerImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.scan.BigQueryScannerImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
+import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
-import com.google.gson.Gson;
-import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
+import org.springframework.web.bind.annotation.RestController;
 
 
 @SpringBootApplication(scanBasePackages = "com.google.cloud.pso.bq_snapshot_manager")

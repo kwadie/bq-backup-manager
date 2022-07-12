@@ -15,28 +15,25 @@
  */
 package com.google.cloud.pso.bq_snapshot_manager.tagger;
 
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.Operation;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
-import com.google.cloud.pso.bq_snapshot_manager.entities.dlp.DataProfilePubSubMessage;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TaggerOperation;
 import com.google.cloud.pso.bq_snapshot_manager.functions.tagger.Tagger;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
-import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
-import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
-import com.google.protobuf.InvalidProtocolBufferException;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication(scanBasePackages = "com.google.cloud.pso.bq_snapshot_manager")
 @RestController
@@ -79,7 +76,7 @@ public class TaggerController {
 
             logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
 
-            Operation operation = gson.fromJson(requestJsonString, Operation.class);
+            TaggerOperation operation = gson.fromJson(requestJsonString, TaggerOperation.class);
 
             trackingId = operation.getTrackingId();
 

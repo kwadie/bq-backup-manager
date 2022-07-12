@@ -15,25 +15,26 @@
  */
 package com.google.cloud.pso.bq_snapshot_manager.inspector;
 
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.Operation;
+import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
 import com.google.cloud.pso.bq_snapshot_manager.functions.snapshoter.Snapshoter;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
-import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
-import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.dlp.DlpService;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
-import org.springframework.web.bind.annotation.RestController;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RequestMethod;
+import org.springframework.web.bind.annotation.RestController;
 
 @SpringBootApplication(scanBasePackages = "com.google.cloud.pso.bq_snapshot_manager")
 @RestController
@@ -54,14 +55,13 @@ public class SnapshoterController {
                 SnapshoterController.class.getSimpleName(),
                 functionNumber,
                 environment.getProjectId()
-                );
+        );
     }
 
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
         String trackingId = "0000000000000-z";
-        BigQueryService bqService = null;
 
         try {
 
@@ -84,10 +84,10 @@ public class SnapshoterController {
 
             logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", operation.toString()));
 
-            bqService = new BigQueryServiceImpl();
             Snapshoter snapshoter = new Snapshoter(
                     environment.toConfig(),
-                    bqService,
+                    new BigQueryServiceImpl(),
+                    new PubSubServiceImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
                     "snapshoter-flags",
                     functionNumber
@@ -97,8 +97,7 @@ public class SnapshoterController {
 
             return new ResponseEntity("Process completed successfully.", HttpStatus.OK);
 
-        }
-        catch (Exception e ){
+        } catch (Exception e) {
             return ControllerExceptionHelper.handleException(e, logger, trackingId);
 
         }

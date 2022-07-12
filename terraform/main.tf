@@ -13,49 +13,34 @@
 #   limitations under the License.
 
 provider "google" {
+  alias = "impersonation"
+  scopes = [
+    "https://www.googleapis.com/auth/cloud-platform",
+    "https://www.googleapis.com/auth/userinfo.email",
+  ]
+}
+
+data "google_service_account_access_token" "default" {
+  provider               	= google.impersonation
+  target_service_account 	= var.terraform_service_account
+  scopes                 	= ["userinfo-email", "cloud-platform"]
+  lifetime               	= "1200s"
+}
+
+provider "google" {
   project = var.project
   region = var.compute_region
-  impersonate_service_account = var.terraform_service_account
+
+  access_token	= data.google_service_account_access_token.default.access_token
+  request_timeout 	= "60s"
 }
 
 provider "google-beta" {
   project = var.project
   region = var.compute_region
-  impersonate_service_account = var.terraform_service_account
-}
 
-
-# Enable APIS
-resource "google_project_service" "enable_service_usage_api" {
-  project = var.project
-  service = "serviceusage.googleapis.com"
-
-  disable_on_destroy = false
-}
-
-# Enable Cloud Scheduler API
-resource "google_project_service" "enable_appengine" {
-  project = var.project
-  service = "appengine.googleapis.com"
-
-  disable_dependent_services = true
-  disable_on_destroy = false
-}
-
-# Enable Cloud Build API
-resource "google_project_service" "enable_cloud_build" {
-  project = var.project
-  service = "cloudbuild.googleapis.com"
-
-  disable_on_destroy = false
-}
-
-# Enables the Cloud Run API
-resource "google_project_service" "run_api" {
-  project = var.project
-  service = "run.googleapis.com"
-
-  disable_on_destroy = false
+  access_token	= data.google_service_account_access_token.default.access_token
+  request_timeout 	= "60s"
 }
 
 locals {
@@ -74,7 +59,7 @@ locals {
     },
     {
       name = "GCS_FLAGS_BUCKET",
-      value = var.gcs_flags_bucket_name,
+      value = module.gcs.create_gcs_flags_bucket_name
     },
     {
       name = "IS_DRY_RUN",
@@ -84,7 +69,7 @@ locals {
 }
 
 module "iam" {
-  source = "/modules/iam"
+  source = "./modules/iam"
   project = var.project
   region = var.compute_region
   sa_dispatcher = var.sa_dispatcher
@@ -111,7 +96,7 @@ module "gcs" {
 }
 
 module "bigquery" {
-  source = "/modules/bigquery"
+  source = "./modules/bigquery"
   project = var.project
   region = var.data_region
   dataset = var.bigquery_dataset_name
@@ -119,7 +104,7 @@ module "bigquery" {
 }
 
 module "cloud_logging" {
-  source = "/modules/cloud-logging"
+  source = "./modules/cloud-logging"
   dataset = module.bigquery.results_dataset
   project = var.project
   region = var.compute_region
@@ -130,7 +115,7 @@ module "cloud_logging" {
 ### Cloud Run Services
 
 module "cloud-run-dispatcher" {
-  source = "/modules/cloud-run"
+  source = "./modules/cloud-run"
   project = var.project
   region = var.compute_region
   service_image = var.dispatcher_service_image
@@ -154,7 +139,7 @@ module "cloud-run-dispatcher" {
 }
 
 module "cloud-run-snapshoter" {
-  source = "/modules/cloud-run"
+  source = "./modules/cloud-run"
   project = var.project
   region = var.compute_region
   service_image = var.snapshoter_service_image
@@ -169,12 +154,16 @@ module "cloud-run-snapshoter" {
       name = "OUTPUT_TOPIC",
       value = module.pubsub-tagger.topic-name,
     },
+    {
+      name = "SNAPSHOT_POLICY_JSON",
+      value = jsonencode(var.snapshot_policy)
+    }
   ]
   )
 }
 
 module "cloud-run-tagger" {
-  source = "/modules/cloud-run"
+  source = "./modules/cloud-run"
   project = var.project
   region = var.compute_region
   service_image = var.tagger_service_image
@@ -187,7 +176,7 @@ module "cloud-run-tagger" {
   environment_variables = concat(local.common_cloud_run_variables, [
     {
       name = "TAG_TEMPLATE_ID",
-      value = "TODO",
+      value = module.data-catalog.tag_template_id,
     },
   ]
   )
@@ -197,7 +186,7 @@ module "cloud-run-tagger" {
 # PubSub Resources
 
 module "pubsub-dispatcher" {
-  source = "/modules/pubsub"
+  source = "./modules/pubsub"
   project = var.project
   subscription_endpoint = module.cloud-run-dispatcher.service_endpoint
   subscription_name = var.dispatcher_pubsub_sub
@@ -213,7 +202,7 @@ module "pubsub-dispatcher" {
 }
 
 module "pubsub-snapshoter" {
-  source = "/modules/pubsub"
+  source = "./modules/pubsub"
   project = var.project
   subscription_endpoint = module.cloud-run-snapshoter.service_endpoint
   subscription_name = var.snapshoter_pubsub_sub
@@ -229,7 +218,7 @@ module "pubsub-snapshoter" {
 }
 
 module "pubsub-tagger" {
-  source = "/modules/pubsub"
+  source = "./modules/pubsub"
   project = var.project
   subscription_endpoint = module.cloud-run-tagger.service_endpoint
   subscription_name = var.tagger_pubsub_sub
@@ -245,5 +234,22 @@ module "pubsub-tagger" {
   subscription_message_retention_duration = var.tagger_subscription_message_retention_duration
 }
 
+module "cloud-scheduler" {
+  source = "./modules/cloud-scheduler"
+  count = length(var.schedulers)
 
+  project = var.project
+  region = var.compute_region
+  target_uri = module.pubsub-dispatcher.topic-id
+
+  scheduler_name = lookup(var.schedulers[count.index], "name")
+  cron_expression = lookup(var.schedulers[count.index], "cron")
+  scope = lookup(var.schedulers[count.index], "scope")
+}
+
+module "data-catalog" {
+  source = "./modules/data-catalog"
+  project = var.project
+  region = var.data_region
+}
 

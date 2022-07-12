@@ -102,46 +102,6 @@
       },
       {
         "mode": "NULLABLE",
-        "name": "tag_history_log_project_id",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
-        "name": "tag_history_log_column_tagging_action",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
-        "name": "tag_history_log_field_name",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
-        "name": "tag_history_log_new_policy_tag_id",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
-        "name": "tag_history_log_description",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
-        "name": "tag_history_log_table_id",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
-        "name": "tag_history_log_existing_policy_tag_id",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
-        "name": "tag_history_log_dataset_id",
-        "type": "STRING"
-      },
-      {
-        "mode": "NULLABLE",
         "name": "dispatched_tracking_id",
         "type": "STRING"
       },

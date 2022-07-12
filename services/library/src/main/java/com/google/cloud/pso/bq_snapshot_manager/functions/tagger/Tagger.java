@@ -16,23 +16,14 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.functions.tagger;
 
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableFieldSchema.PolicyTags;
-import com.google.cloud.pso.bq_snapshot_manager.entities.*;
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Operation;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TaggerOperation;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
-import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
-import com.google.cloud.pso.bq_snapshot_manager.services.findings.FindingsReader;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
-import org.slf4j.event.Level;
 
 import java.io.IOException;
-import java.util.ArrayList;
-import java.util.Arrays;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
 
 public class Tagger {
 
@@ -66,7 +57,7 @@ public class Tagger {
     }
 
     public void execute(
-            Operation request,
+            TaggerOperation request,
             String pubSubMessageId
     ) throws NonRetryableApplicationException {
 
@@ -89,6 +80,9 @@ public class Tagger {
 
         // TODO: Add service logic here
 
+        // TODO: 1. Define the tag template to be used in Terraform
+        // TODO: 2. Determine the values for the tag template to be used with this table
+        // TODO: 3. Apply the tag template to the table using a Java service wrapper on top of the DataCatalog API
 
         // Add a flag key marking that we already completed this request and no additional runs
         // are required in case PubSub is in a loop of retrying due to ACK timeout while the service has already processed the request
