@@ -89,7 +89,7 @@ public class Snapshoter {
 
         //TODO: add service logic here
 
-        // TODO: 1. Parse snapshot policy to JSON object
+        // TODO: 1. Parse snapshot policy to JSON object. There is an example from the PII solution (https://github.com/GoogleCloudPlatform/bq-pii-classifier/blob/24e711f856fadd46b4de96a8ca0c19c9bb30e0d5/services/library/src/main/java/com/google/cloud/pso/bq_pii_classifier/entities/TableScanLimitsConfig.java#L27)
         // TODO: 2. Determine the snapshot config for the target table from the policy
         // TODO: 3. Perform the Snapshot operation using the BigQuery service
         // TODO: 4. Create a Tagger request and send it to the Tagger PubSub topic
