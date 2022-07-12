@@ -9,21 +9,28 @@ while automating the frequent snapshot operations at scale
 ![alt text](diagrams/architecture.jpeg)
 
 
+## Deployment
 
-## Setup Environment Variables
+### Install Maven
+* Download [Maven](https://maven.apache.org/download.cgi)
+* Add Maven to PATH
+```
+export PATH=/DOWNLOADED_MAVEN_DIR/bin:$PATH
+```
+### Setup Environment Variables
 
 In a terminal shell, set and export the following variables.
 
 ```
-export PROJECT_ID=bqsm-host
+export PROJECT_ID=<host project id>
 export TF_SA=bq-snapshot-mgr-terraform
-export COMPUTE_REGION=europe-west3
-export DATA_REGION=eu
+export COMPUTE_REGION=<region to deploy compute resources>
+export DATA_REGION=<region to deploy data resources>
 export BUCKET_NAME=${PROJECT_ID}-bq-snapshot-mgr
 export BUCKET=gs://${BUCKET_NAME}
 export DOCKER_REPO_NAME=docker-repo
 export CONFIG=bqsm
-export ACCOUNT=admin@wadie.joonix.net
+export ACCOUNT=<user account email>
 
 gcloud config configurations create $CONFIG
 gcloud config set project $PROJECT_ID
@@ -34,21 +41,21 @@ gcloud auth login
 gcloud auth application-default login
 ```
 
-## One-time Environment Setup
+### One-time Environment Setup
 
-### Enable GCP APIs
+#### Enable GCP APIs
 
 ```
 ./scripts/enable_gcp_apis.sh
 ```
 
-### Prepare Terraform State Bucket
+#### Prepare Terraform State Bucket
 
 ```
 gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on $BUCKET
 ```
 
-### Prepare Terraform Service Account
+#### Prepare Terraform Service Account
 
 Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.  
 
@@ -56,7 +63,7 @@ Terraform needs to run with a service account to deploy DLP resources. User acco
 ./scripts/prepare_terraform_service_account.sh
 ```
 
-### Prepare a Docker Repo
+#### Prepare a Docker Repo
 
 We need a Docker Repository to publish images that are used by this solution
 
@@ -65,16 +72,16 @@ gcloud artifacts repositories create $DOCKER_REPO_NAME --repository-format=docke
 --location=$COMPUTE_REGION --description="Docker repository"
 ```
 
-## Solution Deployment
+### Solution Deployment
 
-### gcloud
+#### gcloud
 ```
 gcloud config configurations activate $CONFIG
 
 gcloud auth login
 gcloud auth application-default login 
 ```
-### Build Cloud Run Services Images
+#### Build Cloud Run Services Images
 
 We need to build and deploy docker images to be used by the Cloud Run service.
 
@@ -86,12 +93,12 @@ export TAGGER_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO
 ./scripts/deploy_services.sh
 ```
 
-### Terraform Variables Configuration
+#### Terraform Variables Configuration
 
 The solution is deployed by Terraform and thus all configurations are done
 on the Terraform side.
 
-#### Create a Terraform .tfvars file
+##### Create a Terraform .tfvars file
 
 Create a new .tfvars file and override the variables in the below sections. You can use one of the example
 tfavrs files as a base [example-variables](terraform/example-variables.tfvars). 
@@ -100,7 +107,7 @@ tfavrs files as a base [example-variables](terraform/example-variables.tfvars).
 export VARS=my-variables.tfvars
 ```
 
-#### Configure Basic Variables
+##### Configure Basic Variables
 
 Most required variables have default names defined in [variables.tf](terraform/variables.tf).
 You can use the defaults or overwrite them in the .tfvars file you just created.
@@ -113,7 +120,7 @@ compute_region = "<GCP region to deploy compute resources e.g. cloud run, iam, e
 data_region = "<GCP region to deploy data resources (buckets, datasets, tag templates, etc">
 ```
 
-#### Configure BigQuery Dataset  
+##### Configure BigQuery Dataset  
 
 This dataset will be created under the data_region and will
 hold all solution-managed tables and config views. Optionally, it could 
@@ -123,7 +130,7 @@ be used to store Auto DLP findings (configured outside of Terraform)
 bigquery_dataset_name = "<>"
 ```
 
-#### Configure DryRun
+##### Configure DryRun
 
 By setting `is_dry_run = "True"` the solution will list down all BigQuery tables
 included in the scan scope but it will not trigger table-level operations
@@ -134,7 +141,7 @@ monitoring and inspection.
 is_dry_run = "False"
 ```
 
-#### Configure Cloud Scheduler Service Account
+##### Configure Cloud Scheduler Service Account
 
 We will need to grant the Cloud Scheduler account permissions to use parts of the solution 
 
@@ -146,7 +153,7 @@ If this host project never used Cloud Scheduler before, create and run a sample 
 
 PS: project number is different from project id/name. You can find both info on the home page of any project.
 
-#### Configure Terraform Service Account
+##### Configure Terraform Service Account
 
 Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.  
 
@@ -155,7 +162,7 @@ This service account is created in a previous step of the deployment. Use the fu
 terraform_service_account = "bq-snapshot-mgr-terraform@<host project>.iam.gserviceaccount.com"
 ```
 
-#### Configure Cloud Run Service Images
+##### Configure Cloud Run Service Images
 
 Earlier, we used Docker to build container images that will be used by the solution.
 In this step, we instruct Terraform to use these published images in the Cloud Run services
@@ -170,7 +177,7 @@ snapshoter_service_image = "< value of env variable SNAPSHOTER_IMAGE >"
 tagger_service_image = "< value of env variable TAGGER_IMAGE >"
 ``` 
 
-### Terraform Deployment
+#### Terraform Deployment
 
 ```
 cd terraform
@@ -186,11 +193,15 @@ terraform workspace select $CONFIG
 
 terraform plan -var-file=$VARS
 
-terraform apply -lock=false -var-file=$VARS -auto-approve
+terraform apply -var-file=$VARS -auto-approve
 
 ```
 
-### Post deployment setup
+#### Setup access to data projects
+
+The application is deployed under a host project as set in the `PROJECT_ID` variable.
+To enable the application to take snapshots of tables in other projects (i.e. data projects) one must grant a number of
+permissions on each data project. To do, run the following script:
 
 Set the following variables that will be used in next steps:
 
@@ -198,22 +209,14 @@ Set the following variables that will be used in next steps:
 export SA_DISPATCHER_EMAIL=dispatcher@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_SNAPSHOTER_EMAIL=snapshoter@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_TAGGER_EMAIL=tagger@${PROJECT_ID}.iam.gserviceaccount.com
-```
 
-PS: update the SA emails if the default names have been changed in Terraform  
-
-The application is deployed under a host project as set in the `PROJECT_ID` variable.
-To enable the application to take snapshots of tables in other projects (i.e. data projects) one must grant a number of
-permissions on each data project. To do, run the following script:
-
-From root folder:
-```
 ./scripts/prepare_data_projects.sh <project1> <project2> <etc>
 ```
 
 PS: 
-* If you have tables to be inspected in the host project, run the above script and include the host project in the list
-* Use the same projects list as set in the Terraform variable `projects_include_list`
+* Update the SA emails if the default names have been changed in Terraform  
+* If you have tables to be backed-up in the host project, run the above script and include the host project in the list
+* Use the same projects list as set in the Terraform variable `schedulers`
 
 
   

@@ -34,7 +34,7 @@ terraform init \
 
 terraform workspace select "${CONFIG}"
 
-terraform apply -lock=false -var-file="${VARS}" -auto-approve
+terraform apply -var-file="${VARS}" -auto-approve
 
 # set the working dir as the scripts directory
 #cd ../scripts
