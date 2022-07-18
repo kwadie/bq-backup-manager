@@ -45,34 +45,37 @@ snapshot_policy = {
 
   # default snapshot config
   default_config = {
-    snapshot_storage_dataset = "p.d.t"
-    snapshot_expiration_ms = 0
+    snapshot_storage_dataset = "p.d.t" # where to store the snapshot
+    snapshot_expiration_ms = 0, # snapshot expiration in milliseconds
+    time_travel_offset_ms = 0 # to determine a point in time from which the table is backed up (NOW - time_travel_offset_ms)
   },
 
-  # except for these projects we want to use a different snapshot config than the default
+  # except for these projects we want to use different snapshot configs than the default
   projects_override = [
     {
       project_id = "project-1"
       config = {
         snapshot_storage_dataset = ""
-        snapshot_expiration_ms = 0
+        snapshot_expiration_ms = 0,
+        time_travel_offset_ms = 0
       }
     },
   ], # end of projects_override
 
-  # except for these datasets we want to use a different snapshot config than the default
+  # except for these datasets we want to use different snapshot configs than the default and project-level config
   datasets_override = [
     {
       project_id = "project-1"
       dataset_id = "dataset-1"
       config = {
         snapshot_storage_dataset = ""
-        snapshot_expiration_ms = 0
+        snapshot_expiration_ms = 0,
+        time_travel_offset_ms = 0
       }
     },
   ]
 
-  # except for these tables we want to use a different snapshot config than the default
+  # except for these tables we want to use different snapshot configs than the default, project-level and dataset-level config
   tables_override = [
     {
       project_id = "project-1"
@@ -80,7 +83,8 @@ snapshot_policy = {
       table = "table-1"
       config = {
         snapshot_storage_dataset = ""
-        snapshot_expiration_ms = 0
+        snapshot_expiration_ms = 0,
+        time_travel_offset_ms = 0
       }
     },
   ]
