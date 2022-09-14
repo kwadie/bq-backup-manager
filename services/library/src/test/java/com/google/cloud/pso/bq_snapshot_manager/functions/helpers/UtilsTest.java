@@ -18,6 +18,9 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.helpers;
 
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import org.junit.Test;
+import org.springframework.scheduling.support.CronExpression;
+
+import java.time.LocalDateTime;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,5 +45,16 @@ public class UtilsTest {
     public void getConfigFromEnv_NotRequired() {
         // should not fail because the VAR is not required
         Utils.getConfigFromEnv("NA_VAR", false);
+    }
+
+    @Test
+    public void cronTest() {
+
+        CronExpression cron = CronExpression.parse("0 0 1 * * *"); // daily at 1 AM
+        LocalDateTime now = LocalDateTime.of(2022,9,1,18,0);
+        LocalDateTime expectedNextDate = LocalDateTime.of(2022,9,2,1,0);
+        LocalDateTime actualNextDate = cron.next(now);
+        assertEquals(expectedNextDate, actualNextDate);
+
     }
 }
