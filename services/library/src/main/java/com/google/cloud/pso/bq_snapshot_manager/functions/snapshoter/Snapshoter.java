@@ -17,6 +17,8 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.snapshoter;
 
 
+import com.google.api.services.bigquery.model.SnapshotDefinition;
+import com.google.cloud.bigquery.TableId;
 import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.Operation;
@@ -27,6 +29,10 @@ import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMess
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
+import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
+import com.google.gson.JsonParser;
+import com.google.gson.JsonElement;
+import com.google.cloud.bigquery.*;
 
 import java.io.IOException;
 import java.util.ArrayList;
@@ -90,8 +96,35 @@ public class Snapshoter {
         //TODO: add service logic here
 
         // TODO: 1. Parse snapshot policy to JSON object. There is an example from the PII solution (https://github.com/GoogleCloudPlatform/bq-pii-classifier/blob/24e711f856fadd46b4de96a8ca0c19c9bb30e0d5/services/library/src/main/java/com/google/cloud/pso/bq_pii_classifier/entities/TableScanLimitsConfig.java#L27)
+        // String requestJsonString = request.toJsonString();
+        // JsonElement requestJson = JsonParser.parseString(requestJsonString).getAsJsonObject();
+
         // TODO: 2. Determine the snapshot config for the target table from the policy
+        JsonElement snapshotConfigJson = JsonParser.parseString(this.config.getSnapshotPolicyJson()).getAsJsonObject();
+        String snapshotStorageDataset = snapshotConfigJson.getAsJsonObject().get("snapshot_storage_dataset").getAsString();
+        Integer snapshotExpirationMs = snapshotConfigJson.getAsJsonObject().get("snapshot_expiration_ms").getAsInt();
+        Integer timeTravelOffsetMs = snapshotConfigJson.getAsJsonObject().get("time_travel_offset_ms").getAsInt();
+
         // TODO: 3. Perform the Snapshot operation using the BigQuery service
+        String[] entityKey = request.getEntityKey().split(".");
+        String sourceProjectId = entityKey[0];
+        String sourceDataset = entityKey[1];
+        String sourceTable = entityKey[2];
+
+        if(timeTravelOffsetMs > 0) {
+            sourceTable = sourceTable + "@" + timeTravelOffsetMs.toString();
+        }
+
+        String[] destination = snapshotStorageDataset.split(".");
+        String destinationProjectId = destination[0];
+        String destinationDataset = destination[1];
+        String destinationTable = destination[2];
+
+        TableId sourceTableId = TableId.of(sourceProjectId, sourceDataset, sourceTable);
+        TableId destinationTableId = TableId.of(destinationProjectId, destinationDataset, destinationTable);
+        this.bqService.createSnapshot(sourceTableId, destinationTableId, snapshotExpirationMs);
+
+
         // TODO: 4. Create a Tagger request and send it to the Tagger PubSub topic
 
 
