@@ -13,6 +13,8 @@
 #   limitations under the License.
 
 provider "google" {
+  version = "~> 4.39.0"
+
   alias = "impersonation"
   scopes = [
     "https://www.googleapis.com/auth/cloud-platform",
@@ -30,6 +32,8 @@ data "google_service_account_access_token" "default" {
 }
 
 provider "google" {
+  version = "~> 4.39.0"
+
   project = var.project
   region = var.compute_region
 
@@ -38,6 +42,8 @@ provider "google" {
 }
 
 provider "google-beta" {
+  version = "~> 4.39.0"
+
   project = var.project
   region = var.compute_region
 

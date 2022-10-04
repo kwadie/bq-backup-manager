@@ -12,146 +12,192 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-variable "project" {}
+variable "project" {
+  type = string
+}
 
-variable "compute_region" {}
+variable "compute_region" {
+  type = string
+}
 
-variable "data_region" {}
+variable "data_region" {
+  type = string
+}
 
 variable "bigquery_dataset_name" {
+  type = string
   default = "bq_snapshot_manager"
 }
 
 
 
 variable "sa_dispatcher" {
+  type = string
   default = "dispatcher"
 }
 
 
 variable "sa_dispatcher_tasks" {
+  type = string
   default = "dispatcher-tasks"
 }
 
 variable "sa_configurator" {
+  type = string
   default = "configurator"
 }
 
 variable "sa_configurator_tasks" {
+  type = string
   default = "configurator-tasks"
 }
 
 variable "sa_snapshoter_bq" {
+  type = string
   default = "snapshoter-bq"
 }
 
 variable "sa_snapshoter_bq_tasks" {
+  type = string
   default = "snapshoter-bq-tasks"
 }
 
 variable "sa_snapshoter_gcs" {
+  type = string
   default = "snapshoter-gcs"
 }
 
 variable "sa_snapshoter_gcs_tasks" {
+  type = string
   default = "snapshoter-gcs-tasks"
 }
 
 variable "sa_tagger" {
+  type = string
   default = "tagger"
 }
 
 variable "sa_tagger_tasks" {
+  type = string
   default = "tagger-tasks"
 }
 
 variable "log_sink_name" {
+  type = string
   default = "sc_bigquery_log_sink"
 }
 
 
 variable "dispatcher_service_name" {
+  type = string
   default = "s1-dispatcher"
 }
 
 variable "configurator_service_name" {
+  type = string
   default = "s2-configurator"
 }
 
 variable "snapshoter_bq_service_name" {
+  type = string
   default = "s3-snapshoter-bq"
 }
 
 variable "snapshoter_gcs_service_name" {
+  type = string
   default = "s3-snapshoter-gcs"
 }
 
 variable "tagger_service_name" {
+  type = string
   default = "s4-tagger"
 }
 
 
 variable "dispatcher_pubsub_topic" {
+  type = string
   default = "dispatcher_topic"
 }
 
 variable "dispatcher_pubsub_sub" {
+  type = string
   default = "dispatcher_push_sub"
 }
 
 variable "configurator_pubsub_topic" {
+  type = string
   default = "configurator_topic"
 }
 
 variable "configurator_pubsub_sub" {
+  type = string
   default = "configurator_push_sub"
 }
 
 variable "snapshoter_bq_pubsub_topic" {
+  type = string
   default = "snapshoter_bq_topic"
 }
 
 variable "snapshoter_bq_pubsub_sub" {
+  type = string
   default = "snapshoter_bq_push_sub"
 }
 
 variable "snapshoter_gcs_pubsub_topic" {
+  type = string
   default = "snapshoter_gcs_topic"
 }
 
 variable "snapshoter_gcs_pubsub_sub" {
+  type = string
   default = "snapshoter_gcs_push_sub"
 }
 
 variable "tagger_pubsub_topic" {
+  type = string
   default = "tagger_topic"
 }
 
 variable "tagger_pubsub_sub" {
+  type = string
   default = "tagger_push_sub"
 }
 
 variable "gcs_flags_bucket_name" {
+  type = string
   default = "bq-snapshot-mgr-flags"
 }
 
 # Images
-variable "dispatcher_service_image" {}
+variable "dispatcher_service_image" {
+  type = string
+}
 
-variable "configurator_service_image" {}
+variable "configurator_service_image" {
+  type = string
+}
 
-variable "snapshoter_bq_service_image" {}
+variable "snapshoter_bq_service_image" {
+  type = string
+}
 
-variable "snapshoter_gcs_service_image" {}
+variable "snapshoter_gcs_service_image" {
+  type = string
+}
 
-variable "tagger_service_image" {}
+variable "tagger_service_image" {
+  type = string
+}
 
 
 variable "cloud_scheduler_account" {
+  type = string
   description = "Service agent account for Cloud Scheduler. Format service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
 }
 
 variable "terraform_service_account" {
+  type = string
   description = "service account used by terraform to deploy to GCP"
 }
 
@@ -285,9 +331,26 @@ variable "tagger_subscription_message_retention_duration" {
   default = "86400s" # 24h
 }
 
-variable "scheduler" {}
+variable "scheduler" {
+  type = object({
+    name = string,
+    cron = string,
+    payload = object({
+      is_force_run = bool,
+      folders_include_list = list(number),
+      projects_include_list = list(string),
+      projects_exclude_list = list(string),
+      datasets_include_list = list(string),
+      datasets_exclude_list = list(string),
+      tables_include_list = list(string),
+      tables_exclude_list = list(string),
+    })
+  })
+}
 
-variable "snapshot_policy" {}
+variable "snapshot_policy" {
+  type = string
+}
 
 
 
