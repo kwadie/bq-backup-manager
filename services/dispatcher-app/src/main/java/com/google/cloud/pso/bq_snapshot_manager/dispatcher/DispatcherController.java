@@ -19,14 +19,13 @@ package com.google.cloud.pso.bq_snapshot_manager.dispatcher;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
-import com.google.cloud.pso.bq_snapshot_manager.functions.dispatcher.BigQueryScope;
-import com.google.cloud.pso.bq_snapshot_manager.functions.dispatcher.Dispatcher;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f01_dispatcher.Dispatcher;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f01_dispatcher.DispatcherRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
-import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.scan.BigQueryScannerImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.scan.ResourceScannerImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
@@ -81,22 +80,21 @@ public class DispatcherController {
 
             logger.logInfoWithTracker(runId, String.format("Received payload: %s", requestJsonString));
 
-            BigQueryScope bqScope = gson.fromJson(requestJsonString, BigQueryScope.class);
+            DispatcherRequest dispatcherRequest = gson.fromJson(requestJsonString, DispatcherRequest.class);
 
-            logger.logInfoWithTracker(runId, String.format("Parsed JSON input %s ", bqScope.toString()));
+            logger.logInfoWithTracker(runId, String.format("Parsed dispatcher request %s ", dispatcherRequest.toString()));
 
             Dispatcher dispatcher = new Dispatcher(
                     environment.toConfig(),
-                    new BigQueryServiceImpl(),
                     new PubSubServiceImpl(),
-                    new BigQueryScannerImpl(),
+                    new ResourceScannerImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
-                    "inspection-dispatcher-flags",
+                    "dispatcher-flags",
                     functionNumber,
                     runId
             );
 
-            PubSubPublishResults results = dispatcher.execute(bqScope, requestBody.getMessage().getMessageId());
+            PubSubPublishResults results = dispatcher.execute(dispatcherRequest, requestBody.getMessage().getMessageId());
 
             state = String.format("Publishing results: %s SUCCESS MESSAGES and %s FAILED MESSAGES",
                     results.getSuccessMessages().size(),

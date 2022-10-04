@@ -33,13 +33,28 @@ variable "sa_dispatcher_tasks" {
   default = "dispatcher-tasks"
 }
 
-
-variable "sa_snapshoter" {
-  default = "snapshoter"
+variable "sa_configurator" {
+  default = "configurator"
 }
 
-variable "sa_snapshoter_tasks" {
-  default = "snapshoter-tasks"
+variable "sa_configurator_tasks" {
+  default = "configurator-tasks"
+}
+
+variable "sa_snapshoter_bq" {
+  default = "snapshoter-bq"
+}
+
+variable "sa_snapshoter_bq_tasks" {
+  default = "snapshoter-bq-tasks"
+}
+
+variable "sa_snapshoter_gcs" {
+  default = "snapshoter-gcs"
+}
+
+variable "sa_snapshoter_gcs_tasks" {
+  default = "snapshoter-gcs-tasks"
 }
 
 variable "sa_tagger" {
@@ -59,12 +74,20 @@ variable "dispatcher_service_name" {
   default = "s1-dispatcher"
 }
 
-variable "snapshoter_service_name" {
-  default = "s2-snapshoter"
+variable "configurator_service_name" {
+  default = "s2-configurator"
+}
+
+variable "snapshoter_bq_service_name" {
+  default = "s3-snapshoter-bq"
+}
+
+variable "snapshoter_gcs_service_name" {
+  default = "s3-snapshoter-gcs"
 }
 
 variable "tagger_service_name" {
-  default = "s3-tagger"
+  default = "s4-tagger"
 }
 
 
@@ -76,12 +99,28 @@ variable "dispatcher_pubsub_sub" {
   default = "dispatcher_push_sub"
 }
 
-variable "snapshoter_pubsub_topic" {
-  default = "snapshoter_topic"
+variable "configurator_pubsub_topic" {
+  default = "configurator_topic"
 }
 
-variable "snapshoter_pubsub_sub" {
-  default = "snapshoter_push_sub"
+variable "configurator_pubsub_sub" {
+  default = "configurator_push_sub"
+}
+
+variable "snapshoter_bq_pubsub_topic" {
+  default = "snapshoter_bq_topic"
+}
+
+variable "snapshoter_bq_pubsub_sub" {
+  default = "snapshoter_bq_push_sub"
+}
+
+variable "snapshoter_gcs_pubsub_topic" {
+  default = "snapshoter_gcs_topic"
+}
+
+variable "snapshoter_gcs_pubsub_sub" {
+  default = "snapshoter_gcs_push_sub"
 }
 
 variable "tagger_pubsub_topic" {
@@ -99,7 +138,11 @@ variable "gcs_flags_bucket_name" {
 # Images
 variable "dispatcher_service_image" {}
 
-variable "snapshoter_service_image" {}
+variable "configurator_service_image" {}
+
+variable "snapshoter_bq_service_image" {}
+
+variable "snapshoter_gcs_service_image" {}
 
 variable "tagger_service_image" {}
 
@@ -144,24 +187,72 @@ variable "dispatcher_subscription_message_retention_duration" {
   default = "600s" # 10m
 }
 
-# snapshoter settings.
-variable "snapshoter_service_timeout_seconds" {
+# configurator settings.
+variable "configurator_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
   type = number
   default = 300 # 5m
 }
 
-variable "snapshoter_subscription_ack_deadline_seconds" {
+variable "configurator_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
   type = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
   default = 420 # 7m
 }
 
-variable "snapshoter_subscription_message_retention_duration" {
+variable "configurator_subscription_message_retention_duration" {
   description = "How long to retain unacknowledged messages in the subscription's backlog"
   type = string
-  # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Tagger issuing unnecessary BQ queries)
+  # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Service issuing unnecessary API Calls)
+  # It also sets how long should we keep trying to process one run
+  # min value must be at least equal to the ack_deadline_seconds
+  # configurator should have a relatively long retention to handle runs with large number of tables.
+  default = "86400s" # 24h
+}
+
+# snapshoter_bq settings.
+variable "snapshoter_bq_service_timeout_seconds" {
+  description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
+  type = number
+  default = 300 # 5m
+}
+
+variable "snapshoter_bq_subscription_ack_deadline_seconds" {
+  description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
+  type = number
+  // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
+  default = 420 # 7m
+}
+
+variable "snapshoter_bq_subscription_message_retention_duration" {
+  description = "How long to retain unacknowledged messages in the subscription's backlog"
+  type = string
+  # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Service issuing unnecessary API Calls)
+  # It also sets how long should we keep trying to process one run
+  # min value must be at least equal to the ack_deadline_seconds
+  # snapshoter should have a relatively long retention to handle runs with large number of tables.
+  default = "86400s" # 24h
+}
+
+# snapshoter_gcs settings.
+variable "snapshoter_gcs_service_timeout_seconds" {
+  description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
+  type = number
+  default = 300 # 5m
+}
+
+variable "snapshoter_gcs_subscription_ack_deadline_seconds" {
+  description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
+  type = number
+  // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
+  default = 420 # 7m
+}
+
+variable "snapshoter_gcs_subscription_message_retention_duration" {
+  description = "How long to retain unacknowledged messages in the subscription's backlog"
+  type = string
+  # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Service issuing unnecessary API Calls)
   # It also sets how long should we keep trying to process one run
   # min value must be at least equal to the ack_deadline_seconds
   # snapshoter should have a relatively long retention to handle runs with large number of tables.
@@ -194,7 +285,7 @@ variable "tagger_subscription_message_retention_duration" {
   default = "86400s" # 24h
 }
 
-variable "schedulers" {}
+variable "scheduler" {}
 
 variable "snapshot_policy" {}
 

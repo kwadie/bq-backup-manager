@@ -13,13 +13,19 @@ resource "google_cloud_scheduler_job" "scheduler_job" {
   pubsub_target {
     # topic.id is the topic's full resource name.
     topic_name = var.target_uri
-    data       = base64encode(jsonencode({
-      tableIncludeList = lookup(var.scope, "tables_include_list")
-      datasetIncludeList = lookup(var.scope, "datasets_include_list")
-      projectIncludeList = lookup(var.scope, "projects_include_list")
-      datasetExcludeList = lookup(var.scope, "datasets_exclude_list")
-      tableExcludeList = lookup(var.scope, "tables_exclude_list")
-    }))
+    data       = base64encode(jsonencode(
+    {
+      isForceRun = lookup(var.payload, "is_force_run"),
+      bigQueryScope = {
+        folderIncludeList = lookup(var.payload, "folders_include_list"),
+        projectIncludeList = lookup(var.payload, "projects_include_list"),
+        projectExcludeList = lookup(var.payload, "projects_exclude_list"),
+        datasetIncludeList = lookup(var.payload, "datasets_include_list"),
+        datasetExcludeList = lookup(var.payload, "datasets_exclude_list"),
+        tableIncludeList = lookup(var.payload, "tables_include_list"),
+        tableExcludeList = lookup(var.payload, "tables_exclude_list")}
+    }
+    ))
   }
 }
 
