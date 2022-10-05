@@ -1,4 +1,5 @@
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/storage_bucket
+
 resource "google_storage_bucket" "gcs_flags_bucket" {
   project = var.project
   name          = var.gcs_flags_bucket_name

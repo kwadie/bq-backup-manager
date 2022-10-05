@@ -1,6 +1,5 @@
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/data_catalog_policy_tag
 
-
 ### Create Tag Template
 
 resource "google_data_catalog_tag_template" "snapshot_tag_template" {

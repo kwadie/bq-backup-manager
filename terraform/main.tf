@@ -12,12 +12,7 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-terraform {
-  required_providers {
-    google = "~> 4.39.0"
-    google-beta = "~> 4.39.0"
-  }
-}
+
 
 provider "google" {
   alias = "impersonation"

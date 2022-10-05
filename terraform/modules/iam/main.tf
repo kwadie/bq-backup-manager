@@ -2,7 +2,6 @@
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_service_account_iam
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam#google_project_iam_member
 
-
 ############## Service Accounts ######################################
 
 resource "google_service_account" "sa_dispatcher" {
