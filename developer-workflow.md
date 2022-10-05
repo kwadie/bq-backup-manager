@@ -19,9 +19,18 @@ export BUCKET=gs://${BUCKET_NAME}
 export DOCKER_REPO_NAME=docker-repo
 export CONFIG=bqsm
 export VARS=dev.tfvars
+
 export SA_DISPATCHER_EMAIL=dispatcher@${PROJECT_ID}.iam.gserviceaccount.com
-export SA_SNAPSHOTER_EMAIL=snapshoter@${PROJECT_ID}.iam.gserviceaccount.com
+export SA_CONFIGURATOR_EMAIL=configurator@${PROJECT_ID}.iam.gserviceaccount.com
+export SA_SNAPSHOTER_BQ_EMAIL=snapshoter-bq@${PROJECT_ID}.iam.gserviceaccount.com
+export SA_SNAPSHOTER_GCS_EMAIL=snapshoter-gcs@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_TAGGER_EMAIL=tagger@${PROJECT_ID}.iam.gserviceaccount.com
+
+export DISPATCHER_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-dispatcher-service:latest
+export CONFIGURATOR_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-configurator-service:latest
+export SNAPSHOTER_BQ_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-snapshoter-bq-service:latest
+export SNAPSHOTER_GCS_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-snapshoter-gcs-service:latest
+export TAGGER_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-tagger-service:latest
 ```
 
 If you're contributing to the project for the first time, create a gcloud
@@ -62,4 +71,38 @@ or to re-deploy the Cloud Run services with the latest published container image
 To deploy both Services and Terraform (e.g. to publish changes in Java code to Cloud Run)
 ```
 ./scripts/deploy_all.sh
+```
+
+## Prepare folders with required permissions
+```
+./scripts/prepare_data_folders.sh foldernumber1 foldernumber2
+```
+
+## Prepare data projects with required permissions
+```
+./scripts/prepare_data_projects.sh "project1" "project2"
+```
+
+## Linting
+
+The repo is using Git Actions to lint the code using super-linter when creating pull requests.
+This is to ensure the code base follows the Google guidelines for publishing.
+
+However, one don't need to wait until creating a PR to run the linter, this could be done locally as well
+
+* Pull the super-linter docker image
+```
+docker pull github/super-linter:latest
+```
+* Run super-linter using the same flags as in Git Actions
+```
+run
+docker run \
+-e RUN_LOCAL=true \
+-e USE_FIND_ALGORITHM=true \
+-e VALIDATE_GOOGLE_JAVA_FORMAT=true \
+-e VALIDATE_ALL_CODEBASE=true \
+-e VALIDATE_TERRAFORM_TFLINT=true \
+-e VALIDATE_TERRAFORM_TERRASCAN=true \
+-v $(pwd):/tmp/lint github/super-linter
 ```

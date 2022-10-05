@@ -2,7 +2,6 @@
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_service_account_iam
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/google_project_iam#google_project_iam_member
 
-
 ############## Service Accounts ######################################
 
 resource "google_service_account" "sa_dispatcher" {
@@ -23,16 +22,40 @@ resource "google_service_account" "sa_dispatcher_tasks" {
   display_name = "To authorize PubSub Push requests to Tagging Dispatcher Service"
 }
 
-resource "google_service_account" "sa_snapshoter" {
+resource "google_service_account" "sa_configurator" {
   project = var.project
-  account_id = var.sa_snapshoter
-  display_name = "Runtime SA for Snapshoter service"
+  account_id = var.sa_configurator
+  display_name = "Runtime SA for configurator service"
 }
 
-resource "google_service_account" "sa_snapshoter_tasks" {
+resource "google_service_account" "sa_configurator_tasks" {
   project = var.project
-  account_id = var.sa_snapshoter_tasks
-  display_name = "To authorize PubSub Push requests to Inspector Service"
+  account_id = var.sa_configurator_tasks
+  display_name = "To authorize PubSub Push requests to configurator Service"
+}
+
+resource "google_service_account" "sa_snapshoter_bq" {
+  project = var.project
+  account_id = var.sa_snapshoter_bq
+  display_name = "Runtime SA for BQ Snapshoter service"
+}
+
+resource "google_service_account" "sa_snapshoter_bq_tasks" {
+  project = var.project
+  account_id = var.sa_snapshoter_bq_tasks
+  display_name = "To authorize PubSub Push requests to BQ Snapshoter Service"
+}
+
+resource "google_service_account" "sa_snapshoter_gcs" {
+  project = var.project
+  account_id = var.sa_snapshoter_gcs
+  display_name = "Runtime SA for GCS Snapshoter service"
+}
+
+resource "google_service_account" "sa_snapshoter_gcs_tasks" {
+  project = var.project
+  account_id = var.sa_snapshoter_gcs_tasks
+  display_name = "To authorize PubSub Push requests to GCS Snapshoter Service"
 }
 
 resource "google_service_account" "sa_tagger_tasks" {
@@ -58,38 +81,37 @@ resource "google_service_account_iam_member" "sa_dispatcher_account_user_sa_disp
 
 #### Dispatcher SA Permissions ###
 
-# Grant sa_dispatcher access to submit query jobs
-resource "google_project_iam_member" "sa_dispatcher_bq_job_user" {
-  project = var.project
-  role = "roles/bigquery.jobUser"
-  member = "serviceAccount:${google_service_account.sa_dispatcher.email}"
-}
+#### Configurator SA Permissions ###
+# TODO: add relevant Configurator permissions
 
-// tagging dispatcher needs to read data from dlp results table and views created inside the solution-managed dataset
-// e.g. listing tables to be tagged
-resource "google_bigquery_dataset_access" "sa_dispatcher_bq_dataset_reader" {
-  dataset_id    = var.bq_results_dataset
-  role          = "roles/bigquery.dataViewer"
-  user_by_email = google_service_account.sa_dispatcher.email
-}
-
-#### Snapshoter Tasks SA Permissions ###
-
-resource "google_service_account_iam_member" "sa_snapshoter_account_user_sa_inspector_tasks" {
-  service_account_id = google_service_account.sa_snapshoter.name
+#### Configurator Tasks SA Permissions ###
+resource "google_service_account_iam_member" "sa_configurator_account_user_sa_configurator_tasks" {
+  service_account_id = google_service_account.sa_configurator.name
   role = "roles/iam.serviceAccountUser"
-  member = "serviceAccount:${google_service_account.sa_snapshoter_tasks.email}"
+  member = "serviceAccount:${google_service_account.sa_configurator_tasks.email}"
 }
 
 #### Snapshoter SA Permissions ###
 # TODO: add relevant snapshoter permissions
 
-# Grant sa_inspector access to list dlp jobs
-resource "google_project_iam_member" "sa_inspector_dlp_jobs_editor" {
-  project = var.project
-  role = "roles/dlp.jobsEditor"
-  member = "serviceAccount:${google_service_account.sa_snapshoter.email}"
+#### BQ Snapshoter Tasks SA Permissions ###
+
+resource "google_service_account_iam_member" "sa_snapshoter_bq_account_user_sa_inspector_tasks" {
+  service_account_id = google_service_account.sa_snapshoter_bq.name
+  role = "roles/iam.serviceAccountUser"
+  member = "serviceAccount:${google_service_account.sa_snapshoter_bq_tasks.email}"
 }
+
+#### GCS Snapshoter Tasks SA Permissions ###
+
+resource "google_service_account_iam_member" "sa_snapshoter_gcs_account_user_sa_inspector_tasks" {
+  service_account_id = google_service_account.sa_snapshoter_gcs.name
+  role = "roles/iam.serviceAccountUser"
+  member = "serviceAccount:${google_service_account.sa_snapshoter_gcs_tasks.email}"
+}
+
+#### Tagger SA Permissions ###
+# TODO: add relevant Tagger permissions
 
 #### Tagger Tasks SA Permissions ###
 

@@ -27,7 +27,9 @@
     <modules>
         <module>library</module>
         <module>dispatcher-app</module>
-        <module>snapshoter-app</module>
+        <module>configurator-app</module>
+        <module>snapshoter-gcs-app</module>
+        <module>snapshoter-bq-app</module>
         <module>tagger-app</module>
     </modules>
 

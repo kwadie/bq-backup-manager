@@ -16,10 +16,9 @@
 package com.google.cloud.pso.bq_snapshot_manager.tagger;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
-import com.google.cloud.pso.bq_snapshot_manager.entities.Operation;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TaggerOperation;
-import com.google.cloud.pso.bq_snapshot_manager.functions.tagger.Tagger;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.Tagger;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
@@ -76,7 +75,7 @@ public class TaggerController {
 
             logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
 
-            TaggerOperation operation = gson.fromJson(requestJsonString, TaggerOperation.class);
+            TaggerRequest operation = gson.fromJson(requestJsonString, TaggerRequest.class);
 
             trackingId = operation.getTrackingId();
 

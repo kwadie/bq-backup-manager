@@ -51,7 +51,7 @@ public class TrackingHelper {
         // using UUIDs only resulted in unexpected collisions in some runs.
         // adding table name hash for extra "randomness"
 
-        return String.format("%s-%s-%s", runId, UUID.randomUUID().toString(), table.hashCode());
+        return String.format("%s-%s", runId, UUID.randomUUID().toString());
     }
 
     /**
