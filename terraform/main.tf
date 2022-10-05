@@ -12,9 +12,14 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
-provider "google" {
-  version = "~> 4.39.0"
+terraform {
+  required_providers {
+    google = "~> 4.39.0"
+    google-beta = "~> 4.39.0"
+  }
+}
 
+provider "google" {
   alias = "impersonation"
   scopes = [
     "https://www.googleapis.com/auth/cloud-platform",
@@ -32,8 +37,6 @@ data "google_service_account_access_token" "default" {
 }
 
 provider "google" {
-  version = "~> 4.39.0"
-
   project = var.project
   region = var.compute_region
 
@@ -42,8 +45,6 @@ provider "google" {
 }
 
 provider "google-beta" {
-  version = "~> 4.39.0"
-
   project = var.project
   region = var.compute_region
 
@@ -79,7 +80,6 @@ locals {
 module "iam" {
   source = "./modules/iam"
   project = var.project
-  region = var.compute_region
   sa_dispatcher = var.sa_dispatcher
   sa_dispatcher_tasks = var.sa_dispatcher_tasks
   sa_snapshoter_bq = var.sa_snapshoter_bq
@@ -88,7 +88,6 @@ module "iam" {
   sa_snapshoter_gcs_tasks = var.sa_snapshoter_gcs_tasks
   sa_tagger = var.sa_tagger
   sa_tagger_tasks = var.sa_tagger_tasks
-  bq_results_dataset = module.bigquery.results_dataset
   sa_configurator = var.sa_configurator
   sa_configurator_tasks = var.sa_configurator_tasks
 }
@@ -121,7 +120,6 @@ module "cloud_logging" {
   source = "./modules/cloud-logging"
   dataset = module.bigquery.results_dataset
   project = var.project
-  region = var.compute_region
   log_sink_name = var.log_sink_name
 }
 
@@ -334,7 +332,6 @@ module "cloud-scheduler" {
   source = "./modules/cloud-scheduler"
 
   project = var.project
-  region = var.compute_region
   target_uri = module.pubsub-dispatcher.topic-id
 
   scheduler_name = lookup(var.scheduler, "name")

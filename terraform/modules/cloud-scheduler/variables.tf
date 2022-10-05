@@ -1,9 +1,7 @@
 variable "project" {
   type = string
 }
-variable "region" {
-  type = string
-}
+
 variable "scheduler_name" {
   type = string
 }

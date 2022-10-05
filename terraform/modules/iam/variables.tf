@@ -1,5 +1,4 @@
 variable "project" {type = string}
-variable "region" {type = string}
 variable "sa_dispatcher" {type = string}
 variable "sa_dispatcher_tasks" {type = string}
 variable "sa_configurator" {type = string}
@@ -10,4 +9,3 @@ variable "sa_snapshoter_bq_tasks" {type = string}
 variable "sa_snapshoter_gcs_tasks" {type = string}
 variable "sa_tagger" {type = string}
 variable "sa_tagger_tasks"{type = string}
-variable "bq_results_dataset" {type = string}

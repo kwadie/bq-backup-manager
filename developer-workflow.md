@@ -82,3 +82,27 @@ To deploy both Services and Terraform (e.g. to publish changes in Java code to C
 ```
 ./scripts/prepare_data_projects.sh "project1" "project2"
 ```
+
+## Linting
+
+The repo is using Git Actions to lint the code using super-linter when creating pull requests.
+This is to ensure the code base follows the Google guidelines for publishing.
+
+However, one don't need to wait until creating a PR to run the linter, this could be done locally as well
+
+* Pull the super-linter docker image
+```
+docker pull github/super-linter:latest
+```
+* Run super-linter using the same flags as in Git Actions
+```
+run
+docker run \
+-e RUN_LOCAL=true \
+-e USE_FIND_ALGORITHM=true \
+-e VALIDATE_GOOGLE_JAVA_FORMAT=true \
+-e VALIDATE_ALL_CODEBASE=true \
+-e VALIDATE_TERRAFORM_TFLINT=true \
+-e VALIDATE_TERRAFORM_TERRASCAN=true \
+-v $(pwd):/tmp/lint github/super-linter
+```
