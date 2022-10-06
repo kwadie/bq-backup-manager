@@ -118,11 +118,14 @@ public class Snapshoter {
         String[] destination = snapshotStorageDataset.split(".");
         String destinationProjectId = destination[0];
         String destinationDataset = destination[1];
-        String destinationTable = destination[2];
+
+        //not required
+        //String destinationTable = destination[2];
 
         TableId sourceTableId = TableId.of(sourceProjectId, sourceDataset, sourceTable);
         TableId destinationTableId = TableId.of(destinationProjectId, destinationDataset, destinationTable);
         this.bqService.createSnapshot(sourceTableId, destinationTableId, snapshotExpirationMs);
+        // wait for job result
 
 
         // TODO: 4. Create a Tagger request and send it to the Tagger PubSub topic
