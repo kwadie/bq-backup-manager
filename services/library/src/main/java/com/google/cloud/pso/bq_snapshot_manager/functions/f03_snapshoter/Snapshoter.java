@@ -17,12 +17,9 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
 
-<<<<<<< HEAD:services/library/src/main/java/com/google/cloud/pso/bq_snapshot_manager/functions/snapshoter/Snapshoter.java
 import com.google.api.services.bigquery.model.SnapshotDefinition;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
-=======
->>>>>>> master:services/library/src/main/java/com/google/cloud/pso/bq_snapshot_manager/functions/f03_snapshoter/Snapshoter.java
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
