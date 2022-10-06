@@ -1,4 +1,5 @@
 
+
 resource "google_logging_project_sink" "bigquery-logging-sink" {
   name = var.log_sink_name
   destination = "bigquery.googleapis.com/projects/${var.project}/datasets/${var.dataset}"

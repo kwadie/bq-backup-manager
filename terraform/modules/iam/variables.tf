@@ -1,9 +1,11 @@
-variable "project" {}
-variable "region" {}
-variable "sa_dispatcher" {}
-variable "sa_snapshoter" {}
-variable "sa_snapshoter_tasks" {}
-variable "sa_tagger" {}
-variable "sa_dispatcher_tasks" {}
-variable "sa_tagger_tasks"{}
-variable "bq_results_dataset" {}
+variable "project" {type = string}
+variable "sa_dispatcher" {type = string}
+variable "sa_dispatcher_tasks" {type = string}
+variable "sa_configurator" {type = string}
+variable "sa_configurator_tasks" {type = string}
+variable "sa_snapshoter_bq" {type = string}
+variable "sa_snapshoter_gcs" {type = string}
+variable "sa_snapshoter_bq_tasks" {type = string}
+variable "sa_snapshoter_gcs_tasks" {type = string}
+variable "sa_tagger" {type = string}
+variable "sa_tagger_tasks"{type = string}

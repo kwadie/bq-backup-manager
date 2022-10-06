@@ -16,7 +16,7 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.dispatcher;
 
-import com.google.cloud.pso.bq_snapshot_manager.functions.dispatcher.DispatcherConfig;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f01_dispatcher.DispatcherConfig;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 
 public class Environment {

@@ -30,8 +30,14 @@ mvn install
 cd dispatcher-app
 mvn compile jib:build -Dimage="${DISPATCHER_IMAGE}"
 
-cd ../snapshoter-app
-mvn compile jib:build -Dimage="${SNAPSHOTER_IMAGE}"
+cd ../configurator-app
+mvn compile jib:build -Dimage="${CONFIGURATOR_IMAGE}"
+
+cd ../snapshoter-bq-app
+mvn compile jib:build -Dimage="${SNAPSHOTER_BQ_IMAGE}"
+
+cd ../snapshoter-gcs-app
+mvn compile jib:build -Dimage="${SNAPSHOTER_GCS_IMAGE}"
 
 cd ../tagger-app
 mvn compile jib:build -Dimage="${TAGGER_IMAGE}"
