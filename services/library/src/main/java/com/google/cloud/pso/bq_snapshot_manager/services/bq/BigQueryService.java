@@ -18,6 +18,7 @@ package com.google.cloud.pso.bq_snapshot_manager.services.bq;
 
 import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.cloud.bigquery.Job;
+import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 
@@ -39,4 +40,6 @@ public interface BigQueryService {
     BigInteger getTableNumRows(TableSpec tableSpec) throws IOException;
 
     boolean tableExists(TableSpec tableSpec);
+
+    Job createSnapshot(TableId sourceTable, TableId destinationId, Integer snapshotExpirationMs);
 }
