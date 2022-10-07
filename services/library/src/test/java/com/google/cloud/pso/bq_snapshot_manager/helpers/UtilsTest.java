@@ -16,6 +16,7 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.datacatalog.v1.TagField;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
@@ -26,6 +27,7 @@ import org.junit.Test;
 import org.springframework.scheduling.support.CronExpression;
 
 import java.io.IOException;
+import java.time.Instant;
 import java.time.LocalDateTime;
 import java.util.HashMap;
 import java.util.Map;
@@ -47,6 +49,7 @@ public class UtilsTest {
         tagMap.put("bq_snapshot_storage_dataset","test-dataset");
         tagMap.put("bq_snapshot_expiration_days","0.0");
         tagMap.put("gcs_snapshot_storage_location","test-bucket");
+        tagMap.put("last_backup_at","");
 
         BackupPolicy expected = new BackupPolicy(
                 "test-cron",
@@ -56,7 +59,8 @@ public class UtilsTest {
                 "test-project",
                 "test-dataset",
                 "test-bucket",
-                BackupConfigSource.SYSTEM
+                BackupConfigSource.SYSTEM,
+                Timestamp.MIN_VALUE
         );
 
         BackupPolicy actual = Utils.parseBackupTagTemplateMap(tagMap);
@@ -64,15 +68,6 @@ public class UtilsTest {
         assertEquals(expected,actual);
     }
 
-    @Test
-    public void extractTaxonomyIdFromPolicyTagId() {
-
-        String input = "projects/<project>/locations/<location>/taxonomies/<taxonomyID>/policyTags/<policyTagID";
-        String expected = "projects/<project>/locations/<location>/taxonomies/<taxonomyID>";
-        String actual = Utils.extractTaxonomyIdFromPolicyTagId(input);
-
-        assertEquals(expected, actual);
-    }
 
     @Test(expected = IllegalArgumentException.class)
     public void getConfigFromEnv_Required() {

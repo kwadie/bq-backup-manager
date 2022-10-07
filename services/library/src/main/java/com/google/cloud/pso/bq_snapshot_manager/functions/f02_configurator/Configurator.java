@@ -1,15 +1,21 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.FallbackBackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
+import org.springframework.scheduling.support.CronExpression;
 
 import java.io.IOException;
+import java.time.Instant;
+import java.time.LocalDateTime;
+import java.time.ZoneOffset;
 
 public class Configurator {
 
@@ -96,7 +102,52 @@ public class Configurator {
                         request.getTargetTable().toSqlString(),
                         backupPolicy.toString()));
 
-        // TODO: use the backup policy to call the next service
+
+        if (backupPolicy.getConfigSource().equals(BackupConfigSource.MANUAL)){
+            // policy is created by the table designer and attached to it
+
+            if(backupPolicy.getLastBackupAt().equals(Timestamp.MIN_VALUE)){
+                // this means the table has not been backed up before
+                // proceed with a backup request at this run without CRON check
+                // TODO: create backup request
+            }else{
+                // this means table is manually configured and has been backed up before by the system based on the given CRON
+                // compare the last_backup_at with the next CRON run
+
+                //TODO: now should be based on the run id
+                Timestamp referencePoint = Timestamp.now();
+
+                Tuple<Boolean, LocalDateTime> takeBackup = takeBackup(
+                        backupPolicy.getCron(),
+                        backupPolicy.getLastBackupAt(),
+                        referencePoint
+                );
+
+                if (takeBackup.x()){
+
+                    logger.logInfoWithTracker(
+                            request.getTrackingId(),
+                            String.format("Will backup table %s at this run. Calculated next backup time is %s and this run is %s",
+                                    request.getTargetTable().toSqlString(), takeBackup.y(), referencePoint
+                            )
+                    );
+                    // TODO: create backup request
+
+                }else{
+                    logger.logInfoWithTracker(
+                            request.getTrackingId(),
+                            String.format("Will skip backup for table %s at this run. Calculated next backup time is %s and this run is %s",
+                                    request.getTargetTable().toSqlString(), takeBackup.y(), referencePoint
+                                    )
+                    );
+                }
+            }
+        }else{
+            // policy is created by the backup solution based on the fallback backup policy
+            // TODO: implement
+
+        }
+
 
         // Add a flag key marking that we already completed this request and no additional runs
         // are required in case PubSub is in a loop of retrying due to ACK timeout while the service has already processed the request
@@ -105,6 +156,35 @@ public class Configurator {
         persistentSet.add(flagFileName);
 
         logger.logFunctionEnd(request.getTrackingId());
+    }
+
+
+    public static Tuple<Boolean, LocalDateTime> takeBackup(String cronExpression,
+                                     Timestamp lastBackupAtTs,
+                                     Timestamp nowTs
+                                     ){
+
+        CronExpression cron = CronExpression.parse(cronExpression);
+
+        LocalDateTime nowDt = LocalDateTime.ofEpochSecond(
+                nowTs.getSeconds(),
+                0,
+                ZoneOffset.UTC
+        );
+
+        LocalDateTime lastBackupAtDt = LocalDateTime.ofEpochSecond(
+                lastBackupAtTs.getSeconds(),
+                0,
+                ZoneOffset.UTC
+                );
+
+        // get next execution date based on the last backup date
+        LocalDateTime nextExecutionDt = cron.next(lastBackupAtDt);
+
+        return Tuple.of(
+                nextExecutionDt.isBefore(nowDt),
+                nextExecutionDt
+        );
     }
 
     public static Tuple<String, BackupPolicy> findFallbackBackupPolicy(FallbackBackupPolicy fallbackBackupPolicy,

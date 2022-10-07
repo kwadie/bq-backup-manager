@@ -1,6 +1,7 @@
 package com.google.cloud.pso.bq_snapshot_manager.entities;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.cloud.Timestamp;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.gson.Gson;
 import org.junit.Test;
@@ -27,7 +28,8 @@ public class FallbackBackupPolicyTest {
                 "    \"bq_snapshot_storage_project\": \"project\",\n" +
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "  },\n" +
                 "  \"folder_overrides\": {\n" +
                 "    \"folder1\": {\n" +
@@ -38,7 +40,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"folder2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -48,7 +51,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  },\n" +
                 "  \"project_overrides\": {\n" +
@@ -60,7 +64,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"project2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -70,7 +75,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  },\n" +
                 "  \"dataset_overrides\": {\n" +
@@ -82,7 +88,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"dataset2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -92,7 +99,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  },\n" +
                 "  \"table_overrides\": {\n" +
@@ -104,7 +112,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"table2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -114,7 +123,8 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "      \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  }\n" +
                 "}";
@@ -127,7 +137,8 @@ public class FallbackBackupPolicyTest {
                 "project",
                 "dataset",
                 "gs://bla/",
-                BackupConfigSource.SYSTEM
+                BackupConfigSource.SYSTEM,
+                Timestamp.MIN_VALUE
         );
 
         FallbackBackupPolicy expected = new FallbackBackupPolicy(

@@ -1,5 +1,6 @@
 package com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.datacatalog.v1.TagField;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.gson.Gson;
@@ -17,8 +18,18 @@ public class BackupPolicy {
     private final String bigQuerySnapshotStorageDataset;
     private final String gcsSnapshotStorageLocation;
     private final BackupConfigSource configSource;
+    private final Timestamp lastBackupAt;
 
-    public BackupPolicy(String cron, BackupMethod method, TimeTravelOffsetDays timeTravelOffsetDays, Double bigQuerySnapshotExpirationDays, String bigQuerySnapshotStorageProject, String bigQuerySnapshotStorageDataset, String gcsSnapshotStorageLocation, BackupConfigSource configSource) {
+    public BackupPolicy(String cron,
+                        BackupMethod method,
+                        TimeTravelOffsetDays timeTravelOffsetDays,
+                        Double bigQuerySnapshotExpirationDays,
+                        String bigQuerySnapshotStorageProject,
+                        String bigQuerySnapshotStorageDataset,
+                        String gcsSnapshotStorageLocation,
+                        BackupConfigSource configSource,
+                        Timestamp lastBackupAt
+                        ) {
         this.cron = cron;
         this.method = method;
         this.timeTravelOffsetDays = timeTravelOffsetDays;
@@ -27,6 +38,7 @@ public class BackupPolicy {
         this.bigQuerySnapshotStorageDataset = bigQuerySnapshotStorageDataset;
         this.gcsSnapshotStorageLocation = gcsSnapshotStorageLocation;
         this.configSource = configSource;
+        this.lastBackupAt = lastBackupAt;
     }
 
     public String getCron() {
@@ -57,18 +69,22 @@ public class BackupPolicy {
         return configSource;
     }
 
+    public Timestamp getLastBackupAt() {
+        return lastBackupAt;
+    }
 
     @Override
     public String toString() {
-        return "BackupPolicyTag{" +
+        return "BackupPolicy{" +
                 "cron='" + cron + '\'' +
                 ", method=" + method +
                 ", timeTravelOffsetDays=" + timeTravelOffsetDays +
                 ", bigQuerySnapshotExpirationDays=" + bigQuerySnapshotExpirationDays +
                 ", bigQuerySnapshotStorageProject='" + bigQuerySnapshotStorageProject + '\'' +
                 ", bigQuerySnapshotStorageDataset='" + bigQuerySnapshotStorageDataset + '\'' +
-                ", String gcsSnapshotStorageLocation='" + gcsSnapshotStorageLocation + '\'' +
+                ", gcsSnapshotStorageLocation='" + gcsSnapshotStorageLocation + '\'' +
                 ", configSource=" + configSource +
+                ", lastBackupAt=" + lastBackupAt +
                 '}';
     }
 
@@ -88,12 +104,13 @@ public class BackupPolicy {
                 getBigQuerySnapshotStorageProject().equals(that.getBigQuerySnapshotStorageProject()) &&
                 getBigQuerySnapshotStorageDataset().equals(that.getBigQuerySnapshotStorageDataset()) &&
                 getGcsSnapshotStorageLocation().equals(that.getGcsSnapshotStorageLocation()) &&
-                getConfigSource() == that.getConfigSource();
+                getConfigSource() == that.getConfigSource() &&
+                getLastBackupAt().equals(that.getLastBackupAt());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getCron(), getMethod(), getTimeTravelOffsetDays(), getBigQuerySnapshotExpirationDays(), getBigQuerySnapshotStorageProject(), getBigQuerySnapshotStorageDataset(), getGcsSnapshotStorageLocation(), getConfigSource());
+        return Objects.hash(getCron(), getMethod(), getTimeTravelOffsetDays(), getBigQuerySnapshotExpirationDays(), getBigQuerySnapshotStorageProject(), getBigQuerySnapshotStorageDataset(), getGcsSnapshotStorageLocation(), getConfigSource(), getLastBackupAt());
     }
 
     public static BackupPolicy fromJson(String jsonStr) {

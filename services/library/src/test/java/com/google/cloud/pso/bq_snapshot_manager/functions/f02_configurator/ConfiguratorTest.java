@@ -1,10 +1,14 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import org.junit.Test;
+import org.springframework.scheduling.support.CronExpression;
 
+import java.time.Instant;
+import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -22,7 +26,8 @@ public class ConfiguratorTest {
             "project",
             "dataset",
             "gs://bla/",
-            BackupConfigSource.SYSTEM
+            BackupConfigSource.SYSTEM,
+            Timestamp.MIN_VALUE
     );
 
     FallbackBackupPolicy fallbackBackupPolicy = new FallbackBackupPolicy(
@@ -82,5 +87,31 @@ public class ConfiguratorTest {
 
         assertEquals("global", defaultLevel.x());
         assertEquals(testPolicy, defaultLevel.y());
+    }
+
+    @Test
+    public void testTakeBackup() {
+
+        Tuple<Boolean, LocalDateTime> testFalse = Configurator.takeBackup(
+                "0 0 13 * * *", // daily at 1 PM
+                Timestamp.parseTimestamp("2022-10-06T14:00:00Z"), // last backup
+                Timestamp.parseTimestamp("2022-10-07T12:00:00Z") // now
+        );
+
+        Tuple<Boolean, LocalDateTime> testTrue = Configurator.takeBackup(
+                "0 0 13 * * *", // daily at 1 PM
+                Timestamp.parseTimestamp("2022-10-06T14:00:00Z"), // last backup
+                Timestamp.parseTimestamp("2022-10-07T14:00:00Z") // now
+        );
+
+        assertEquals(false, testFalse.x());
+        assertEquals(
+                LocalDateTime.of(2022,10,7,13,0)
+                , testFalse.y());
+
+        assertEquals(true, testTrue.x());
+        assertEquals(
+                LocalDateTime.of(2022,10,7,13,0)
+                , testFalse.y());
     }
 }

@@ -9,4 +9,5 @@ public enum DataCatalogBackupPolicyTagFields {
     bq_snapshot_storage_project,
     gcs_snapshot_storage_location,
     config_source,
+    last_backup_at
 }

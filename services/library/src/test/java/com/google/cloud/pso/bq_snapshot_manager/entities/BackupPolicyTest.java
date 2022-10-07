@@ -1,5 +1,6 @@
 package com.google.cloud.pso.bq_snapshot_manager.entities;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
@@ -21,7 +22,8 @@ public class BackupPolicyTest {
                 "    \"bq_snapshot_storage_project\": \"project\",\n" +
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\"\n" +
+                "    \"config_source\": \"SYSTEM\",\n" +
+                "    \"last_backup_at\": \"\"\n" +
                 "  }";
 
         BackupPolicy expected = new BackupPolicy(
@@ -32,7 +34,8 @@ public class BackupPolicyTest {
                 "project",
                 "dataset",
                 "gs://bla/",
-                BackupConfigSource.SYSTEM
+                BackupConfigSource.SYSTEM,
+                Timestamp.MIN_VALUE
         );
 
         BackupPolicy actual = BackupPolicy.fromJson(jsonPolicyStr);
