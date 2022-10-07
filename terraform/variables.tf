@@ -349,7 +349,22 @@ variable "scheduler" {
 }
 
 variable "snapshot_policy" {
-  type = string
+  type = object({
+    default_policy = object({
+      backup_cron = string,
+      backup_method = string,
+      backup_time_travel_offset_days = string,
+      bq_snapshot_expiration_days = string,
+      bq_snapshot_storage_project = string,
+      bq_snapshot_storage_dataset = string,
+      gcs_snapshot_storage_location = string,
+      config_source = string
+    }),
+    folder_overrides = map(map(string)),
+    project_overrides = map(map(string)),
+    dataset_overrides = map(map(string)),
+    table_overrides = map(map(string)),
+  })
 }
 
 

@@ -33,13 +33,13 @@ public class Snapshoter {
 
     private final LoggingHelper logger;
 
-    private Integer functionNumber;
+    private final Integer functionNumber;
 
-    private SnapshoterConfig config;
-    private BigQueryService bqService;
-    private PubSubService pubSubService;
-    private PersistentSet persistentSet;
-    private String persistentSetObjectPrefix;
+    private final SnapshoterConfig config;
+    private final BigQueryService bqService;
+    private final PubSubService pubSubService;
+    private final PersistentSet persistentSet;
+    private final String persistentSetObjectPrefix;
 
 
     public Snapshoter(SnapshoterConfig config,

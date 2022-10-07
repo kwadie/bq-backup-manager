@@ -1,16 +1,31 @@
-# https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/data_catalog_policy_tag
+# https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/data_catalog_tag_template
 
 ### Create Tag Template
 
 resource "google_data_catalog_tag_template" "snapshot_tag_template" {
-  tag_template_id = "bq_snapshot_manager_template"
+  tag_template_id = "bq_backup_manager_template"
   project = var.project
   region = var.region
-  display_name = "BigQuery Snapshot Manager"
+  display_name = "BigQuery Backup Manager"
 
   fields {
-    field_id = "latest_snapshot_timestamp"
-    display_name = "Timestamp of the latest snapshot taken"
+    field_id = "config_source"
+    display_name = "Configuration Source"
+    type {
+      enum_type {
+        allowed_values {
+          display_name = "MANUAL"
+        }
+        allowed_values {
+          display_name = "SYSTEM"
+        }
+      }
+    }
+  }
+
+  fields {
+    field_id = "backup_cron"
+    display_name = "Cron expression for backup frequency"
     type {
       primitive_type = "STRING"
     }
@@ -18,39 +33,101 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   }
 
   fields {
-    field_id = "latest_snapshot_time"
-    display_name = "Datetime of the latest snapshot taken"
+    field_id = "last_backup_at"
+    display_name = "Timestamp of the latest backup taken"
     type {
       primitive_type = "TIMESTAMP"
     }
-    is_required = true
+    is_required = false
   }
 
   fields {
-    field_id = "latest_snapshot_id"
-    display_name = "BigQuery table ID of the snapshot"
+    field_id = "backup_time_travel_offset_days"
+    display_name = "Number of days in the past where the backup is taken relative to NOW"
     type {
-      primitive_type = "STRING"
+      enum_type {
+        allowed_values {
+          display_name = "0"
+        }
+        allowed_values {
+          display_name = "1"
+        }
+        allowed_values {
+          display_name = "2"
+        }
+        allowed_values {
+          display_name = "3"
+        }
+        allowed_values {
+          display_name = "4"
+        }
+        allowed_values {
+          display_name = "5"
+        }
+        allowed_values {
+          display_name = "6"
+        }
+        allowed_values {
+          display_name = "7"
+        }
+      }
     }
     is_required = true
   }
 
   fields {
-    field_id = "latest_snapshot_run_tracking_id"
-    display_name = "Tracking ID of the BigQuery Snapshot Manager solution that took the snapshot"
+    field_id = "backup_method"
+    display_name = "How to backup this table"
     type {
-      primitive_type = "STRING"
+      enum_type {
+        allowed_values {
+          display_name = "BigQuery Snapshot"
+        }
+        allowed_values {
+          display_name = "GCS Snapshot"
+        }
+        allowed_values {
+          display_name = "Both"
+        }
+      }
     }
     is_required = true
   }
 
   fields {
-    field_id = "last_known_snapshot_cron"
-    display_name = "Last known snapshot frequency as a cron expression"
+    field_id = "bq_snapshot_storage_project"
+    display_name = "GCP project where the BigQuery snapshot is saved"
     type {
       primitive_type = "STRING"
     }
-    is_required = true
+    is_required = false
+  }
+
+  fields {
+    field_id = "bq_snapshot_storage_dataset"
+    display_name = "Dataset where the BigQuery snapshot is saved"
+    type {
+      primitive_type = "STRING"
+    }
+    is_required = false
+  }
+
+  fields {
+    field_id = "bq_snapshot_expiration_days"
+    display_name = "BigQuery snapshot retention period in days"
+    type {
+      primitive_type = "DOUBLE"
+    }
+    is_required = false
+  }
+
+  fields {
+    field_id = "gcs_snapshot_storage_location"
+    display_name = "GCS path to store table snapshots"
+    type {
+      primitive_type = "STRING"
+    }
+    is_required = false
   }
 
   force_delete = "true"

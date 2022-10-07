@@ -21,10 +21,22 @@ do
 
   echo "Preparing data project ${project} .."
 
+  # Dispatcher permissions
   # Dispatcher needs to list datasets and tables in a project and know the location of datasets
   gcloud projects add-iam-policy-binding "${project}" \
       --member="serviceAccount:${SA_DISPATCHER_EMAIL}" \
      --role="roles/bigquery.metadataViewer"
+
+  # Configurator permissions
+  gcloud projects add-iam-policy-binding "${project}" \
+    --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
+    --role="roles/bigquery.metadataViewer"
+
+  gcloud projects add-iam-policy-binding "${project}" \
+    --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
+    --role="roles/datacatalog.viewer"
+
+
 
   #TODO Add roles for Snapshoter
 

@@ -1,4 +1,4 @@
-package com.google.cloud.pso.bq_snapshot_manager.functions.entities;
+package com.google.cloud.pso.bq_snapshot_manager.entities;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import org.junit.Test;

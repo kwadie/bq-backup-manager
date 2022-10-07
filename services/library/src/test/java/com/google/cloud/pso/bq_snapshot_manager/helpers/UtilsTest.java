@@ -14,17 +14,55 @@
  * limitations under the License.
  */
 
-package com.google.cloud.pso.bq_snapshot_manager.functions.helpers;
+package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
-import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
+import com.google.cloud.datacatalog.v1.TagField;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
 import org.junit.Test;
 import org.springframework.scheduling.support.CronExpression;
 
+import java.io.IOException;
 import java.time.LocalDateTime;
+import java.util.HashMap;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
 public class UtilsTest {
+
+    @Test
+    public void testParseBackupTagTemplateMap() throws IOException, IllegalArgumentException {
+
+        Map<String, String> tagMap = new HashMap<>();
+
+        tagMap.put("backup_cron","test-cron");
+        tagMap.put("backup_method","BigQuery Snapshot");
+        tagMap.put("config_source","System");
+        tagMap.put("backup_time_travel_offset_days","0");
+        tagMap.put("bq_snapshot_storage_project","test-project");
+        tagMap.put("bq_snapshot_storage_dataset","test-dataset");
+        tagMap.put("bq_snapshot_expiration_days","0.0");
+        tagMap.put("gcs_snapshot_storage_location","test-bucket");
+
+        BackupPolicy expected = new BackupPolicy(
+                "test-cron",
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_0,
+                0.0,
+                "test-project",
+                "test-dataset",
+                "test-bucket",
+                BackupConfigSource.SYSTEM
+        );
+
+        BackupPolicy actual = Utils.parseBackupTagTemplateMap(tagMap);
+
+        assertEquals(expected,actual);
+    }
 
     @Test
     public void extractTaxonomyIdFromPolicyTagId() {

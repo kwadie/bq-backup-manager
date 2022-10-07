@@ -15,6 +15,7 @@
  */
 package com.google.cloud.pso.bq_snapshot_manager.configurator;
 
+import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.ConfiguratorConfig;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterConfig;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 
@@ -22,18 +23,16 @@ public class Environment {
 
 
 
-    public SnapshoterConfig toConfig (){
+    public ConfiguratorConfig toConfig (){
 
-        return new SnapshoterConfig(
+        return new ConfiguratorConfig(
                 getProjectId(),
-                getComputeRegionId(),
-                getDataRegionId(),
-                getSnapshotPolicyJson(),
-                getIsDryRun(),
-                getOutputTopic()
+                getBackupPolicyJson(),
+                getBqSnapshoterOutputTopic(),
+                getGCSSnapshoterOutputTopic(),
+                getBackupTagTemplateId()
         );
     }
-
 
     public String getProjectId(){
         return Utils.getConfigFromEnv("PROJECT_ID", true);
@@ -47,15 +46,19 @@ public class Environment {
         return Utils.getConfigFromEnv("DATA_REGION_ID", true);
     }
 
-    public String getSnapshotPolicyJson(){
-        return Utils.getConfigFromEnv("SNAPSHOT_POLICY_JSON", true);
+    public String getBackupPolicyJson(){
+        return Utils.getConfigFromEnv("BACKUP_POLICY_JSON", true);
     }
 
     public Boolean getIsDryRun(){
         return Boolean.valueOf(Utils.getConfigFromEnv("IS_DRY_RUN", true));
     }
 
-    public String getOutputTopic() { return Utils.getConfigFromEnv("OUTPUT_TOPIC", true); }
+    public String getBqSnapshoterOutputTopic() { return Utils.getConfigFromEnv("SNAPSHOTER_BQ_OUTPUT_TOPIC", true); }
+
+    public String getGCSSnapshoterOutputTopic() { return Utils.getConfigFromEnv("SNAPSHOTER_GCS_OUTPUT_TOPIC", true); }
+
+    public String getBackupTagTemplateId() { return Utils.getConfigFromEnv("BACKUP_TAG_TEMPLATE_ID", true); }
 
     public String getGcsFlagsBucket(){
         return Utils.getConfigFromEnv("GCS_FLAGS_BUCKET", true);

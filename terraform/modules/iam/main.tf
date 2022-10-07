@@ -82,7 +82,12 @@ resource "google_service_account_iam_member" "sa_dispatcher_account_user_sa_disp
 #### Dispatcher SA Permissions ###
 
 #### Configurator SA Permissions ###
-# TODO: add relevant Configurator permissions
+
+resource "google_project_iam_member" "sa_configurator_datacatalog_viewer" {
+  project = var.project
+  role    = "roles/datacatalog.viewer"
+  member  = "serviceAccount:${google_service_account.sa_configurator.email}"
+}
 
 #### Configurator Tasks SA Permissions ###
 resource "google_service_account_iam_member" "sa_configurator_account_user_sa_configurator_tasks" {

@@ -16,6 +16,8 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
+import com.google.cloud.datacatalog.v1.TagField;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.gson.Gson;
 import com.google.gson.JsonArray;
 import com.google.gson.JsonObject;
@@ -24,9 +26,61 @@ import com.google.gson.reflect.TypeToken;
 import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 public class Utils {
+
+    private static String getOrFail(Map<String, String> map, String key) {
+        String field = map.get(key);
+        if (field == null) {
+            throw new IllegalArgumentException(String.format(
+                    "Key '%s' is not found in Map.",
+                    key
+            ));
+        } else {
+            return field;
+        }
+    }
+
+    public static BackupPolicy parseBackupTagTemplateMap(Map<String, String> tagTemplate) throws IllegalArgumentException {
+
+        // parse common settings
+        String cron = getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_cron.toString());
+
+        BackupMethod method = BackupMethod.fromString(
+                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_method.toString())
+        );
+
+        BackupConfigSource configSource = BackupConfigSource.fromString(
+                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.config_source.toString())
+        );
+
+        TimeTravelOffsetDays timeTravelOffsetDays = TimeTravelOffsetDays.fromString(
+                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days.toString())
+        );
+
+        // parse BQ snapshot settings
+        String bqSnapshotStorageProject = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project.toString());
+        String bqSnapshotStorageDataset = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString());
+        String bqSnapshotExpirationDays = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString());
+        String gcsSnapshotStorageLocation = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString());
+
+        return new BackupPolicy(
+                cron,
+                method,
+                timeTravelOffsetDays,
+                Double.valueOf(bqSnapshotExpirationDays),
+                bqSnapshotStorageProject,
+                bqSnapshotStorageDataset,
+                gcsSnapshotStorageLocation,
+                configSource
+        );
+    }
 
     public static List<String> tokenize(String input, String delimiter, boolean required) {
         List<String> output = new ArrayList<>();
