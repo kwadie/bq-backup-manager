@@ -43,6 +43,7 @@ snapshot_policy = {
     "bq_snapshot_storage_project": "project",
     "bq_snapshot_storage_dataset": "dataset",
     "gcs_snapshot_storage_location": "gs://bla/",
+    "gcs_snapshot_format": "",
     "config_source": "SYSTEM",
     "last_backup_at": ""
   },
@@ -55,6 +56,7 @@ snapshot_policy = {
       "bq_snapshot_storage_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
+      "gcs_snapshot_format": "",
       "config_source": "SYSTEM",
       "last_backup_at": ""
     },
@@ -68,6 +70,7 @@ snapshot_policy = {
       "bq_snapshot_storage_project": "bqsm-data-1",
       "bq_snapshot_storage_dataset": "backup",
       "gcs_snapshot_storage_location": "",
+      "gcs_snapshot_format": "",
       "config_source": "SYSTEM",
       "last_backup_at": ""
     }
@@ -81,6 +84,7 @@ snapshot_policy = {
       "bq_snapshot_storage_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
+      "gcs_snapshot_format": "",
       "config_source": "SYSTEM",
       "last_backup_at": ""
     },
@@ -92,6 +96,7 @@ snapshot_policy = {
       "bq_snapshot_storage_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
+      "gcs_snapshot_format": "",
       "config_source": "SYSTEM",
       "last_backup_at": ""
     }
@@ -105,6 +110,7 @@ snapshot_policy = {
       "bq_snapshot_storage_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
+      "gcs_snapshot_format": "",
       "config_source": "SYSTEM",
       "last_backup_at": ""
     },
@@ -116,6 +122,7 @@ snapshot_policy = {
       "bq_snapshot_storage_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
+      "gcs_snapshot_format": "",
       "config_source": "SYSTEM",
       "last_backup_at": ""
     }

@@ -17,7 +17,12 @@
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
 import com.google.cloud.Timestamp;
+import com.google.cloud.pso.bq_snapshot_manager.entities.GCSSnapshotFormat;
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
+import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
+
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -69,8 +74,14 @@ public class Utils {
                 DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString());
         String bqSnapshotExpirationDays = getOrFail(tagTemplate,
                 DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString());
+
+        // parse GCS snapshot settings
         String gcsSnapshotStorageLocation = getOrFail(tagTemplate,
                 DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString());
+
+        String gcsSnapshotFormatStr = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.gcs_snapshot_format.toString());
+        GCSSnapshotFormat gcsSnapshotFormat = gcsSnapshotFormatStr.isEmpty() ? null : GCSSnapshotFormat.valueOf(gcsSnapshotFormatStr);
 
         return new BackupPolicy(
                 cron,
@@ -80,6 +91,7 @@ public class Utils {
                 bqSnapshotStorageProject,
                 bqSnapshotStorageDataset,
                 gcsSnapshotStorageLocation,
+                gcsSnapshotFormat,
                 configSource,
                 lastBackupAt
         );
@@ -121,5 +133,46 @@ public class Utils {
         }
 
         return value;
+    }
+
+
+    public static void runServiceStartRoutines(LoggingHelper logger,
+                                               TableOperationRequest request,
+                                               PersistentSet persistentSet,
+                                               String persistentSetObjectPrefix,
+                                               String pubSubMessageId
+                                               ) throws NonRetryableApplicationException {
+        logger.logFunctionStart(request.getTrackingId());
+        logger.logInfoWithTracker(request.getTrackingId(),
+                String.format("Request : %s", request.toString()));
+
+        /**
+         *  Check if we already processed this pubSubMessageId before to avoid submitting API requests
+         *  in case we have unexpected errors with PubSub re-sending the message. This is an extra measure to avoid unnecessary cost.
+         *  We do that by keeping simple flag files in GCS with the pubSubMessageId as file name.
+         */
+        String flagFileName = String.format("%s/%s", persistentSetObjectPrefix, pubSubMessageId);
+        if (persistentSet.contains(flagFileName)) {
+            // log error and ACK and return
+            String msg = String.format("PubSub message ID '%s' has been processed before by the service. The message should be ACK to PubSub to stop retries. Please investigate further why the message was retried in the first place.",
+                    pubSubMessageId
+            );
+            throw new NonRetryableApplicationException(msg);
+        }
+    }
+
+    public static void runServiceEndRoutines(LoggingHelper logger,
+                                            TableOperationRequest request,
+                                            PersistentSet persistentSet,
+                                            String persistentSetObjectPrefix,
+                                            String pubSubMessageId){
+        // Add a flag key marking that we already completed this request and no additional runs
+        // are required in case PubSub is in a loop of retrying due to ACK timeout while the service has already processed the request
+        // This is an extra measure to avoid unnecessary cost due to config issues.
+        String flagFileName = String.format("%s/%s", persistentSetObjectPrefix, pubSubMessageId);
+        logger.logInfoWithTracker(request.getTrackingId(), String.format("Persisting processing key for PubSub message ID %s", pubSubMessageId));
+        persistentSet.add(flagFileName);
+
+        logger.logFunctionEnd(request.getTrackingId());
     }
 }

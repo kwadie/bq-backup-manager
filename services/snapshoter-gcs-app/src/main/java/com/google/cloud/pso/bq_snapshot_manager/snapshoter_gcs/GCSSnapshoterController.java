@@ -18,7 +18,7 @@ package com.google.cloud.pso.bq_snapshot_manager.snapshoter_gcs;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.gson.Gson;
@@ -73,7 +73,7 @@ public class GCSSnapshoterController {
 
             logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
 
-            SnapshoterRequest operation = gson.fromJson(requestJsonString, SnapshoterRequest.class);
+            BigQuerySnapshoterRequest operation = gson.fromJson(requestJsonString, BigQuerySnapshoterRequest.class);
 
             trackingId = operation.getTrackingId();
 

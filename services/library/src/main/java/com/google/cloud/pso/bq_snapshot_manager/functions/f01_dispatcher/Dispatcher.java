@@ -109,7 +109,7 @@ public class Dispatcher {
                             dispatcherRequest.isForceRun(),
                             tableSpec,
                             runId,
-                            TrackingHelper.generateTrackingId(runId, tableSpec.toSqlString()))
+                            TrackingHelper.generateTrackingId(runId))
             );
         }
 

@@ -49,6 +49,7 @@ public class UtilsTest {
         tagMap.put("bq_snapshot_storage_dataset","test-dataset");
         tagMap.put("bq_snapshot_expiration_days","0.0");
         tagMap.put("gcs_snapshot_storage_location","test-bucket");
+        tagMap.put("gcs_snapshot_format","");
         tagMap.put("last_backup_at","");
 
         BackupPolicy expected = new BackupPolicy(
@@ -59,6 +60,7 @@ public class UtilsTest {
                 "test-project",
                 "test-dataset",
                 "test-bucket",
+                null,
                 BackupConfigSource.SYSTEM,
                 Timestamp.MIN_VALUE
         );

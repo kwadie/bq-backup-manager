@@ -62,7 +62,7 @@ public class DispatcherController {
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
-        String runId = TrackingHelper.generateInspectionRunId();
+        String runId = TrackingHelper.generateHeartBeatRunId();
         String state = "";
 
         try {

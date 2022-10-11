@@ -16,52 +16,41 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
+import com.google.cloud.Timestamp;
+
 import java.util.UUID;
 
 public class TrackingHelper {
 
-    private static final String taggingRunSuffix = "-T";
-    private static final String inspectionRunSuffix = "-I";
-    private static final String oneTimeTaggingSuffix = "-A";
+    private static final String heartBeatRunSuffix = "-H";
     private static final Integer suffixLength = 2;
 
-    public static String generateTaggingRunId(){
-        return generateRunId(taggingRunSuffix);
-    }
-
-    public static String generateInspectionRunId(){
-        return generateRunId(inspectionRunSuffix);
-    }
-
-    public static String generateOneTimeTaggingSuffix(){
-        return generateRunId(oneTimeTaggingSuffix);
+    public static String generateHeartBeatRunId(){
+        return generateRunId(heartBeatRunSuffix);
     }
 
     private static String generateRunId(String suffix){
         return String.format("%s%s", System.currentTimeMillis(), suffix);
     }
 
-    public static String parseRunIdAsPrefix(String str){
+    public static String parseRunIdAsPrefix(String runId){
         // currentTimeMillis() will always be 13 chars between Sep 9 2001 at 01:46:40.000 UTC and Nov 20 2286 at 17:46:39.999 UTC
-        return str.substring(0, (13 + suffixLength));
+        return runId.substring(0, (13 + suffixLength));
     }
 
-    public static String generateTrackingId (String runId, String table){
+    public static Long parseRunIdAsMilliSeconds(String runId){
+        // currentTimeMillis() will always be 13 chars between Sep 9 2001 at 01:46:40.000 UTC and Nov 20 2286 at 17:46:39.999 UTC
+        return Long.valueOf(runId.substring(0, 13));
+    }
 
-        // using UUIDs only resulted in unexpected collisions in some runs.
-        // adding table name hash for extra "randomness"
+    public static Timestamp parseRunIdAsTimestamp(String runId){
+        return Timestamp.ofTimeSecondsAndNanos(
+                parseRunIdAsMilliSeconds(runId)/1000,
+                0
+        );
+    }
 
+    public static String generateTrackingId (String runId){
         return String.format("%s-%s", runId, UUID.randomUUID().toString());
     }
-
-    /**
-     *
-     * @param jobName Dlp Job name in format projects/locations/dlpJobs/i-<tracking-number>
-     * @return tracking-number part
-     */
-    public static String extractTrackingIdFromJobName(String jobName){
-        String [] splits = jobName.split("/");
-        return  splits[splits.length-1].substring(2);
-    }
-
 }

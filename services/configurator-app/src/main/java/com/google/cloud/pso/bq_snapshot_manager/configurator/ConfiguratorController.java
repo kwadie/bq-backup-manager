@@ -25,6 +25,7 @@ import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelpe
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
@@ -63,6 +64,10 @@ public class ConfiguratorController {
                 trackingId,
                 "Will try to parse fallback backup policy.."
         );
+
+        // initializing in the constructor to fail the Cloud Run deployment
+        // if the parsing failed. This is to avoid running the
+        // solution silently with invalid cofiguration
         fallbackBackupPolicy = FallbackBackupPolicy.fromJson(environment.getBackupPolicyJson());
 
         logger.logInfoWithTracker(
@@ -103,13 +108,12 @@ public class ConfiguratorController {
             Configurator configurator = new Configurator(
                     environment.toConfig(),
                     dataCatalogService,
+                    new PubSubServiceImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
-                    FallbackBackupPolicy.fromJson(environment.getBackupPolicyJson()),
+                    fallbackBackupPolicy,
                     "configurator-flags",
                     functionNumber
             );
-
-            logger.logInfoWithTracker(trackingId, String.format("Config is parsed and will execute"));
 
             configurator.execute(configuratorRequest, requestBody.getMessage().getMessageId());
 

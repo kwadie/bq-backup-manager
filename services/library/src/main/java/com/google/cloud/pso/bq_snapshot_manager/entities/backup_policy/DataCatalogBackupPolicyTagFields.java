@@ -8,6 +8,7 @@ public enum DataCatalogBackupPolicyTagFields {
     bq_snapshot_storage_dataset,
     bq_snapshot_storage_project,
     gcs_snapshot_storage_location,
+    gcs_snapshot_format,
     config_source,
     last_backup_at
 }

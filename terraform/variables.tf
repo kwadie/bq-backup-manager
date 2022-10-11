@@ -358,7 +358,9 @@ variable "snapshot_policy" {
       bq_snapshot_storage_project = string,
       bq_snapshot_storage_dataset = string,
       gcs_snapshot_storage_location = string,
+      gcs_snapshot_format: string,
       config_source = string
+      last_backup_at = string
     }),
     folder_overrides = map(map(string)),
     project_overrides = map(map(string)),

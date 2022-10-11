@@ -130,5 +130,46 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
     is_required = false
   }
 
-  force_delete = "true"
+  fields {
+    field_id = "gcs_snapshot_format"
+    display_name = "Export format and compression"
+    type {
+      enum_type {
+        allowed_values {
+          display_name = "CSV"
+        }
+        allowed_values {
+          display_name = "CSV_GZIP"
+        }
+        allowed_values {
+          display_name = "JSON"
+        }
+        allowed_values {
+          display_name = "JSON_GZIP"
+        }
+        allowed_values {
+          display_name = "AVRO"
+        }
+        allowed_values {
+          display_name = "AVRO_DEFLATE"
+        }
+        allowed_values {
+          display_name = "AVRO_SNAPPY"
+        }
+        allowed_values {
+          display_name = "PARQUET"
+        }
+        allowed_values {
+          display_name = "PARQUET_SNAPPY"
+        }
+        allowed_values {
+          display_name = "PARQUET_GZIP"
+        }
+      }
+    }
+    is_required = false
+  }
+
+  // deleting the tag template will delete all configs attached to tables
+  force_delete = false
 }

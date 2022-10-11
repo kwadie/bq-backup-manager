@@ -22,6 +22,7 @@ public class BackupPolicyTest {
                 "    \"bq_snapshot_storage_project\": \"project\",\n" +
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
+                "    \"gcs_snapshot_format\": \"AVRO\",\n" +
                 "    \"config_source\": \"SYSTEM\",\n" +
                 "    \"last_backup_at\": \"\"\n" +
                 "  }";
@@ -34,6 +35,7 @@ public class BackupPolicyTest {
                 "project",
                 "dataset",
                 "gs://bla/",
+                GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
                 Timestamp.MIN_VALUE
         );
@@ -54,6 +56,7 @@ public class BackupPolicyTest {
                 "    \"bq_snapshot_storage_project\": \"project\",\n" +
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
+                "    \"gcs_snapshot_format\": \"\",\n" +
                 "    \"config_source\": \"SYSTEM\"\n" +
                 "  }";
 

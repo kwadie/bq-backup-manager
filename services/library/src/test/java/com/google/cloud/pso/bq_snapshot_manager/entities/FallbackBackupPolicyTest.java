@@ -28,6 +28,7 @@ public class FallbackBackupPolicyTest {
                 "    \"bq_snapshot_storage_project\": \"project\",\n" +
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
+                "    \"gcs_snapshot_format\": \"\",\n" +
                 "    \"config_source\": \"SYSTEM\",\n" +
                 "    \"last_backup_at\": \"\"\n" +
                 "  },\n" +
@@ -40,8 +41,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"folder2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -51,8 +53,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  },\n" +
                 "  \"project_overrides\": {\n" +
@@ -64,8 +67,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"project2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -75,8 +79,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  },\n" +
                 "  \"dataset_overrides\": {\n" +
@@ -88,8 +93,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"dataset2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -99,8 +105,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  },\n" +
                 "  \"table_overrides\": {\n" +
@@ -112,8 +119,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    },\n" +
                 "    \"table2\": {\n" +
                 "      \"backup_cron\": \"*****\",\n" +
@@ -123,8 +131,9 @@ public class FallbackBackupPolicyTest {
                 "      \"bq_snapshot_storage_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "      \"gcs_snapshot_format\": \"\",\n" +
+                "      \"config_source\": \"SYSTEM\",\n" +
+                "      \"last_backup_at\": \"\"\n" +
                 "    }\n" +
                 "  }\n" +
                 "}";
@@ -137,6 +146,7 @@ public class FallbackBackupPolicyTest {
                 "project",
                 "dataset",
                 "gs://bla/",
+                null,
                 BackupConfigSource.SYSTEM,
                 Timestamp.MIN_VALUE
         );

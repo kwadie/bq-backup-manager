@@ -27,7 +27,6 @@ public class Environment {
 
         return new ConfiguratorConfig(
                 getProjectId(),
-                getBackupPolicyJson(),
                 getBqSnapshoterOutputTopic(),
                 getGCSSnapshoterOutputTopic(),
                 getBackupTagTemplateId()
@@ -48,10 +47,6 @@ public class Environment {
 
     public String getBackupPolicyJson(){
         return Utils.getConfigFromEnv("BACKUP_POLICY_JSON", true);
-    }
-
-    public Boolean getIsDryRun(){
-        return Boolean.valueOf(Utils.getConfigFromEnv("IS_DRY_RUN", true));
     }
 
     public String getBqSnapshoterOutputTopic() { return Utils.getConfigFromEnv("SNAPSHOTER_BQ_OUTPUT_TOPIC", true); }
