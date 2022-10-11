@@ -18,7 +18,6 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
 public class SnapshoterConfig {
 
-
     private String projectId;
     private String computeRegionId;
     private String dataRegionId;

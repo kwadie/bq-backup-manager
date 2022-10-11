@@ -166,8 +166,12 @@ module "cloud-run-configurator" {
       value = module.pubsub-snapshoter-gcs.topic-name,
     },
     {
-      name = "SNAPSHOT_POLICY_JSON",
+      name = "BACKUP_POLICY_JSON",
       value = jsonencode(var.snapshot_policy)
+    },
+    {
+      name = "BACKUP_TAG_TEMPLATE_ID",
+      value = module.data-catalog.tag_template_id
     }
   ]
   )

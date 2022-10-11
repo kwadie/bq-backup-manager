@@ -41,5 +41,5 @@ public interface BigQueryService {
 
     boolean tableExists(TableSpec tableSpec);
 
-    Job createSnapshot(TableId sourceTable, TableId destinationId, Integer snapshotExpirationMs);
+    Job createSnapshot(TableId sourceTable, TableId destinationId, Long snapshotExpirationMs);
 }

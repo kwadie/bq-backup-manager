@@ -66,14 +66,6 @@ public class LoggingHelper {
         logWithTracker(log, tracker, msg, level, new Object[]{});
     }
 
-    // used by Tagging Dispatcher
-    public void logSuccessDispatcherTrackingId(String trackingId, String dispatchedTrackingId) {
-        logSuccessDispatcherTrackingId(trackingId,
-                dispatchedTrackingId,
-                new TableSpec("NA","NA","NA")
-        );
-    }
-
     public void logSuccessDispatcherTrackingId(String trackingId, String dispatchedTrackingId, TableSpec tableSpec) {
 
         Object [] attributes = new Object[]{
@@ -87,7 +79,7 @@ public class LoggingHelper {
         logWithTracker(
                 ApplicationLog.DISPATCHED_REQUESTS_LOG,
                 trackingId,
-                String.format("Dispatched tagging request with trackindId `%s`", dispatchedTrackingId),
+                String.format("Dispatched request with trackindId `%s`", dispatchedTrackingId),
                 Level.INFO,
                 attributes
         );

@@ -129,7 +129,7 @@ public class BigQueryServiceImpl implements BigQueryService {
         return bqAPIWrapper.getTable(tableSpec.toTableId()) != null;
     }
 
-    CopyJobConfiguration getCopyJobConfiguration(TableId sourceTable, TableId destinationId, Integer snapshotExpirationMs) {
+    private CopyJobConfiguration getCopyJobConfiguration(TableId sourceTable, TableId destinationId, Long snapshotExpirationMs) {
         JobInfo.WriteDisposition writeDisposition = JobInfo.WriteDisposition.WRITE_EMPTY;
         CopyJobConfiguration copyJobConfiguration =
                 CopyJobConfiguration.newBuilder(destinationId, sourceTable)
@@ -139,7 +139,8 @@ public class BigQueryServiceImpl implements BigQueryService {
                         .build();
         return copyJobConfiguration;
     }
-    public Job createSnapshot(TableId sourceTable, TableId destinationId, Integer snapshotExpirationMs) {
+
+    public Job createSnapshot(TableId sourceTable, TableId destinationId, Long snapshotExpirationMs) {
         CopyJobConfiguration copyJobConfiguration = getCopyJobConfiguration(sourceTable, destinationId, snapshotExpirationMs);
         JobId jobId = JobId.of(UUID.randomUUID().toString());
         return bqAPIWrapper.create(JobInfo.newBuilder(copyJobConfiguration).setJobId(jobId).build());

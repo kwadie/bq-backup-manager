@@ -16,17 +16,86 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
-import com.google.gson.Gson;
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.reflect.TypeToken;
+import com.google.cloud.Timestamp;
+import com.google.cloud.pso.bq_snapshot_manager.entities.GCSSnapshotFormat;
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
+import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 
-import java.lang.reflect.Type;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Map;
 import java.util.StringTokenizer;
 
 public class Utils {
+
+    private static String getOrFail(Map<String, String> map, String key) {
+        String field = map.get(key);
+        if (field == null) {
+            throw new IllegalArgumentException(String.format(
+                    "Key '%s' is not found in Map.",
+                    key
+            ));
+        } else {
+            return field;
+        }
+    }
+
+    public static BackupPolicy parseBackupTagTemplateMap(Map<String, String> tagTemplate) throws IllegalArgumentException {
+
+        // parse common settings
+        String cron = getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_cron.toString());
+
+        BackupMethod method = BackupMethod.fromString(
+                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_method.toString())
+        );
+
+        BackupConfigSource configSource = BackupConfigSource.fromString(
+                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.config_source.toString())
+        );
+
+        TimeTravelOffsetDays timeTravelOffsetDays = TimeTravelOffsetDays.fromString(
+                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days.toString())
+        );
+
+        String lastBackupAtStr = getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.last_backup_at.toString());
+        Timestamp lastBackupAt;
+        if(lastBackupAtStr.isEmpty()){
+            lastBackupAt = Timestamp.MIN_VALUE;
+        }else{
+            lastBackupAt = Timestamp.parseTimestamp (lastBackupAtStr);
+        }
+
+        // parse BQ snapshot settings
+        String bqSnapshotStorageProject = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project.toString());
+        String bqSnapshotStorageDataset = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString());
+        String bqSnapshotExpirationDays = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString());
+
+        // parse GCS snapshot settings
+        String gcsSnapshotStorageLocation = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString());
+
+        String gcsSnapshotFormatStr = getOrFail(tagTemplate,
+                DataCatalogBackupPolicyTagFields.gcs_snapshot_format.toString());
+        GCSSnapshotFormat gcsSnapshotFormat = gcsSnapshotFormatStr.isEmpty() ? null : GCSSnapshotFormat.valueOf(gcsSnapshotFormatStr);
+
+        return new BackupPolicy(
+                cron,
+                method,
+                timeTravelOffsetDays,
+                Double.valueOf(bqSnapshotExpirationDays),
+                bqSnapshotStorageProject,
+                bqSnapshotStorageDataset,
+                gcsSnapshotStorageLocation,
+                gcsSnapshotFormat,
+                configSource,
+                lastBackupAt
+        );
+    }
 
     public static List<String> tokenize(String input, String delimiter, boolean required) {
         List<String> output = new ArrayList<>();
@@ -66,54 +135,44 @@ public class Utils {
         return value;
     }
 
-    /**
-     *
-     * @param policyTagId e.g. projects/<project>/locations/<location>/taxonomies/<taxonomyID>/policyTags/<policyTagID
-     * @return e.g. projects/<project>/locations/<location>/taxonomies/<taxonomyID>
-     */
-    public static String extractTaxonomyIdFromPolicyTagId(String policyTagId){
 
-        List<String> tokens = tokenize(policyTagId, "/", true);
-        int taxonomiesIndex = tokens.indexOf("taxonomies");
-        return String.join("/", tokens.subList(0,taxonomiesIndex+2));
+    public static void runServiceStartRoutines(LoggingHelper logger,
+                                               TableOperationRequest request,
+                                               PersistentSet persistentSet,
+                                               String persistentSetObjectPrefix,
+                                               String pubSubMessageId
+                                               ) throws NonRetryableApplicationException {
+        logger.logFunctionStart(request.getTrackingId());
+        logger.logInfoWithTracker(request.getTrackingId(),
+                String.format("Request : %s", request.toString()));
+
+        /**
+         *  Check if we already processed this pubSubMessageId before to avoid submitting API requests
+         *  in case we have unexpected errors with PubSub re-sending the message. This is an extra measure to avoid unnecessary cost.
+         *  We do that by keeping simple flag files in GCS with the pubSubMessageId as file name.
+         */
+        String flagFileName = String.format("%s/%s", persistentSetObjectPrefix, pubSubMessageId);
+        if (persistentSet.contains(flagFileName)) {
+            // log error and ACK and return
+            String msg = String.format("PubSub message ID '%s' has been processed before by the service. The message should be ACK to PubSub to stop retries. Please investigate further why the message was retried in the first place.",
+                    pubSubMessageId
+            );
+            throw new NonRetryableApplicationException(msg);
+        }
     }
 
-    public static String getArgFromJsonParams(JsonObject requestJson, String argName, boolean required) {
+    public static void runServiceEndRoutines(LoggingHelper logger,
+                                            TableOperationRequest request,
+                                            PersistentSet persistentSet,
+                                            String persistentSetObjectPrefix,
+                                            String pubSubMessageId){
+        // Add a flag key marking that we already completed this request and no additional runs
+        // are required in case PubSub is in a loop of retrying due to ACK timeout while the service has already processed the request
+        // This is an extra measure to avoid unnecessary cost due to config issues.
+        String flagFileName = String.format("%s/%s", persistentSetObjectPrefix, pubSubMessageId);
+        logger.logInfoWithTracker(request.getTrackingId(), String.format("Persisting processing key for PubSub message ID %s", pubSubMessageId));
+        persistentSet.add(flagFileName);
 
-        String arg = "";
-
-        // check in Json
-        if (requestJson != null && requestJson.has(argName)) {
-            arg = requestJson.get(argName).getAsString();
-        }
-
-        // validate it exists
-        if(required) {
-            if (arg.isBlank())
-                throw new IllegalArgumentException(String.format("%s is required", argName));
-        }
-
-        return arg;
+        logger.logFunctionEnd(request.getTrackingId());
     }
-
-    public static List<String> getArgFromJsonParamsAsList(JsonObject requestJson, String argName, boolean required) {
-
-        JsonArray  jsonArray = new JsonArray();
-
-        // check in Json
-        if (requestJson != null && requestJson.has(argName)) {
-            jsonArray = requestJson.get(argName).getAsJsonArray();
-        }
-
-        // validate it exists
-        if(required) {
-            if (jsonArray.size() == 0)
-                throw new IllegalArgumentException(String.format("%s is required", argName));
-        }
-
-        Type listType = new TypeToken<List<String>>() {}.getType();
-
-        return new Gson().fromJson(jsonArray, listType);
-    }
-
 }

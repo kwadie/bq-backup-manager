@@ -14,13 +14,11 @@
  * limitations under the License.
  */
 
-package com.google.cloud.pso.bq_snapshot_manager.functions.helpers;
+package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.ResourceExhaustedException;
 import com.google.api.gax.rpc.StatusCode;
-import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
-import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.storage.StorageException;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;

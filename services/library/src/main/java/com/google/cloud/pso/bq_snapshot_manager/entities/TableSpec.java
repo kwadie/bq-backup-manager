@@ -86,4 +86,19 @@ public class TableSpec {
     public int hashCode() {
         return Objects.hash(project, dataset, table);
     }
+
+    public String toDataCatalogLinkedResource(){
+        return String.format(
+                "//bigquery.googleapis.com/projects/%s/datasets/%s/tables/%s",
+                getProject(), getDataset(), getTable());
+    }
+
+    @Override
+    public String toString() {
+        return "TableSpec{" +
+                "project='" + project + '\'' +
+                ", dataset='" + dataset + '\'' +
+                ", table='" + table + '\'' +
+                '}';
+    }
 }

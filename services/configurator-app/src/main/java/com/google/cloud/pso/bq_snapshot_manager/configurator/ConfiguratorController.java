@@ -15,11 +15,18 @@
  */
 package com.google.cloud.pso.bq_snapshot_manager.configurator;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.FallbackBackupPolicy;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.Configurator;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.ConfiguratorRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -39,9 +46,11 @@ public class ConfiguratorController {
     private static final Integer functionNumber = 2;
 
     private Gson gson;
-    Environment environment;
+    private Environment environment;
+    private FallbackBackupPolicy fallbackBackupPolicy;
+    private String trackingId = "0000000000000-z";
 
-    public ConfiguratorController() {
+    public ConfiguratorController() throws JsonProcessingException {
 
         gson = new Gson();
         environment = new Environment();
@@ -50,12 +59,28 @@ public class ConfiguratorController {
                 functionNumber,
                 environment.getProjectId()
         );
+
+        logger.logInfoWithTracker(
+                trackingId,
+                "Will try to parse fallback backup policy.."
+        );
+
+        // initializing in the constructor to fail the Cloud Run deployment
+        // if the parsing failed. This is to avoid running the
+        // solution silently with invalid cofiguration
+        fallbackBackupPolicy = FallbackBackupPolicy.fromJson(environment.getBackupPolicyJson());
+
+        logger.logInfoWithTracker(
+                trackingId,
+                "Successfully parsed fallback backup policy"
+        );
     }
 
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
-        String trackingId = "0000000000000-z";
+
+        DataCatalogServiceImpl dataCatalogService = null;
 
         try {
 
@@ -72,19 +97,35 @@ public class ConfiguratorController {
 
             logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
 
-            ConfiguratorRequest operation = gson.fromJson(requestJsonString, ConfiguratorRequest.class);
+            ConfiguratorRequest configuratorRequest = gson.fromJson(requestJsonString, ConfiguratorRequest.class);
 
-            trackingId = operation.getTrackingId();
+            trackingId = configuratorRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", operation.toString()));
+            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", configuratorRequest.toString()));
 
-            //TODO: create configurator and execute request
+            dataCatalogService = new DataCatalogServiceImpl();
+
+            Configurator configurator = new Configurator(
+                    environment.toConfig(),
+                    dataCatalogService,
+                    new PubSubServiceImpl(),
+                    new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
+                    fallbackBackupPolicy,
+                    "configurator-flags",
+                    functionNumber
+            );
+
+            configurator.execute(configuratorRequest, requestBody.getMessage().getMessageId());
 
             return new ResponseEntity("Process completed successfully.", HttpStatus.OK);
 
         } catch (Exception e) {
             return ControllerExceptionHelper.handleException(e, logger, trackingId);
+        } finally {
 
+            if (dataCatalogService != null) {
+                dataCatalogService.shutdown();
+            }
         }
     }
 
