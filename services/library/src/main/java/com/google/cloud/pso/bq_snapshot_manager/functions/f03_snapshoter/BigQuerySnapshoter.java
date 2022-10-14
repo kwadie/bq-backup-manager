@@ -17,14 +17,20 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
 
-import com.google.cloud.bigquery.TableId;
+import com.google.cloud.Timestamp;
+import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMessage;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.SuccessPubSubMessage;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 
 import java.io.IOException;
@@ -64,77 +70,159 @@ public class BigQuerySnapshoter {
         );
     }
 
-    public void execute(BigQuerySnapshoterRequest request, String trackingId, String pubSubMessageId) throws IOException, NonRetryableApplicationException, InterruptedException {
+    public PubSubPublishResults execute(BigQuerySnapshoterRequest request, String pubSubMessageId) throws IOException, NonRetryableApplicationException, InterruptedException {
 
-        logger.logFunctionStart(trackingId);
-        logger.logInfoWithTracker(trackingId, String.format("Request : %s", request.toString()));
+        // run common service start logging and checks
+        Utils.runServiceStartRoutines(
+                logger,
+                request,
+                persistentSet,
+                persistentSetObjectPrefix,
+                pubSubMessageId
+        );
 
-        /**
-         *  Check if we already processed this pubSubMessageId before to avoid submitting BQ queries
-         *  in case we have unexpected errors with PubSub re-sending the message. This is an extra measure to avoid unnecessary cost.
-         *  We do that by keeping simple flag files in GCS with the pubSubMessageId as file name.
-         */
-        String flagFileName = String.format("%s/%s", persistentSetObjectPrefix, pubSubMessageId);
-        if (persistentSet.contains(flagFileName)) {
-            // log error and ACK and return
-            String msg = String.format("PubSub message ID '%s' has been processed before by %s. The message should be ACK to PubSub to stop retries. Please investigate further why the message was retried in the first place.",
-                    pubSubMessageId,
-                    this.getClass().getSimpleName()
-            );
-            throw new NonRetryableApplicationException(msg);
-        }
+        // Perform the Snapshot operation using the BigQuery service
 
-        // 3. Perform the Snapshot operation using the BigQuery service
 
-        String tableDecorator = request.getTargetTable().getTable();
-        if(request.getTimeTravelOffsetMs() > 0) {
-            tableDecorator = tableDecorator + "@" + request.getTimeTravelOffsetMs().toString();
-        }
+        // TODO: Should the operationTs be the runId?
 
-        TableId sourceTableId = TableId.of(
-                request.getTargetTable().getProject(),
-                request.getTargetTable().getDataset(),
-                request.getTargetTable().getTable());
+        // Calculate expiration date starting from time of taking the snapshot
+        Timestamp operationTs = Timestamp.now();
 
-        TableId destinationTableId = TableId.of(
+        // expiry date is calculated relative to the operation time
+        Timestamp expiryTs = Timestamp.ofTimeSecondsAndNanos(
+                operationTs.getSeconds() + request.getSnapshotExpirationMs() / 1000,
+                0);
+
+        // time travel is calculated relative to the operation time
+        Tuple<TableSpec, Long> sourceTableWithTimeTravelTuple = getTableSpecWithTimeTravel(
+                request.getTargetTable(),
+                request.getTimeTravelOffsetDays(),
+                operationTs
+        );
+
+        // construct the snapshot table from the request params and calculated timetravel
+        TableSpec snapshotTable = getSnapshotTableSpec(
+                request.getTargetTable(),
                 request.getSnapshotStorageProjectID(),
                 request.getSnapshotStorageDataset(),
-                //TODO: Construct a snapshot table name that doesn't collide with other snapshots
-                request.getTargetTable().getTable()
-                );
+                request.getRunId(),
+                sourceTableWithTimeTravelTuple.y()
+        );
 
-        // TODO: use the table decorator to get the snapshot time travel
-        bqService.createSnapshot(sourceTableId, destinationTableId, request.getSnapshotExpirationMs());
-        //TODO: wait for job result and proceed based on output
+        Timestamp timeTravelTs = Timestamp.ofTimeSecondsAndNanos(sourceTableWithTimeTravelTuple.y()/1000, 0);
+        logger.logInfoWithTracker(request.getTrackingId(),
+                String.format("Will take a BQ Snapshot for '%s' to '%s' with time travel timestamp '%s' (%s days) expiring on '%s'",
+                        request.getTargetTable().toSqlString(),
+                        snapshotTable.toSqlString(),
+                        timeTravelTs.toString(),
+                        request.getTimeTravelOffsetDays().getText(),
+                        expiryTs.toString()
+                )
+        );
 
+        // API Call
+        bqService.createSnapshot(
+                sourceTableWithTimeTravelTuple.x(),
+                snapshotTable,
+                expiryTs,
+                request.getTrackingId()
+        );
+
+        // TODO: use a designated logger to track backup operations (audit log)
+        logger.logInfoWithTracker(request.getTrackingId(),
+                String.format("BigQuery snapshot completed for table %s to %s",
+                        request.getTargetTable().toSqlString(),
+                        snapshotTable.toSqlString()
+                )
+        );
 
         // Create a Tagger request and send it to the Tagger PubSub topic
+        TaggerRequest taggerRequest = new TaggerRequest(
+                request.getTargetTable(),
+                request.getRunId(),
+                request.getTrackingId(),
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                snapshotTable.toResourceUrl(),
+                operationTs,
+                null,
+                null
+        );
 
+        // Publish the list of tagging requests to PubSub
+        PubSubPublishResults publishResults = pubSubService.publishTableOperationRequests(
+                config.getProjectId(),
+                config.getOutputTopic(),
+                Arrays.asList(taggerRequest)
+        );
 
-//        // Construct and Send a request to the Tagger via PubSub
-//        TaggerRequest taggerOperation = new TaggerRequest(
-//                request.getTargetTable(),
-//                request.getRunId(),
-//                request.getTrackingId()
-//        );
-//
-//        // Publish the list of tagging requests to PubSub
-//        PubSubPublishResults publishResults = pubSubService.publishTableOperationRequests(
-//                config.getProjectId(),
-//                config.getOutputTopic(),
-//                Arrays.asList(taggerOperation)
-//        );
-//        for (FailedPubSubMessage msg : publishResults.getFailedMessages()) {
-//            String logMsg = String.format("Failed to publish this messages %s", msg.toString());
-//            logger.logWarnWithTracker(request.getTrackingId(), logMsg);
-//        }
+        for (FailedPubSubMessage msg : publishResults.getFailedMessages()) {
+            String logMsg = String.format("Failed to publish this message %s", msg.toString());
+            logger.logWarnWithTracker(request.getTrackingId(), logMsg);
+        }
 
-        // Add a flag key marking that we already completed this request and no additional runs
-        // are required in case PubSub is in a loop of retrying due to ACK timeout while the service has already processed the request
-        // This is an extra measure to avoid unnecessary cost due to config issues.
-        logger.logInfoWithTracker(trackingId, String.format("Persisting processing key for PubSub message ID %s", pubSubMessageId));
-        persistentSet.add(flagFileName);
+        for (SuccessPubSubMessage msg : publishResults.getSuccessMessages()) {
+            String logMsg = String.format("Published this message %s", msg.toString());
+            logger.logInfoWithTracker(request.getTrackingId(), logMsg);
+        }
 
-        logger.logFunctionEnd(trackingId);
+        // run common service end logging and adding pubsub message to processed list
+        Utils.runServiceEndRoutines(
+                logger,
+                request,
+                persistentSet,
+                persistentSetObjectPrefix,
+                pubSubMessageId
+        );
+
+        return publishResults;
+    }
+
+    /**
+     * return a Tuple (X, Y) where X is a TableSpec containing a table decorator with time travel applied and Y is the calculated
+     * timestamp in milliseconds since epoch used for the decorator
+     * @param table
+     * @param timeTravelOffsetDays
+     * @param referencePoint
+     * @return
+     */
+    public static Tuple<TableSpec, Long> getTableSpecWithTimeTravel(TableSpec table, TimeTravelOffsetDays timeTravelOffsetDays, Timestamp referencePoint) {
+        Long timeTravelMs;
+        Long refPointMs = referencePoint.getSeconds()*1000;
+
+        if (timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_0)) {
+            // always use time travel for consistency and traceability
+            timeTravelMs = refPointMs;
+        }else{
+            // use a buffer (milliseconds) to count for the operation time
+            Long bufferMs = timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_7) ? 5000L : 0L;
+            // milli seconds per day * number of days
+            Long timeTravelOffsetMs = (86400000L * Long.parseLong(timeTravelOffsetDays.getText()));
+            timeTravelMs = refPointMs - timeTravelOffsetMs - bufferMs;
+        }
+
+        return Tuple.of(new TableSpec(
+                        table.getProject(),
+                        table.getDataset(),
+                        String.format("%s@%s", table.getTable(), timeTravelMs)),
+                timeTravelMs
+        );
+    }
+
+    public static TableSpec getSnapshotTableSpec(TableSpec sourceTable, String snapshotProject, String snapshotDataset, String runId, Long timeTravelMs){
+        return new TableSpec(
+                snapshotProject,
+                snapshotDataset,
+                // Construct a snapshot table name that
+                // 1. doesn't collide with other snapshots from other datasets, projects or runs
+                // 2. propagates the time travel used to take this snapshot (we don't use labels to avoid extra API calls)
+                String.format("%s_%s_%s_%s_%s",
+                        sourceTable.getProject(),
+                        sourceTable.getDataset(),
+                        sourceTable.getTable(),
+                        runId,
+                        timeTravelMs
+                )
+        );
     }
 }

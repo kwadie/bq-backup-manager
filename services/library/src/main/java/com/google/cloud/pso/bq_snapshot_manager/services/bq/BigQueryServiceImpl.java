@@ -23,126 +23,52 @@ import com.google.api.services.bigquery.model.TableFieldSchema;
 import com.google.api.services.bigquery.model.TableSchema;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
+import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.*;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 
 import java.io.IOException;
 import java.math.BigInteger;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 import java.util.UUID;
 
 public class BigQueryServiceImpl implements BigQueryService {
 
-    private com.google.api.services.bigquery.Bigquery bqAPI;
     private BigQuery bqAPIWrapper;
 
-    public BigQueryServiceImpl() throws IOException {
-        bqAPIWrapper = BigQueryOptions.getDefaultInstance().getService();
+    public BigQueryServiceImpl(String projectId) throws IOException {
+        bqAPIWrapper = BigQueryOptions
+                .newBuilder()
+                .setProjectId(projectId)
+                .build()
+                .getService();
+    }
 
-        // direct API calls are needed for some operations
-        // TODO: follow up on the missing/faulty wrapper calls and stop using direct API calls
-        bqAPI = new com.google.api.services.bigquery.Bigquery.Builder(
-                new NetHttpTransport(),
-                new JacksonFactory(),
-                new HttpCredentialsAdapter(GoogleCredentials
-                        .getApplicationDefault()
-                        .createScoped(BigqueryScopes.all())))
-                .setApplicationName("bq-security-classifier")
+
+    public void createSnapshot(TableSpec sourceTable, TableSpec destinationTable, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
+        CopyJobConfiguration copyJobConfiguration = CopyJobConfiguration
+                .newBuilder(destinationTable.toTableId(), sourceTable.toTableId())
+                .setWriteDisposition(JobInfo.WriteDisposition.WRITE_EMPTY)
+                .setOperationType("SNAPSHOT")
+                .setDestinationExpirationTime(snapshotExpirationTs.toString())
                 .build();
-    }
 
-    @Override
-    public String getDatasetLocation(String projectId, String datasetId) throws IOException {
-        // calling dataset.getLocation always returns null --> seems like a bug in the SDK
-        // instead, use the underlying API call to get dataset info
-        return bqAPI.datasets()
-                .get(projectId, datasetId)
-                .execute()
-                .getLocation();
-    }
+        Job job = bqAPIWrapper.create(JobInfo
+                .newBuilder(copyJobConfiguration)
+                .setJobId(JobId.of(String.format("%s_%s", Globals.APPLICATION_NAME, trackingId)))
+                .build());
 
-    @Override
-    public Job submitJob(String query){
+        // wait for the job to complete
+        job = job.waitFor();
 
-        QueryJobConfiguration queryConfig =
-                QueryJobConfiguration.newBuilder(query)
-                        .setUseLegacySql(false)
-                        // Use Interactive priority to avoid waiting idle and timing out the cloud run request
-                        // Interactive queries have a limit of 100 concurrent ones. This is handled by
-                        // Cloud run number of parallel requests and PubSub retries
-                        .setPriority(QueryJobConfiguration.Priority.INTERACTIVE)
-                        .build();
-
-        JobId jobId = JobId.of(UUID.randomUUID().toString());
-        return bqAPIWrapper.create(JobInfo.newBuilder(queryConfig).setJobId(jobId).build());
-    }
-
-    @Override
-    public TableResult waitAndGetJobResults(Job queryJob) throws InterruptedException, RuntimeException {
-
-        // Wait for the query to complete.
-
-        queryJob = queryJob.waitFor();
-
-        // Check for errors
-        if (queryJob == null) {
-            throw new RuntimeException("Job no longer exists");
-        } else // You can also look at queryJob.getStatus().getExecutionErrors() for all
-            // errors, not just the latest one.
-            if (queryJob.getStatus().getError() != null) {
-                throw new RuntimeException(queryJob.getStatus().getError().toString());
-            }
-
-        return queryJob.getQueryResults();
-    }
-
-    @Override
-    public List<TableFieldSchema> getTableSchemaFields(TableSpec tableSpec) throws IOException {
-
-        return bqAPI.tables()
-                .get(tableSpec.getProject(), tableSpec.getDataset(), tableSpec.getTable())
-                .execute()
-                .getSchema()
-                .getFields();
-    }
-
-    @Override
-    public void patchTable(TableSpec tableSpec, List<TableFieldSchema> updatedFields) throws IOException {
-        bqAPI.tables()
-                .patch(tableSpec.getProject(),
-                        tableSpec.getDataset(),
-                        tableSpec.getTable(),
-                        new com.google.api.services.bigquery.model.Table().setSchema(new TableSchema().setFields(updatedFields)))
-                .execute();
-    }
-
-    @Override
-    public BigInteger getTableNumRows(TableSpec tableSpec) throws IOException {
-        return bqAPI.tables()
-                .get(tableSpec.getProject(), tableSpec.getDataset(), tableSpec.getTable())
-                .execute()
-                .getNumRows();
-    }
-
-    @Override
-    public boolean tableExists(TableSpec tableSpec) {
-        return bqAPIWrapper.getTable(tableSpec.toTableId()) != null;
-    }
-
-    private CopyJobConfiguration getCopyJobConfiguration(TableId sourceTable, TableId destinationId, Long snapshotExpirationMs) {
-        JobInfo.WriteDisposition writeDisposition = JobInfo.WriteDisposition.WRITE_EMPTY;
-        CopyJobConfiguration copyJobConfiguration =
-                CopyJobConfiguration.newBuilder(destinationId, sourceTable)
-                        .setWriteDisposition(writeDisposition)
-                        .setOperationType("SNAPSHOT")
-                        .setDestinationExpirationTime(snapshotExpirationMs.toString())
-                        .build();
-        return copyJobConfiguration;
-    }
-
-    public Job createSnapshot(TableId sourceTable, TableId destinationId, Long snapshotExpirationMs) {
-        CopyJobConfiguration copyJobConfiguration = getCopyJobConfiguration(sourceTable, destinationId, snapshotExpirationMs);
-        JobId jobId = JobId.of(UUID.randomUUID().toString());
-        return bqAPIWrapper.create(JobInfo.newBuilder(copyJobConfiguration).setJobId(jobId).build());
+        // if job finished with errors
+        if (job.getStatus().getError() != null) {
+            throw new RuntimeException(job.getStatus().getError().toString());
+        }
     }
 }

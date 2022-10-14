@@ -20,9 +20,11 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.pso.bq_snapshot_manager.entities.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 
+import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -61,10 +63,10 @@ public class Utils {
 
         String lastBackupAtStr = getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.last_backup_at.toString());
         Timestamp lastBackupAt;
-        if(lastBackupAtStr.isEmpty()){
+        if (lastBackupAtStr.isEmpty()) {
             lastBackupAt = Timestamp.MIN_VALUE;
-        }else{
-            lastBackupAt = Timestamp.parseTimestamp (lastBackupAtStr);
+        } else {
+            lastBackupAt = Timestamp.parseTimestamp(lastBackupAtStr);
         }
 
         // parse BQ snapshot settings
@@ -100,14 +102,14 @@ public class Utils {
     public static List<String> tokenize(String input, String delimiter, boolean required) {
         List<String> output = new ArrayList<>();
 
-        if(input.isBlank() && required){
+        if (input.isBlank() && required) {
             throw new IllegalArgumentException(String.format(
                     "Input string '%s' is blank.",
                     input
             ));
         }
 
-        if(input.isBlank() && !required){
+        if (input.isBlank() && !required) {
             return output;
         }
 
@@ -125,11 +127,11 @@ public class Utils {
         return output;
     }
 
-    public static String getConfigFromEnv(String config, boolean required){
+    public static String getConfigFromEnv(String config, boolean required) {
         String value = System.getenv().getOrDefault(config, "");
 
-        if(required && value.isBlank()){
-            throw new IllegalArgumentException(String.format("Missing environment variable '%s'",config));
+        if (required && value.isBlank()) {
+            throw new IllegalArgumentException(String.format("Missing environment variable '%s'", config));
         }
 
         return value;
@@ -141,7 +143,7 @@ public class Utils {
                                                PersistentSet persistentSet,
                                                String persistentSetObjectPrefix,
                                                String pubSubMessageId
-                                               ) throws NonRetryableApplicationException {
+    ) throws NonRetryableApplicationException {
         logger.logFunctionStart(request.getTrackingId());
         logger.logInfoWithTracker(request.getTrackingId(),
                 String.format("Request : %s", request.toString()));
@@ -162,10 +164,10 @@ public class Utils {
     }
 
     public static void runServiceEndRoutines(LoggingHelper logger,
-                                            TableOperationRequest request,
-                                            PersistentSet persistentSet,
-                                            String persistentSetObjectPrefix,
-                                            String pubSubMessageId){
+                                             TableOperationRequest request,
+                                             PersistentSet persistentSet,
+                                             String persistentSetObjectPrefix,
+                                             String pubSubMessageId) {
         // Add a flag key marking that we already completed this request and no additional runs
         // are required in case PubSub is in a loop of retrying due to ACK timeout while the service has already processed the request
         // This is an extra measure to avoid unnecessary cost due to config issues.

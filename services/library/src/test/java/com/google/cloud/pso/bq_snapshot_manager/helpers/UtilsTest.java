@@ -41,16 +41,16 @@ public class UtilsTest {
 
         Map<String, String> tagMap = new HashMap<>();
 
-        tagMap.put("backup_cron","test-cron");
-        tagMap.put("backup_method","BigQuery Snapshot");
-        tagMap.put("config_source","System");
-        tagMap.put("backup_time_travel_offset_days","0");
-        tagMap.put("bq_snapshot_storage_project","test-project");
-        tagMap.put("bq_snapshot_storage_dataset","test-dataset");
-        tagMap.put("bq_snapshot_expiration_days","0.0");
-        tagMap.put("gcs_snapshot_storage_location","test-bucket");
-        tagMap.put("gcs_snapshot_format","");
-        tagMap.put("last_backup_at","");
+        tagMap.put("backup_cron", "test-cron");
+        tagMap.put("backup_method", "BigQuery Snapshot");
+        tagMap.put("config_source", "System");
+        tagMap.put("backup_time_travel_offset_days", "0");
+        tagMap.put("bq_snapshot_storage_project", "test-project");
+        tagMap.put("bq_snapshot_storage_dataset", "test-dataset");
+        tagMap.put("bq_snapshot_expiration_days", "0.0");
+        tagMap.put("gcs_snapshot_storage_location", "test-bucket");
+        tagMap.put("gcs_snapshot_format", "");
+        tagMap.put("last_backup_at", "");
 
         BackupPolicy expected = new BackupPolicy(
                 "test-cron",
@@ -67,7 +67,7 @@ public class UtilsTest {
 
         BackupPolicy actual = Utils.parseBackupTagTemplateMap(tagMap);
 
-        assertEquals(expected,actual);
+        assertEquals(expected, actual);
     }
 
 
@@ -80,16 +80,5 @@ public class UtilsTest {
     public void getConfigFromEnv_NotRequired() {
         // should not fail because the VAR is not required
         Utils.getConfigFromEnv("NA_VAR", false);
-    }
-
-    @Test
-    public void cronTest() {
-
-        CronExpression cron = CronExpression.parse("0 0 1 * * *"); // daily at 1 AM
-        LocalDateTime now = LocalDateTime.of(2022,9,1,18,0);
-        LocalDateTime expectedNextDate = LocalDateTime.of(2022,9,2,1,0);
-        LocalDateTime actualNextDate = cron.next(now);
-        assertEquals(expectedNextDate, actualNextDate);
-
     }
 }

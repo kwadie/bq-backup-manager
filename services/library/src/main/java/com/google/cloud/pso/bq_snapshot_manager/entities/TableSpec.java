@@ -24,9 +24,9 @@ import java.util.Objects;
 
 public class TableSpec {
 
-    private String project;
-    private String dataset;
-    private String table;
+    private final String project;
+    private final String dataset;
+    private final String table;
 
     public TableSpec(String project, String dataset, String table) {
         this.project = project;
@@ -100,5 +100,13 @@ public class TableSpec {
                 ", dataset='" + dataset + '\'' +
                 ", table='" + table + '\'' +
                 '}';
+    }
+
+    public String toResourceUrl(){
+        return String.format("https://console.cloud.google.com/bigquery?d=%s&p=%s&page=table&t=%s",
+                getDataset(),
+                getProject(),
+                getTable()
+                );
     }
 }

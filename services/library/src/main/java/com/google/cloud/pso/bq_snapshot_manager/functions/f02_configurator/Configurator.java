@@ -317,7 +317,7 @@ public class Configurator {
                     backupPolicy.getBigQuerySnapshotStorageProject(),
                     backupPolicy.getBigQuerySnapshotStorageDataset(),
                     backupPolicy.getBigQuerySnapshotExpirationDays().longValue() * 86400000,
-                    Long.parseLong(backupPolicy.getTimeTravelOffsetDays().getText()) * 86400000
+                    backupPolicy.getTimeTravelOffsetDays()
             ));
         }
 
