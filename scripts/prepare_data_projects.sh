@@ -36,9 +36,17 @@ do
     --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
     --role="roles/datacatalog.viewer"
 
+  # BigQuery Snapshoter needs to create snapshot jobs and read table data
+  gcloud projects add-iam-policy-binding "${project}" \
+     --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
+     --role="roles/bigquery.jobUser"
+
+  gcloud projects add-iam-policy-binding "${project}" \
+     --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
+     --role="roles/bigquery.dataViewer"
 
 
-  #TODO Add roles for Snapshoter
+
 
   #TODO Add roles for Tagger
 

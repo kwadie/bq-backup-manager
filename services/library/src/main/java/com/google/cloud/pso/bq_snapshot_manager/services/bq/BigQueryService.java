@@ -17,29 +17,20 @@
 package com.google.cloud.pso.bq_snapshot_manager.services.bq;
 
 import com.google.api.services.bigquery.model.TableFieldSchema;
+import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
 
 public interface BigQueryService {
-    String getDatasetLocation(String projectId, String datasetId) throws IOException;
-
-    Job submitJob(String query);
-
-    TableResult waitAndGetJobResults(Job queryJob) throws InterruptedException, RuntimeException;
-
-    List<TableFieldSchema> getTableSchemaFields(TableSpec tableSpec) throws IOException;
-
-    void patchTable(TableSpec tableSpec, List<TableFieldSchema> updatedFields) throws IOException;
-
-    BigInteger getTableNumRows(TableSpec tableSpec) throws IOException;
-
-    boolean tableExists(TableSpec tableSpec);
-
-    Job createSnapshot(TableId sourceTable, TableId destinationId, Long snapshotExpirationMs);
+    void createSnapshot(TableSpec sourceTable,
+                        TableSpec destinationId,
+                        Timestamp snapshotExpirationTs,
+                        String trackingId) throws InterruptedException;
 }

@@ -1,8 +1,8 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
-import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 
 import java.util.Objects;
 
@@ -14,15 +14,15 @@ public class BigQuerySnapshoterRequest extends TableOperationRequest {
 
     private final Long snapshotExpirationMs;
 
-    private final Long timeTravelOffsetMs;
+    private final TimeTravelOffsetDays timeTravelOffsetDays;
 
 
-    public BigQuerySnapshoterRequest(TableSpec targetTable, String runId, String trackingId, String snapshotStorageProjectID, String snapshotStorageDataset, Long snapshotExpirationMs, Long timeTravelOffsetMs) {
+    public BigQuerySnapshoterRequest(TableSpec targetTable, String runId, String trackingId, String snapshotStorageProjectID, String snapshotStorageDataset, Long snapshotExpirationMs, TimeTravelOffsetDays timeTravelOffsetDays) {
         super(targetTable, runId, trackingId);
         this.snapshotStorageProjectID = snapshotStorageProjectID;
         this.snapshotStorageDataset = snapshotStorageDataset;
         this.snapshotExpirationMs = snapshotExpirationMs;
-        this.timeTravelOffsetMs = timeTravelOffsetMs;
+        this.timeTravelOffsetDays = timeTravelOffsetDays;
     }
 
     public String getSnapshotStorageProjectID() {
@@ -37,8 +37,8 @@ public class BigQuerySnapshoterRequest extends TableOperationRequest {
         return snapshotExpirationMs;
     }
 
-    public Long getTimeTravelOffsetMs() {
-        return timeTravelOffsetMs;
+    public TimeTravelOffsetDays getTimeTravelOffsetDays() {
+        return timeTravelOffsetDays;
     }
 
     @Override
@@ -47,7 +47,7 @@ public class BigQuerySnapshoterRequest extends TableOperationRequest {
                 "snapshotStorageProjectID='" + snapshotStorageProjectID + '\'' +
                 ", snapshotStorageDataset='" + snapshotStorageDataset + '\'' +
                 ", snapshotExpirationMs=" + snapshotExpirationMs +
-                ", timeTravelOffsetMs=" + timeTravelOffsetMs +
+                ", timeTravelOffsetDays=" + timeTravelOffsetDays +
                 '}';
     }
 
@@ -59,11 +59,11 @@ public class BigQuerySnapshoterRequest extends TableOperationRequest {
         return getSnapshotStorageProjectID().equals(that.getSnapshotStorageProjectID()) &&
                 getSnapshotStorageDataset().equals(that.getSnapshotStorageDataset()) &&
                 getSnapshotExpirationMs().equals(that.getSnapshotExpirationMs()) &&
-                getTimeTravelOffsetMs().equals(that.getTimeTravelOffsetMs());
+                getTimeTravelOffsetDays().equals(that.getTimeTravelOffsetDays());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getSnapshotStorageProjectID(), getSnapshotStorageDataset(), getSnapshotExpirationMs(), getTimeTravelOffsetMs());
+        return Objects.hash(getSnapshotStorageProjectID(), getSnapshotStorageDataset(), getSnapshotExpirationMs(), getTimeTravelOffsetDays());
     }
 }

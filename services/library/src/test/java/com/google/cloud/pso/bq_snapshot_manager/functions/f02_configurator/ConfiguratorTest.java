@@ -416,7 +416,7 @@ public class ConfiguratorTest {
                 "snapshotProject",
                 "snapshotDataset",
                 (15 * 86400000L),
-                (7 * 86400000L)
+                TimeTravelOffsetDays.DAYS_7
         );
 
         assertEquals(expectedBigQuerySnapshoterRequest, actualBigQuerySnapshoterRequest);
@@ -527,7 +527,7 @@ public class ConfiguratorTest {
                 "snapshotProject",
                 "snapshotDataset",
                 (15 * 86400000L),
-                (7 * 86400000L)
+                TimeTravelOffsetDays.DAYS_7
         );
 
         assertEquals(expectedBigQuerySnapshoterRequest, actualBigQuerySnapshoterRequest);

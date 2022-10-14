@@ -17,9 +17,13 @@ package com.google.cloud.pso.bq_snapshot_manager.snapshoter_bq;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoter;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -72,29 +76,26 @@ public class BigQuerySnapshoterController {
 
             logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
 
-            BigQuerySnapshoterRequest operation = gson.fromJson(requestJsonString, BigQuerySnapshoterRequest.class);
+            BigQuerySnapshoterRequest request = gson.fromJson(requestJsonString, BigQuerySnapshoterRequest.class);
 
-            trackingId = operation.getTrackingId();
+            trackingId = request.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", operation.toString()));
+            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", request.toString()));
 
-            //TODO: create snapshoter and execute
-//            Snapshoter snapshoter = new Snapshoter(
-//                    environment.toConfig(),
-//                    new BigQueryServiceImpl(),
-//                    new PubSubServiceImpl(),
-//                    new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
-//                    "snapshoter-bq-flags",
-//                    functionNumber
-//            );
-//
-//            snapshoter.execute(operation, trackingId, requestBody.getMessage().getMessageId());
+            BigQuerySnapshoter snapshoter = new BigQuerySnapshoter(
+                    environment.toConfig(),
+                    new BigQueryServiceImpl(request.getSnapshotStorageProjectID()),
+                    new PubSubServiceImpl(),
+                    new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
+                    "snapshoter-bq-flags",
+                    functionNumber);
+
+            snapshoter.execute(request, requestBody.getMessage().getMessageId());
 
             return new ResponseEntity("Process completed successfully.", HttpStatus.OK);
 
         } catch (Exception e) {
             return ControllerExceptionHelper.handleException(e, logger, trackingId);
-
         }
     }
 

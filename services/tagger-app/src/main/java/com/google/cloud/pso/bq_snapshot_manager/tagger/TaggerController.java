@@ -81,7 +81,9 @@ public class TaggerController {
 
             logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", operation.toString()));
 
-            BigQueryService bigQueryService = new BigQueryServiceImpl();
+            BigQueryService bigQueryService = new BigQueryServiceImpl(
+                    "FIXME"
+            );
 
             Tagger tagger = new Tagger(
                     environment.toConfig(),
