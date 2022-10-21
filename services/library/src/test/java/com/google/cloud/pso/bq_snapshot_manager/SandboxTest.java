@@ -1,11 +1,15 @@
 package com.google.cloud.pso.bq_snapshot_manager;
 
 import com.google.cloud.Timestamp;
-import com.google.cloud.bigquery.TableId;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -27,19 +31,27 @@ public class SandboxTest {
     }
 
     @Test
-    public void test2(){
-//        Long currct = System.currentTimeMillis();
-//        System.out.println(Timestamp.ofTimeSecondsAndNanos(currct/1000, 0)); // UTC
-//        System.out.println(currct);
-//        System.out.println(System.currentTimeMillis() - 86400000L);
+    public void test2() throws IOException {
 
+        BackupPolicy policy = new BackupPolicy(
+                "*****",
+                BackupMethod.GCS_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_0,
+                15.0,
+                "project",
+                "dataset",
+                "gs://bla/5",
+                GCSSnapshotFormat.AVRO,
+                BackupConfigSource.SYSTEM,
+                Timestamp.MIN_VALUE,
+                "",
+                ""
+        );
 
-        Long refPointMs = 1665665921023L;
-        Long seconds = refPointMs / 1000;
-        Long nano = refPointMs - seconds;
-        Long x = seconds + nano;
-
-        System.out.println(refPointMs);
-        System.out.println(x);
+        new DataCatalogServiceImpl().createOrUpdateBackupPolicyTag(
+                TableSpec.fromSqlString("bqsm-data-1.europe.fake_data"),
+                policy,
+                "projects/bqsm-host/locations/eu/tagTemplates/bq_backup_manager_template"
+                );
     }
 }

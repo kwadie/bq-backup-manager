@@ -1,6 +1,6 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
-import com.google.cloud.pso.bq_snapshot_manager.entities.GCSSnapshotFormat;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 

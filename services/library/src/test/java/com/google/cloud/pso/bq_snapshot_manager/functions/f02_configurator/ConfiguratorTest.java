@@ -2,7 +2,8 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
-import com.google.cloud.pso.bq_snapshot_manager.entities.GCSSnapshotFormat;
+import com.google.cloud.datacatalog.v1.Tag;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
@@ -42,9 +43,7 @@ public class ConfiguratorTest {
             "    \"bq_snapshot_storage_project\": \"project\",\n" +
             "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "    \"gcs_snapshot_format\": \"\",\n" +
-            "    \"config_source\": \"SYSTEM\",\n" +
-            "    \"last_backup_at\": \"\"\n" +
+            "    \"gcs_snapshot_format\": \"\"\n" +
             "  },\n" +
             "  \"folder_overrides\": {\n" +
             "    \"folder1\": {\n" +
@@ -55,9 +54,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    },\n" +
             "    \"folder2\": {\n" +
             "      \"backup_cron\": \"*****\",\n" +
@@ -67,9 +64,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    }\n" +
             "  },\n" +
             "  \"project_overrides\": {\n" +
@@ -81,9 +76,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    },\n" +
             "    \"project2\": {\n" +
             "      \"backup_cron\": \"*****\",\n" +
@@ -93,9 +86,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    }\n" +
             "  },\n" +
             "  \"dataset_overrides\": {\n" +
@@ -107,9 +98,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    },\n" +
             "    \"dataset2\": {\n" +
             "      \"backup_cron\": \"*****\",\n" +
@@ -119,9 +108,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    }\n" +
             "  },\n" +
             "  \"table_overrides\": {\n" +
@@ -133,9 +120,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    },\n" +
             "    \"table2\": {\n" +
             "      \"backup_cron\": \"*****\",\n" +
@@ -145,9 +130,7 @@ public class ConfiguratorTest {
             "      \"bq_snapshot_storage_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
-            "      \"gcs_snapshot_format\": \"\",\n" +
-            "      \"config_source\": \"SYSTEM\",\n" +
-            "      \"last_backup_at\": \"\"\n" +
+            "      \"gcs_snapshot_format\": \"\"\n" +
             "    }\n" +
             "  }\n" +
             "}";
@@ -162,7 +145,9 @@ public class ConfiguratorTest {
             "gs://bla/",
             GCSSnapshotFormat.AVRO,
             BackupConfigSource.SYSTEM,
-            Timestamp.MIN_VALUE
+            Timestamp.MIN_VALUE,
+            "",
+            ""
     );
 
     FallbackBackupPolicy fallbackBackupPolicy = new FallbackBackupPolicy(
@@ -342,6 +327,8 @@ public class ConfiguratorTest {
 
     private Tuple<PubSubPublishResults, PubSubPublishResults> executeConfigurator(
             TableSpec targetTable,
+            String runId,
+            String trackingId,
             BackupPolicy testBackupPolicy) throws NonRetryableApplicationException, InterruptedException, IOException {
 
         ConfiguratorConfig config = new ConfiguratorConfig(
@@ -353,7 +340,19 @@ public class ConfiguratorTest {
 
         Configurator configurator = new Configurator(
                 config,
-                (tableSpec, backupPolicyTagTemplateId) -> testBackupPolicy,
+                new DataCatalogService() {
+
+                    @Override
+                    public Tag createOrUpdateBackupPolicyTag(TableSpec tableSpec, BackupPolicy backupPolicy, String backupPolicyTagTemplateId) {
+
+                        return null;
+                    }
+
+                    @Override
+                    public BackupPolicy getBackupPolicyTag(TableSpec tableSpec, String backupPolicyTagTemplateId) throws IOException, IllegalArgumentException {
+                        return testBackupPolicy;
+                    }
+                },
                 new PubSubServiceTestImpl(),
                 new PersistentSetTestImpl(),
                 FallbackBackupPolicy.fromJson(jsonPolicyStr), // has no effect since we return a static BackUpPolicy from DC stub
@@ -365,8 +364,8 @@ public class ConfiguratorTest {
                 new ConfiguratorRequest(
                         false,
                         targetTable,
-                        "runId",
-                        "runIdTrackingId"
+                        runId,
+                        trackingId
                 ),
                 "pubsubmessageid"
         );
@@ -385,13 +384,17 @@ public class ConfiguratorTest {
                 "gs://bla/",
                 GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE
+                Timestamp.MIN_VALUE,
+                "",
+                ""
         );
 
         TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
 
         Tuple<PubSubPublishResults, PubSubPublishResults> publishResults = executeConfigurator(
                 targetTable,
+                "1665734583289-T",
+                "1665734583289-T-xyz",
                 backupPolicy);
 
         // this run returns a static BackupPolicy. Assert expectations based on it
@@ -411,12 +414,9 @@ public class ConfiguratorTest {
 
         BigQuerySnapshoterRequest expectedBigQuerySnapshoterRequest = new BigQuerySnapshoterRequest(
                 targetTable,
-                "runId",
-                "runIdTrackingId",
-                "snapshotProject",
-                "snapshotDataset",
-                (15 * 86400000L),
-                TimeTravelOffsetDays.DAYS_7
+                "1665734583289-T",
+                "1665734583289-T-xyz",
+                backupPolicy
         );
 
         assertEquals(expectedBigQuerySnapshoterRequest, actualBigQuerySnapshoterRequest);
@@ -435,13 +435,17 @@ public class ConfiguratorTest {
                 "gs://bucket/folder",
                 GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE
+                Timestamp.MIN_VALUE,
+                "",
+                ""
         );
 
         TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
 
         Tuple<PubSubPublishResults, PubSubPublishResults> publishResults = executeConfigurator(
                 targetTable,
+                "1665734583289-T",
+                "1665734583289-T-xyz",
                 backupPolicy);
 
         // this run returns a static BackupPolicy. Assert expectations based on it
@@ -461,8 +465,8 @@ public class ConfiguratorTest {
 
         GCSSnapshoterRequest expectedGCSSnapshoterRequest = new GCSSnapshoterRequest(
                 targetTable,
-                "runId",
-                "runIdTrackingId",
+                "1665734583289-T",
+                "1665734583289-T-xyz",
                 "gs://bucket/folder",
                 GCSSnapshotFormat.AVRO
         );
@@ -483,13 +487,17 @@ public class ConfiguratorTest {
                 "gs://bucket/folder",
                 GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE
+                Timestamp.MIN_VALUE,
+                "",
+                ""
         );
 
         TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
 
         Tuple<PubSubPublishResults, PubSubPublishResults> publishResults = executeConfigurator(
                 targetTable,
+                "1665734583289-T",
+                "1665734583289-T-xyz",
                 backupPolicy);
 
         // this run returns a static BackupPolicy. Assert expectations based on it
@@ -505,8 +513,8 @@ public class ConfiguratorTest {
 
         GCSSnapshoterRequest expectedGCSSnapshoterRequest = new GCSSnapshoterRequest(
                 targetTable,
-                "runId",
-                "runIdTrackingId",
+                "1665734583289-T",
+                "1665734583289-T-xyz",
                 "gs://bucket/folder",
                 GCSSnapshotFormat.AVRO
         );
@@ -522,12 +530,9 @@ public class ConfiguratorTest {
 
         BigQuerySnapshoterRequest expectedBigQuerySnapshoterRequest = new BigQuerySnapshoterRequest(
                 targetTable,
-                "runId",
-                "runIdTrackingId",
-                "snapshotProject",
-                "snapshotDataset",
-                (15 * 86400000L),
-                TimeTravelOffsetDays.DAYS_7
+                "1665734583289-T",
+                "1665734583289-T-xyz",
+                backupPolicy
         );
 
         assertEquals(expectedBigQuerySnapshoterRequest, actualBigQuerySnapshoterRequest);

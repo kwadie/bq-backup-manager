@@ -116,7 +116,11 @@ resource "google_service_account_iam_member" "sa_snapshoter_gcs_account_user_sa_
 }
 
 #### Tagger SA Permissions ###
-# TODO: add relevant Tagger permissions
+resource "google_project_iam_member" "sa_tagger_datacatalog_viewer" {
+  project = var.project
+  role    = "roles/datacatalog.viewer"
+  member  = "serviceAccount:${google_service_account.sa_tagger.email}"
+}
 
 #### Tagger Tasks SA Permissions ###
 

@@ -28,6 +28,12 @@ do
      --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
      --role="roles/bigquery.dataEditor"
 
+    # BigQuery Snapshoter needs to create snapshot jobs
+  gcloud projects add-iam-policy-binding "${project}" \
+     --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
+     --role="roles/bigquery.jobUser"
+
+
 
 
 

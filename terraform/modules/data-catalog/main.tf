@@ -11,6 +11,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "config_source"
     display_name = "Configuration Source"
+    order = 1
     type {
       enum_type {
         allowed_values {
@@ -26,6 +27,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_cron"
     display_name = "Cron expression for backup frequency"
+    order = 2
     type {
       primitive_type = "STRING"
     }
@@ -33,17 +35,9 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   }
 
   fields {
-    field_id = "last_backup_at"
-    display_name = "Timestamp of the latest backup taken"
-    type {
-      primitive_type = "TIMESTAMP"
-    }
-    is_required = false
-  }
-
-  fields {
     field_id = "backup_time_travel_offset_days"
     display_name = "Number of days in the past where the backup is taken relative to NOW"
+    order = 3
     type {
       enum_type {
         allowed_values {
@@ -78,6 +72,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_method"
     display_name = "How to backup this table"
+    order = 4
     type {
       enum_type {
         allowed_values {
@@ -96,7 +91,8 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
 
   fields {
     field_id = "bq_snapshot_storage_project"
-    display_name = "GCP project where the BigQuery snapshot is saved"
+    display_name = "BigQuery - Project where the snapshot is stored"
+    order = 5
     type {
       primitive_type = "STRING"
     }
@@ -105,7 +101,8 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
 
   fields {
     field_id = "bq_snapshot_storage_dataset"
-    display_name = "Dataset where the BigQuery snapshot is saved"
+    display_name = "BigQuery - Dataset where the snapshot is stored"
+    order = 6
     type {
       primitive_type = "STRING"
     }
@@ -114,7 +111,8 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
 
   fields {
     field_id = "bq_snapshot_expiration_days"
-    display_name = "BigQuery snapshot retention period in days"
+    display_name = "BigQuery - Snapshot retention period in days"
+    order = 7
     type {
       primitive_type = "DOUBLE"
     }
@@ -123,7 +121,8 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
 
   fields {
     field_id = "gcs_snapshot_storage_location"
-    display_name = "GCS path to store table snapshots"
+    display_name = "GCS - Parent path to store all table snapshots"
+    order = 8
     type {
       primitive_type = "STRING"
     }
@@ -132,9 +131,13 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
 
   fields {
     field_id = "gcs_snapshot_format"
-    display_name = "Export format and compression"
+    display_name = "GCS - Export format and compression"
+    order = 9
     type {
       enum_type {
+        allowed_values {
+          display_name = "NOT_APPLICABLE"
+        }
         allowed_values {
           display_name = "CSV"
         }
@@ -170,6 +173,43 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
     is_required = false
   }
 
+  fields {
+    field_id = "last_backup_at"
+    display_name = "Read-Only - Timestamp of the latest backup taken"
+    order = 10
+    type {
+      primitive_type = "TIMESTAMP"
+    }
+    is_required = false
+  }
+
+  fields {
+    field_id = "last_gcs_snapshot_storage_uri"
+    display_name = "Read-Only - Last GCS snapshot location"
+    order = 11
+    type {
+      primitive_type = "STRING"
+    }
+    is_required = false
+  }
+
+  fields {
+    field_id = "last_bq_snapshot_storage_uri"
+    display_name = "Read-Only - Last BQ snapshot location"
+    order = 12
+    type {
+      primitive_type = "STRING"
+    }
+    is_required = false
+  }
+
   // deleting the tag template will delete all configs attached to tables
-  force_delete = false
+  force_delete = true
+}
+
+resource "google_data_catalog_tag_template_iam_member" "tag_template_user" {
+  count = length(var.tagTemplateUsers)
+  tag_template = google_data_catalog_tag_template.snapshot_tag_template.name
+  role = "roles/datacatalog.tagTemplateUser"
+  member = "serviceAccount:${var.tagTemplateUsers[count.index]}"
 }

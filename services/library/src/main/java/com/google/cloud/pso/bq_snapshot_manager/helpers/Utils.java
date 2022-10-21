@@ -16,15 +16,10 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
-import com.google.cloud.Timestamp;
-import com.google.cloud.pso.bq_snapshot_manager.entities.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
-import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 
-import java.sql.Time;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -32,7 +27,7 @@ import java.util.StringTokenizer;
 
 public class Utils {
 
-    private static String getOrFail(Map<String, String> map, String key) {
+    public static String getOrFail(Map<String, String> map, String key) {
         String field = map.get(key);
         if (field == null) {
             throw new IllegalArgumentException(String.format(
@@ -42,61 +37,6 @@ public class Utils {
         } else {
             return field;
         }
-    }
-
-    public static BackupPolicy parseBackupTagTemplateMap(Map<String, String> tagTemplate) throws IllegalArgumentException {
-
-        // parse common settings
-        String cron = getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_cron.toString());
-
-        BackupMethod method = BackupMethod.fromString(
-                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_method.toString())
-        );
-
-        BackupConfigSource configSource = BackupConfigSource.fromString(
-                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.config_source.toString())
-        );
-
-        TimeTravelOffsetDays timeTravelOffsetDays = TimeTravelOffsetDays.fromString(
-                getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days.toString())
-        );
-
-        String lastBackupAtStr = getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.last_backup_at.toString());
-        Timestamp lastBackupAt;
-        if (lastBackupAtStr.isEmpty()) {
-            lastBackupAt = Timestamp.MIN_VALUE;
-        } else {
-            lastBackupAt = Timestamp.parseTimestamp(lastBackupAtStr);
-        }
-
-        // parse BQ snapshot settings
-        String bqSnapshotStorageProject = getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project.toString());
-        String bqSnapshotStorageDataset = getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString());
-        String bqSnapshotExpirationDays = getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString());
-
-        // parse GCS snapshot settings
-        String gcsSnapshotStorageLocation = getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString());
-
-        String gcsSnapshotFormatStr = getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_format.toString());
-        GCSSnapshotFormat gcsSnapshotFormat = gcsSnapshotFormatStr.isEmpty() ? null : GCSSnapshotFormat.valueOf(gcsSnapshotFormatStr);
-
-        return new BackupPolicy(
-                cron,
-                method,
-                timeTravelOffsetDays,
-                Double.valueOf(bqSnapshotExpirationDays),
-                bqSnapshotStorageProject,
-                bqSnapshotStorageDataset,
-                gcsSnapshotStorageLocation,
-                gcsSnapshotFormat,
-                configSource,
-                lastBackupAt
-        );
     }
 
     public static List<String> tokenize(String input, String delimiter, boolean required) {

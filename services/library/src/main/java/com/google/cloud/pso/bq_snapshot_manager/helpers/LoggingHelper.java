@@ -79,7 +79,7 @@ public class LoggingHelper {
         logWithTracker(
                 ApplicationLog.DISPATCHED_REQUESTS_LOG,
                 trackingId,
-                String.format("Dispatched request with trackindId `%s`", dispatchedTrackingId),
+                String.format("Dispatched request for table '%s' with trackindId `%s`", tableSpec.toSqlString(), dispatchedTrackingId),
                 Level.INFO,
                 attributes
         );

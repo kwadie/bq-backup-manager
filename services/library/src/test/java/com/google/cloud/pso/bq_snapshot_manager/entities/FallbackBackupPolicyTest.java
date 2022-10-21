@@ -3,11 +3,9 @@ package com.google.cloud.pso.bq_snapshot_manager.entities;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.google.cloud.Timestamp;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
-import com.google.gson.Gson;
 import org.junit.Test;
 
 import java.util.AbstractMap;
-import java.util.HashMap;
 import java.util.Map;
 import java.util.stream.Collectors;
 import java.util.stream.Stream;
@@ -148,7 +146,9 @@ public class FallbackBackupPolicyTest {
                 "gs://bla/",
                 null,
                 BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE
+                Timestamp.MIN_VALUE,
+                "",
+                ""
         );
 
         FallbackBackupPolicy expected = new FallbackBackupPolicy(

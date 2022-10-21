@@ -43,9 +43,7 @@ snapshot_policy = {
     "bq_snapshot_storage_project": "project",
     "bq_snapshot_storage_dataset": "dataset",
     "gcs_snapshot_storage_location": "gs://bla/",
-    "gcs_snapshot_format": "",
-    "config_source": "SYSTEM",
-    "last_backup_at": ""
+    "gcs_snapshot_format": ""
   },
   "folder_overrides": {
     "456209084685": {
@@ -57,8 +55,6 @@ snapshot_policy = {
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
       "gcs_snapshot_format": "",
-      "config_source": "SYSTEM",
-      "last_backup_at": ""
     },
   },
   "project_overrides": {
@@ -71,8 +67,6 @@ snapshot_policy = {
       "bq_snapshot_storage_dataset": "london_backups",
       "gcs_snapshot_storage_location": "",
       "gcs_snapshot_format": "",
-      "config_source": "SYSTEM",
-      "last_backup_at": ""
     },
     "bqsm-data-2": {
       "backup_cron": "0 0 1 * *",
@@ -83,8 +77,6 @@ snapshot_policy = {
       "bq_snapshot_storage_dataset": "europe_backups",
       "gcs_snapshot_storage_location": "",
       "gcs_snapshot_format": "",
-      "config_source": "SYSTEM",
-      "last_backup_at": ""
     }
   },
   "dataset_overrides": {
@@ -97,8 +89,6 @@ snapshot_policy = {
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
       "gcs_snapshot_format": "",
-      "config_source": "SYSTEM",
-      "last_backup_at": ""
     },
     "project1.dataset2": {
       "backup_cron": "*****",
@@ -109,8 +99,6 @@ snapshot_policy = {
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
       "gcs_snapshot_format": "",
-      "config_source": "SYSTEM",
-      "last_backup_at": ""
     }
   },
   "table_overrides": {
@@ -123,8 +111,6 @@ snapshot_policy = {
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
       "gcs_snapshot_format": "",
-      "config_source": "SYSTEM",
-      "last_backup_at": ""
     },
     "p1.d1.t2": {
       "backup_cron": "*****",
@@ -134,9 +120,7 @@ snapshot_policy = {
       "bq_snapshot_storage_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/",
-      "gcs_snapshot_format": "",
-      "config_source": "SYSTEM",
-      "last_backup_at": ""
+      "gcs_snapshot_format": ""
     }
   }
 }

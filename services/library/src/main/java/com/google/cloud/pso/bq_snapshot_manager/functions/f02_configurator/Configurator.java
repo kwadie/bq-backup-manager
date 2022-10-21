@@ -314,10 +314,7 @@ public class Configurator {
                     request.getTargetTable(),
                     request.getRunId(),
                     request.getTrackingId(),
-                    backupPolicy.getBigQuerySnapshotStorageProject(),
-                    backupPolicy.getBigQuerySnapshotStorageDataset(),
-                    backupPolicy.getBigQuerySnapshotExpirationDays().longValue() * 86400000,
-                    backupPolicy.getTimeTravelOffsetDays()
+                    backupPolicy
             ));
         }
 

@@ -1,58 +1,58 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger;
 
 import com.google.cloud.Timestamp;
-import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 
 import java.util.Objects;
 
 public class TaggerRequest extends TableOperationRequest {
 
-    private final BackupMethod backupMethod;
-    private final String bigQuerySnapshotLocation;
-    private final Timestamp bigQuerySnapshotAt;
-    private final String gcsSnapshotLocation;
-    private final Timestamp gcsSnapshotAt;
+    private final BackupPolicy backupPolicy;
+    private final BackupMethod appliedBackupMethod;
+    private final String bigQuerySnapshotUri;
+    private final String gcsSnapshotUri;
+    private final Timestamp lastBackUpAt;
 
-    public TaggerRequest(TableSpec targetTable, String runId, String trackingId, BackupMethod backupMethod, String bigQuerySnapshotLocation, Timestamp bigQuerySnapshotAt, String gcsSnapshotLocation, Timestamp gcsSnapshotAt) {
+    public TaggerRequest(TableSpec targetTable, String runId, String trackingId, BackupPolicy backupPolicy, BackupMethod appliedBackupMethod, String bigQuerySnapshotUri, String gcsSnapshotUri, Timestamp lastBackUpAt) {
         super(targetTable, runId, trackingId);
-        this.backupMethod = backupMethod;
-        this.bigQuerySnapshotLocation = bigQuerySnapshotLocation;
-        this.bigQuerySnapshotAt = bigQuerySnapshotAt;
-        this.gcsSnapshotLocation = gcsSnapshotLocation;
-        this.gcsSnapshotAt = gcsSnapshotAt;
+        this.backupPolicy = backupPolicy;
+        this.appliedBackupMethod = appliedBackupMethod;
+        this.bigQuerySnapshotUri = bigQuerySnapshotUri;
+        this.gcsSnapshotUri = gcsSnapshotUri;
+        this.lastBackUpAt = lastBackUpAt;
     }
 
-    public BackupMethod getBackupMethod() {
-        return backupMethod;
+    public BackupPolicy getBackupPolicy() {
+        return backupPolicy;
     }
 
-    public String getBigQuerySnapshotLocation() {
-        return bigQuerySnapshotLocation;
+    public BackupMethod getAppliedBackupMethod() {
+        return appliedBackupMethod;
     }
 
-    public Timestamp getBigQuerySnapshotAt() {
-        return bigQuerySnapshotAt;
+    public String getBigQuerySnapshotUri() {
+        return bigQuerySnapshotUri;
     }
 
-    public String getGcsSnapshotLocation() {
-        return gcsSnapshotLocation;
+    public String getGcsSnapshotUri() {
+        return gcsSnapshotUri;
     }
 
-    public Timestamp getGcsSnapshotAt() {
-        return gcsSnapshotAt;
+    public Timestamp getLastBackUpAt() {
+        return lastBackUpAt;
     }
 
     @Override
     public String toString() {
         return "TaggerRequest{" +
-                "backupMethod=" + backupMethod +
-                ", bigQuerySnapshotLocation='" + bigQuerySnapshotLocation + '\'' +
-                ", bigQuerySnapshotAt=" + bigQuerySnapshotAt +
-                ", gcsSnapshotLocation='" + gcsSnapshotLocation + '\'' +
-                ", gcsSnapshotAt=" + gcsSnapshotAt +
+                "backupPolicy=" + backupPolicy +
+                ", appliedBackupMethod=" + appliedBackupMethod +
+                ", bigQuerySnapshotUri='" + bigQuerySnapshotUri + '\'' +
+                ", gcsSnapshotUri='" + gcsSnapshotUri + '\'' +
+                ", lastBackUpAt=" + lastBackUpAt +
                 '}';
     }
 
@@ -62,15 +62,15 @@ public class TaggerRequest extends TableOperationRequest {
         if (!(o instanceof TaggerRequest)) return false;
         if (!super.equals(o)) return false;
         TaggerRequest that = (TaggerRequest) o;
-        return getBackupMethod() == that.getBackupMethod() &&
-                getBigQuerySnapshotLocation().equals(that.getBigQuerySnapshotLocation()) &&
-                getBigQuerySnapshotAt().equals(that.getBigQuerySnapshotAt()) &&
-                getGcsSnapshotLocation().equals(that.getGcsSnapshotLocation()) &&
-                getGcsSnapshotAt().equals(that.getGcsSnapshotAt());
+        return getBackupPolicy().equals(that.getBackupPolicy()) &&
+                getAppliedBackupMethod() == that.getAppliedBackupMethod() &&
+                getBigQuerySnapshotUri().equals(that.getBigQuerySnapshotUri()) &&
+                getGcsSnapshotUri().equals(that.getGcsSnapshotUri()) &&
+                getLastBackUpAt().equals(that.getLastBackUpAt());
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getBackupMethod(), getBigQuerySnapshotLocation(), getBigQuerySnapshotAt(), getGcsSnapshotLocation(), getGcsSnapshotAt());
+        return Objects.hash(super.hashCode(), getBackupPolicy(), getAppliedBackupMethod(), getBigQuerySnapshotUri(), getGcsSnapshotUri(), getLastBackUpAt());
     }
 }
