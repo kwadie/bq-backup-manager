@@ -40,8 +40,6 @@ public class BigQuerySnapshoter {
 
     private final LoggingHelper logger;
 
-    private final Integer functionNumber;
-
     private final SnapshoterConfig config;
     private final BigQueryService bqService;
     private final PubSubService pubSubService;
@@ -61,7 +59,6 @@ public class BigQuerySnapshoter {
         this.pubSubService = pubSubService;
         this.persistentSet = persistentSet;
         this.persistentSetObjectPrefix = persistentSetObjectPrefix;
-        this.functionNumber = functionNumber;
 
         logger = new LoggingHelper(
                 BigQuerySnapshoter.class.getSimpleName(),
@@ -91,21 +88,21 @@ public class BigQuerySnapshoter {
 
         // expiry date is calculated relative to the operation time
         Timestamp expiryTs = Timestamp.ofTimeSecondsAndNanos(
-                operationTs.getSeconds() + request.getSnapshotExpirationMs() / 1000,
+                operationTs.getSeconds() + (request.getBackupPolicy().getBigQuerySnapshotExpirationDays().longValue() * 86400L),
                 0);
 
         // time travel is calculated relative to the operation time
         Tuple<TableSpec, Long> sourceTableWithTimeTravelTuple = getTableSpecWithTimeTravel(
                 request.getTargetTable(),
-                request.getTimeTravelOffsetDays(),
+                request.getBackupPolicy().getTimeTravelOffsetDays(),
                 operationTs
         );
 
         // construct the snapshot table from the request params and calculated timetravel
         TableSpec snapshotTable = getSnapshotTableSpec(
                 request.getTargetTable(),
-                request.getSnapshotStorageProjectID(),
-                request.getSnapshotStorageDataset(),
+                request.getBackupPolicy().getBigQuerySnapshotStorageProject(),
+                request.getBackupPolicy().getBigQuerySnapshotStorageDataset(),
                 request.getRunId(),
                 sourceTableWithTimeTravelTuple.y()
         );
@@ -116,7 +113,7 @@ public class BigQuerySnapshoter {
                         request.getTargetTable().toSqlString(),
                         snapshotTable.toSqlString(),
                         timeTravelTs.toString(),
-                        request.getTimeTravelOffsetDays().getText(),
+                        request.getBackupPolicy().getTimeTravelOffsetDays().getText(),
                         expiryTs.toString()
                 )
         );
@@ -142,11 +139,11 @@ public class BigQuerySnapshoter {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
+                request.getBackupPolicy(),
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 snapshotTable.toResourceUrl(),
-                operationTs,
                 null,
-                null
+                operationTs
         );
 
         // Publish the list of tagging requests to PubSub

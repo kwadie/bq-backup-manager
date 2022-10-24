@@ -36,39 +36,6 @@ import static org.junit.Assert.assertEquals;
 
 public class UtilsTest {
 
-    @Test
-    public void testParseBackupTagTemplateMap() throws IOException, IllegalArgumentException {
-
-        Map<String, String> tagMap = new HashMap<>();
-
-        tagMap.put("backup_cron", "test-cron");
-        tagMap.put("backup_method", "BigQuery Snapshot");
-        tagMap.put("config_source", "System");
-        tagMap.put("backup_time_travel_offset_days", "0");
-        tagMap.put("bq_snapshot_storage_project", "test-project");
-        tagMap.put("bq_snapshot_storage_dataset", "test-dataset");
-        tagMap.put("bq_snapshot_expiration_days", "0.0");
-        tagMap.put("gcs_snapshot_storage_location", "test-bucket");
-        tagMap.put("gcs_snapshot_format", "");
-        tagMap.put("last_backup_at", "");
-
-        BackupPolicy expected = new BackupPolicy(
-                "test-cron",
-                BackupMethod.BIGQUERY_SNAPSHOT,
-                TimeTravelOffsetDays.DAYS_0,
-                0.0,
-                "test-project",
-                "test-dataset",
-                "test-bucket",
-                null,
-                BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE
-        );
-
-        BackupPolicy actual = Utils.parseBackupTagTemplateMap(tagMap);
-
-        assertEquals(expected, actual);
-    }
 
 
     @Test(expected = IllegalArgumentException.class)

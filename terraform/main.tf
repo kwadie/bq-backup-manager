@@ -342,5 +342,6 @@ module "data-catalog" {
   source = "./modules/data-catalog"
   project = var.project
   region = var.data_region
+  tagTemplateUsers = [module.iam.sa_tagger_email]
 }
 

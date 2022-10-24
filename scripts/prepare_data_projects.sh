@@ -45,9 +45,16 @@ do
      --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
      --role="roles/bigquery.dataViewer"
 
+  # Tagger roles
 
+  # Provides access to modify tags on Google Cloud assets for BigQuery
+  gcloud projects add-iam-policy-binding "${project}" \
+     --member="serviceAccount:${SA_TAGGER_EMAIL}" \
+     --role="roles/datacatalog.tagEditor"
 
-
-  #TODO Add roles for Tagger
+  # to lookup meta data (e.g. tags)
+  gcloud projects add-iam-policy-binding "${project}" \
+    --member="serviceAccount:${SA_TAGGER_EMAIL}" \
+    --role="roles/bigquery.metadataViewer"
 
 done

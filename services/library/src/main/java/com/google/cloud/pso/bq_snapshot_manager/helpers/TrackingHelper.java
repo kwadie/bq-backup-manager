@@ -22,6 +22,9 @@ import java.util.UUID;
 
 public class TrackingHelper {
 
+    // so that it never appears in max(run_id) queries
+    public static final String MIN_RUN_ID = "0000000000000-z";
+
     private static final String heartBeatRunSuffix = "-H";
     private static final Integer suffixLength = 2;
 

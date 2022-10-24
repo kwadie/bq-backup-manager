@@ -144,7 +144,7 @@ public class FallbackBackupPolicy {
         for(String key: jsonNodeMap.keySet()){
             policyMap.put(
                     key,
-                    Utils.parseBackupTagTemplateMap(jsonNodeMap.get(key))
+                    BackupPolicy.fromMap(jsonNodeMap.get(key), true)
             );
         }
 

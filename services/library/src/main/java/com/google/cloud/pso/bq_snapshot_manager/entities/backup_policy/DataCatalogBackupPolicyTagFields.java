@@ -10,5 +10,7 @@ public enum DataCatalogBackupPolicyTagFields {
     gcs_snapshot_storage_location,
     gcs_snapshot_format,
     config_source,
-    last_backup_at
+    last_backup_at,
+    last_gcs_snapshot_storage_uri,
+    last_bq_snapshot_storage_uri
 }

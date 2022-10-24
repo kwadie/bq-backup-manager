@@ -21,8 +21,10 @@ import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.Tagger;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
@@ -39,7 +41,7 @@ import org.springframework.web.bind.annotation.RestController;
 public class TaggerController {
 
     private final LoggingHelper logger;
-    private static final Integer functionNumber = 3;
+    private static final Integer functionNumber = 4;
     private Gson gson;
     Environment environment;
 
@@ -57,8 +59,8 @@ public class TaggerController {
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
-        String trackingId = "0000000000000-z";
-        BigQueryService bqService = null;
+        String trackingId = TrackingHelper.MIN_RUN_ID;
+        DataCatalogServiceImpl dataCatalogService = null;
 
         try {
 
@@ -75,26 +77,23 @@ public class TaggerController {
 
             logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
 
-            TaggerRequest operation = gson.fromJson(requestJsonString, TaggerRequest.class);
+            TaggerRequest taggerRequest = gson.fromJson(requestJsonString, TaggerRequest.class);
 
-            trackingId = operation.getTrackingId();
+            trackingId = taggerRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", operation.toString()));
+            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", taggerRequest.toString()));
 
-            BigQueryService bigQueryService = new BigQueryServiceImpl(
-                    "FIXME"
-            );
-
+            dataCatalogService = new DataCatalogServiceImpl();
             Tagger tagger = new Tagger(
+                    new LoggingHelper(Tagger.class.getSimpleName(), functionNumber, environment.getProjectId()),
                     environment.toConfig(),
-                    bigQueryService,
+                    dataCatalogService,
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
-                    "tagger-flags",
-                    functionNumber
+                    "tagger-flags"
             );
 
             tagger.execute(
-                    operation,
+                    taggerRequest,
                     requestBody.getMessage().getMessageId()
             );
 
@@ -102,6 +101,10 @@ public class TaggerController {
         } catch (Exception e) {
 
             return ControllerExceptionHelper.handleException(e, logger, trackingId);
+        }finally {
+            if(dataCatalogService != null){
+                dataCatalogService.shutdown();
+            }
         }
     }
 

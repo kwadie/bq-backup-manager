@@ -1,10 +1,11 @@
-package com.google.cloud.pso.bq_snapshot_manager.entities;
+package com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
 
 import java.util.Arrays;
 
 public enum GCSSnapshotFormat {
+    NOT_APPLICABLE,
     CSV,
     CSV_GZIP,
     JSON,
