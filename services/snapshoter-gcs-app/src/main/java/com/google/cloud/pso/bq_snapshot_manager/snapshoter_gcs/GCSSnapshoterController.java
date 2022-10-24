@@ -21,6 +21,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -56,7 +57,7 @@ public class GCSSnapshoterController {
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
-        String trackingId = "0000000000000-z";
+        String trackingId = TrackingHelper.MIN_RUN_ID;
 
         try {
 

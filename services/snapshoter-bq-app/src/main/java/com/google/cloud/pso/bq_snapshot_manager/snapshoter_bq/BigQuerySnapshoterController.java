@@ -21,6 +21,7 @@ import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuer
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
@@ -59,7 +60,7 @@ public class BigQuerySnapshoterController {
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
-        String trackingId = "0000000000000-z";
+        String trackingId = TrackingHelper.MIN_RUN_ID;
 
         try {
 

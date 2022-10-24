@@ -18,6 +18,7 @@ package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.ApplicationLog;
 import com.google.cloud.pso.bq_snapshot_manager.entities.FunctionLifeCycleEvent;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
@@ -35,8 +36,6 @@ public class LoggingHelper {
     private final Integer functionNumber;
     // Used to create a trace
     private final String projectId;
-
-    private final String applicationName = "bq-snapshot-manager";
 
     public LoggingHelper(String loggerName, Integer functionNumber, String projectId) {
         this.loggerName = loggerName;
@@ -184,7 +183,7 @@ public class LoggingHelper {
         // Enable JSON logging with Logback and SLF4J by enabling the Logstash JSON Encoder in your logback.xml configuration.
 
         String payload = String.format("%s | %s | %s | %s | %s",
-                applicationName,
+                Globals.APPLICATION_NAME,
                 log,
                 loggerName,
                 tracker,
@@ -196,11 +195,11 @@ public class LoggingHelper {
             runId = TrackingHelper.parseRunIdAsPrefix(tracker);
         }catch (Exception e){
             // so that it never appears in max(run_id) queries
-            runId = "0000000000000-z";
+            runId = TrackingHelper.MIN_RUN_ID;
         }
 
         Object [] globalAttributes = new Object[]{
-                kv("global_app", this.applicationName),
+                kv("global_app", Globals.APPLICATION_NAME),
                 kv("global_logger_name", this.loggerName),
                 kv("global_app_log", log),
                 kv("global_tracker", tracker),
