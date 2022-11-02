@@ -62,14 +62,15 @@ public class DispatcherController {
     @RequestMapping(value = "/", method = RequestMethod.POST)
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
-        String runId = TrackingHelper.generateHeartBeatRunId();
+        String runId = TrackingHelper.MIN_RUN_ID;
         String state = "";
+        // These values will be updated based on the execution flow and logged at the end
 
         try {
 
             if (requestBody == null || requestBody.getMessage() == null) {
                 String msg = "Bad Request: invalid message format";
-                logger.logSevereWithTracker(runId, msg);
+                logger.logSevereWithTracker(runId, null, msg);
                 throw new NonRetryableApplicationException("Request body or message is Null.");
             }
 
@@ -78,11 +79,13 @@ public class DispatcherController {
             // remove any escape characters (e.g. from Terraform
             requestJsonString = requestJsonString.replace("\\", "");
 
-            logger.logInfoWithTracker(runId, String.format("Received payload: %s", requestJsonString));
+            logger.logInfoWithTracker(runId, null, String.format("Received payload: %s", requestJsonString));
 
             DispatcherRequest dispatcherRequest = gson.fromJson(requestJsonString, DispatcherRequest.class);
 
-            logger.logInfoWithTracker(runId, String.format("Parsed dispatcher request %s ", dispatcherRequest.toString()));
+            runId = dispatcherRequest.isForceRun()? TrackingHelper.generateForcedRunId(): TrackingHelper.generateHeartBeatRunId();
+
+            logger.logInfoWithTracker(runId, null, String.format("Parsed dispatcher request %s ", dispatcherRequest.toString()));
 
             Dispatcher dispatcher = new Dispatcher(
                     environment.toConfig(),
@@ -100,10 +103,10 @@ public class DispatcherController {
                     results.getSuccessMessages().size(),
                     results.getFailedMessages().size());
 
-            logger.logInfoWithTracker(runId, state);
+            logger.logInfoWithTracker(runId, null, state);
 
         } catch (Exception e) {
-            logger.logNonRetryableExceptions(runId, e);
+            logger.logNonRetryableExceptions(runId, null, e);
             state = String.format("ERROR '%s'", e.getMessage());
         }
 

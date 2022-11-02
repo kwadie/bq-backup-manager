@@ -67,7 +67,7 @@ public class BigQuerySnapshoter {
         );
     }
 
-    public PubSubPublishResults execute(BigQuerySnapshoterRequest request, String pubSubMessageId) throws IOException, NonRetryableApplicationException, InterruptedException {
+    public BigQuerySnapshoterResponse execute(BigQuerySnapshoterRequest request, String pubSubMessageId) throws IOException, NonRetryableApplicationException, InterruptedException {
 
         // run common service start logging and checks
         Utils.runServiceStartRoutines(
@@ -109,6 +109,7 @@ public class BigQuerySnapshoter {
 
         Timestamp timeTravelTs = Timestamp.ofTimeSecondsAndNanos(sourceTableWithTimeTravelTuple.y()/1000, 0);
         logger.logInfoWithTracker(request.getTrackingId(),
+                request.getTargetTable(),
                 String.format("Will take a BQ Snapshot for '%s' to '%s' with time travel timestamp '%s' (%s days) expiring on '%s'",
                         request.getTargetTable().toSqlString(),
                         snapshotTable.toSqlString(),
@@ -128,6 +129,7 @@ public class BigQuerySnapshoter {
 
         // TODO: use a designated logger to track backup operations (audit log)
         logger.logInfoWithTracker(request.getTrackingId(),
+                request.getTargetTable(),
                 String.format("BigQuery snapshot completed for table %s to %s",
                         request.getTargetTable().toSqlString(),
                         snapshotTable.toSqlString()
@@ -141,7 +143,7 @@ public class BigQuerySnapshoter {
                 request.getTrackingId(),
                 request.getBackupPolicy(),
                 BackupMethod.BIGQUERY_SNAPSHOT,
-                snapshotTable.toResourceUrl(),
+                snapshotTable,
                 null,
                 operationTs
         );
@@ -155,12 +157,12 @@ public class BigQuerySnapshoter {
 
         for (FailedPubSubMessage msg : publishResults.getFailedMessages()) {
             String logMsg = String.format("Failed to publish this message %s", msg.toString());
-            logger.logWarnWithTracker(request.getTrackingId(), logMsg);
+            logger.logWarnWithTracker(request.getTrackingId(), request.getTargetTable(), logMsg);
         }
 
         for (SuccessPubSubMessage msg : publishResults.getSuccessMessages()) {
             String logMsg = String.format("Published this message %s", msg.toString());
-            logger.logInfoWithTracker(request.getTrackingId(), logMsg);
+            logger.logInfoWithTracker(request.getTrackingId(), request.getTargetTable(), logMsg);
         }
 
         // run common service end logging and adding pubsub message to processed list
@@ -172,7 +174,16 @@ public class BigQuerySnapshoter {
                 pubSubMessageId
         );
 
-        return publishResults;
+        return new BigQuerySnapshoterResponse(
+                request.getTargetTable(),
+                request.getRunId(),
+                request.getTrackingId(),
+                operationTs,
+                sourceTableWithTimeTravelTuple.x(),
+                snapshotTable,
+                taggerRequest,
+                publishResults
+        );
     }
 
     /**

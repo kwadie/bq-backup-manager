@@ -1,35 +1,26 @@
-WITH broken AS
-(
--- Check for Tagger call in-completion (yet)
+WITH counts AS (
+SELECT
+  r.run_id,
+  -- one tracking id might have multiple records/runs due to retryable errors
+  r.tracking_id,
+  TIMESTAMP_MILLIS(CAST(SUBSTR(r.run_id, 0, 13) AS INT64)) AS timestamp,
+  -- if at least one run is successful then the tracking id has completed successfully
+  SUM(CASE WHEN r.is_successful_run IS TRUE THEN 1 ELSE 0 END) AS success_count,
+  -- if at least one run is not successully and is not retryable then the tracking id has completed with a failure
+  SUM(CASE WHEN r.is_successful_run IS FALSE AND r.run_has_retryable_error IS FALSE THEN 1 ELSE 0 END) AS non_retryable_failure_count,
+  -- runs that are not success but failed for retryable errors
+  SUM(CASE WHEN r.is_successful_run IS FALSE AND r.run_has_retryable_error IS TRUE THEN 1 ELSE 0 END) AS retryable_failure_count,
+  SUM(CASE WHEN r.is_successful_run IS NULL THEN 1 ELSE 0 END) AS incomplete_count,
+FROM `${project}.${dataset}.${v_unified_logging}`, UNNEST(runs) r
+GROUP BY 1,2
+)
+
 SELECT
 run_id,
-TIMESTAMP_MILLIS(CAST(SUBSTR(run_id, 0, 13) AS INT64)) AS timestamp,
-s.dispatched_tracking_id AS tracking_id,
-'INCOMPLETE' AS status,
-msg AS details
-FROM `${project}.${dataset}.${v_broken_steps}` s
-),
-success AS (
-
--- Check for Tagger call completion
-SELECT DISTINCT
-run_id,
-TIMESTAMP_MILLIS(CAST(SUBSTR(run_id, 0, 13) AS INT64)) AS timestamp,
-tracker AS tracking_id,
-'COMPLETE' AS status,
-'Tagger Completed Successfully' AS details
-FROM
-`${project}.${dataset}.${v_service_calls}`
-WHERE tagger_ends > 0
-
-)
-,
-final AS
-(
-SELECT * FROM broken
-UNION ALL
-SELECT * FROM success
-)
-
-
-SELECT * FROM final ORDER BY run_id DESC, status, tracking_id
+timestamp,
+tracking_id,
+CASE WHEN success_count > 0 THEN 'Success'
+ WHEN non_retryable_failure_count > 0 THEN 'Failed'
+ WHEN retryable_failure_count > 0 THEN 'Retrying'
+ WHEN incomplete_count > 0 THEN 'In Progress' END AS status
+FROM counts

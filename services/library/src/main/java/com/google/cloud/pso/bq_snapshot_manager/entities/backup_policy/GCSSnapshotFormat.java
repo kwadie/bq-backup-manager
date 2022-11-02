@@ -5,7 +5,6 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupCon
 import java.util.Arrays;
 
 public enum GCSSnapshotFormat {
-    NOT_APPLICABLE,
     CSV,
     CSV_GZIP,
     JSON,

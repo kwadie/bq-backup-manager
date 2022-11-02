@@ -31,4 +31,6 @@ public enum ApplicationLog {
     NON_RETRYABLE_EXCEPTIONS_LOG,
     // To capture trackers with retryable exceptions during processing
     RETRYABLE_EXCEPTIONS_LOG,
+    // Unified log for service requests
+    UNIFIED_LOG
 }

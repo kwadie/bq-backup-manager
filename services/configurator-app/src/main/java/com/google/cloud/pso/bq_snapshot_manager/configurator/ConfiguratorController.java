@@ -16,11 +16,16 @@
 package com.google.cloud.pso.bq_snapshot_manager.configurator;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.FallbackBackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.Configurator;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.ConfiguratorRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.ConfiguratorResponse;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerResponse;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
@@ -62,6 +67,7 @@ public class ConfiguratorController {
 
         logger.logInfoWithTracker(
                 trackingId,
+                null,
                 "Will try to parse fallback backup policy.."
         );
 
@@ -72,6 +78,7 @@ public class ConfiguratorController {
 
         logger.logInfoWithTracker(
                 trackingId,
+                null,
                 "Successfully parsed fallback backup policy"
         );
     }
@@ -82,11 +89,19 @@ public class ConfiguratorController {
 
         DataCatalogServiceImpl dataCatalogService = null;
 
+        // These values will be updated based on the execution flow and logged at the end
+        ResponseEntity responseEntity;
+        ConfiguratorRequest configuratorRequest = null;
+        ConfiguratorResponse configuratorResponse = null;
+        boolean isSuccess;
+        Exception error = null;
+        boolean isRetryableError= false;
+
         try {
 
             if (requestBody == null || requestBody.getMessage() == null) {
                 String msg = "Bad Request: invalid message format";
-                logger.logSevereWithTracker(trackingId, msg);
+                logger.logSevereWithTracker(trackingId,null, msg);
                 throw new NonRetryableApplicationException("Request body or message is Null.");
             }
 
@@ -95,13 +110,13 @@ public class ConfiguratorController {
             // remove any escape characters (e.g. from Terraform
             requestJsonString = requestJsonString.replace("\\", "");
 
-            logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
+            logger.logInfoWithTracker(trackingId, null, String.format("Received payload: %s", requestJsonString));
 
-            ConfiguratorRequest configuratorRequest = gson.fromJson(requestJsonString, ConfiguratorRequest.class);
+            configuratorRequest = gson.fromJson(requestJsonString, ConfiguratorRequest.class);
 
             trackingId = configuratorRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", configuratorRequest.toString()));
+            logger.logInfoWithTracker(trackingId, configuratorRequest.getTargetTable(), String.format("Parsed Request: %s", configuratorRequest.toString()));
 
             dataCatalogService = new DataCatalogServiceImpl();
 
@@ -115,18 +130,44 @@ public class ConfiguratorController {
                     functionNumber
             );
 
-            configurator.execute(configuratorRequest, requestBody.getMessage().getMessageId());
+            configuratorResponse = configurator.execute(configuratorRequest, requestBody.getMessage().getMessageId());
 
-            return new ResponseEntity("Process completed successfully.", HttpStatus.OK);
+            responseEntity = new ResponseEntity("Process completed successfully.", HttpStatus.OK);
+            isSuccess = true;
 
         } catch (Exception e) {
-            return ControllerExceptionHelper.handleException(e, logger, trackingId);
+
+            Tuple<ResponseEntity, Boolean> handlingResults  = ControllerExceptionHelper.handleException(
+                    e,
+                    logger,
+                    trackingId,
+                    configuratorRequest == null? null : configuratorRequest.getTargetTable()
+                    );
+            isSuccess = false;
+            responseEntity = handlingResults.x();
+            isRetryableError = handlingResults.y();
+            error = e;
+
         } finally {
 
             if (dataCatalogService != null) {
                 dataCatalogService.shutdown();
             }
         }
+
+        logger.logUnified(
+                functionNumber.toString(),
+                configuratorRequest == null? null: configuratorRequest.getRunId(),
+                configuratorRequest == null? null: configuratorRequest.getTrackingId(),
+                configuratorRequest == null? null : configuratorRequest.getTargetTable(),
+                configuratorRequest,
+                configuratorResponse,
+                isSuccess,
+                error,
+                isRetryableError
+        );
+
+        return responseEntity;
     }
 
     public static void main(String[] args) {

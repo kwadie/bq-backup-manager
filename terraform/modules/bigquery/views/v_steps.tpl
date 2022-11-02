@@ -2,6 +2,7 @@ SELECT
 TIMESTAMP_MILLIS(CAST(SUBSTR(jsonPayload.global_run_id, 0, 13) AS INT64)) AS start_time,
 jsonPayload.global_run_id AS run_id,
 jsonPayload.global_tracker AS tracker,
+CONCAT(jsonPayload.global_tablespec_project,'.',jsonPayload.global_tablespec_dataset,'.',jsonPayload.global_tablespec_table) AS table_spec,
 jsonPayload.global_logger_name AS function_name,
 jsonPayload.function_lifecycle_functionnumber AS function_number,
 jsonPayload.function_lifecycle_event AS step

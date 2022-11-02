@@ -16,14 +16,14 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
-import com.google.cloud.pso.bq_snapshot_manager.entities.ApplicationLog;
-import com.google.cloud.pso.bq_snapshot_manager.entities.FunctionLifeCycleEvent;
-import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.*;
+import com.google.flatbuffers.Table;
+import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
+import javax.annotation.Nullable;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -45,24 +45,24 @@ public class LoggingHelper {
         logger = LoggerFactory.getLogger(loggerName);
     }
 
-    public void logDebugWithTracker(String tracker, String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tracker, msg, Level.DEBUG);
+    public void logDebugWithTracker(String tracker, @Nullable TableSpec tableSpec, String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.DEBUG);
     }
 
-    public void logInfoWithTracker(String tracker, String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tracker, msg, Level.INFO);
+    public void logInfoWithTracker(String tracker, @Nullable TableSpec tableSpec, String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.INFO);
     }
 
-    public void logWarnWithTracker(String tracker, String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tracker, msg, Level.WARN);
+    public void logWarnWithTracker(String tracker, @Nullable TableSpec tableSpec,String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.WARN);
     }
 
-    public void logSevereWithTracker(String tracker, String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tracker, msg, Level.ERROR);
+    public void logSevereWithTracker(String tracker, @Nullable TableSpec tableSpec, String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.ERROR);
     }
 
-    private void logWithTracker(ApplicationLog log, String tracker, String msg, Level level) {
-        logWithTracker(log, tracker, msg, level, new Object[]{});
+    private void logWithTracker(ApplicationLog log, @Nullable TableSpec tableSpec, String tracker, String msg, Level level) {
+        logWithTracker(log, tracker, tableSpec, msg, level, new Object[]{});
     }
 
     public void logSuccessDispatcherTrackingId(String trackingId, String dispatchedTrackingId, TableSpec tableSpec) {
@@ -78,6 +78,7 @@ public class LoggingHelper {
         logWithTracker(
                 ApplicationLog.DISPATCHED_REQUESTS_LOG,
                 trackingId,
+                tableSpec,
                 String.format("Dispatched request for table '%s' with trackindId `%s`", tableSpec.toSqlString(), dispatchedTrackingId),
                 Level.INFO,
                 attributes
@@ -85,7 +86,7 @@ public class LoggingHelper {
     }
 
     // To log failed processing of projects, datasets or tables
-    public void logFailedDispatcherEntityId(String trackingId, String entityId, Exception ex) {
+    public void logFailedDispatcherEntityId(String trackingId, @Nullable TableSpec tableSpec, String entityId, Exception ex) {
 
         Object [] attributes = new Object[]{
                 kv("failed_dispatcher_entity_id", entityId),
@@ -96,6 +97,7 @@ public class LoggingHelper {
         logWithTracker(
                 ApplicationLog.FAILED_DISPATCHED_REQUESTS_LOG,
                 trackingId,
+                tableSpec,
                 String.format("Failed to process entity `%s`.Exception: %s. Msg: %s",
                         entityId,
                         ex.getClass().getName(),
@@ -107,17 +109,18 @@ public class LoggingHelper {
     }
 
     // To log failed processing of projects, datasets or tables
-    public void logNonRetryableExceptions(String trackingId, Exception ex) {
+    public void logNonRetryableExceptions(String trackingId, @Nullable TableSpec tableSpec, Exception ex) {
 
         Object [] attributes = new Object[]{
                 kv("non_retryable_ex_tracking_id", trackingId),
                 kv("non_retryable_ex_name", ex.getClass().getName()),
-                kv("non_retryable_ex_msg", ex.getMessage()),
+                kv("non_retryable_ex_msg", ExceptionUtils.getStackTrace(ex)),
         };
 
         logWithTracker(
                 ApplicationLog.NON_RETRYABLE_EXCEPTIONS_LOG,
                 trackingId,
+                tableSpec,
                 String.format("Caught a Non-Retryable exception while processing tracker `%s`. Exception: %s. Msg: %s", trackingId, ex.getClass().getName(), ex.getMessage()),
                 Level.ERROR,
                 attributes
@@ -126,18 +129,19 @@ public class LoggingHelper {
     }
 
     // To log failed processing of projects, datasets or tables
-    public void logRetryableExceptions(String trackingId, Exception ex, String reason) {
+    public void logRetryableExceptions(String trackingId, @Nullable  TableSpec tableSpec, Exception ex, String reason) {
 
         Object [] attributes = new Object[]{
                 kv("retryable_ex_tracking_id", trackingId),
                 kv("retryable_ex_name", ex.getClass().getName()),
-                kv("retryable_ex_msg", ex.getMessage()),
+                kv("retryable_ex_msg", ExceptionUtils.getStackTrace(ex)),
                 kv("retryable_ex_reason", reason),
         };
 
         logWithTracker(
                 ApplicationLog.RETRYABLE_EXCEPTIONS_LOG,
                 trackingId,
+                tableSpec,
                 String.format("Caught a Retryable exception while processing tracker `%s`. Exception: %s. Msg: %s. Classification Reason: %s.",
                         trackingId,
                         ex.getClass().getName(),
@@ -150,15 +154,15 @@ public class LoggingHelper {
         ex.printStackTrace();
     }
 
-    public void logFunctionStart(String trackingId) {
-        logFunctionLifeCycleEvent(trackingId, FunctionLifeCycleEvent.START);
+    public void logFunctionStart(String trackingId, @Nullable TableSpec tableSpec) {
+        logFunctionLifeCycleEvent(trackingId, tableSpec, FunctionLifeCycleEvent.START);
     }
 
-    public void logFunctionEnd(String trackingId) {
-        logFunctionLifeCycleEvent(trackingId, FunctionLifeCycleEvent.END);
+    public void logFunctionEnd(String trackingId, @Nullable TableSpec tableSpec) {
+        logFunctionLifeCycleEvent(trackingId, tableSpec, FunctionLifeCycleEvent.END);
     }
 
-    private void logFunctionLifeCycleEvent(String trackingId, FunctionLifeCycleEvent event) {
+    private void logFunctionLifeCycleEvent(String trackingId, @Nullable TableSpec tableSpec, FunctionLifeCycleEvent event) {
 
         Object [] attributes = new Object[]{
                 kv("function_lifecycle_event", event),
@@ -168,17 +172,60 @@ public class LoggingHelper {
         logWithTracker(
                 ApplicationLog.TRACKER_LOG,
                 trackingId,
-                String.format("%s | %s | %s",
+                tableSpec,
+                String.format("%s | %s | %s | %s",
                         loggerName,
                         functionNumber,
-                        event),
+                        event,
+                        tableSpec == null? null: tableSpec.toSqlString()
+                        ),
                 Level.INFO,
                 attributes
         );
 
     }
 
-    private void logWithTracker(ApplicationLog log, String tracker, String msg, Level level, Object [] extraAttributes) {
+
+    public void logUnified(
+            String component,
+            String runId,
+            String trackingId,
+            @Nullable TableSpec targetTable,
+            @Nullable JsonMessage inputJson,
+            @Nullable JsonMessage outputJson,
+            boolean isSuccess,
+            @Nullable Exception exception,
+            boolean isRetryableError
+    ){
+
+        Object [] attributes = new Object[]{
+                kv("unified_component", component),
+                kv("unified_run_id", runId),
+                kv("unified_tracking_id", trackingId),
+                kv("unified_target_table", targetTable != null? targetTable.toSqlString(): null),
+                kv("unified_input_json", inputJson != null? inputJson.toJsonString(): null),
+                kv("unified_output_json", outputJson != null? outputJson.toJsonString(): null),
+                kv("unified_is_successful", String.valueOf(isSuccess)),
+                kv("unified_error", exception != null? ExceptionUtils.getStackTrace(exception) : null),
+                kv("unified_is_retryable_error", String.valueOf(isRetryableError))
+        };
+
+        logWithTracker(
+                ApplicationLog.UNIFIED_LOG,
+                trackingId,
+                targetTable,
+                String.format("Unified log event for component '%s' processing target table '%s' with isSuccess status = '%s' and isRetryable = '%s'",
+                        component,
+                        targetTable != null? targetTable.toSqlString(): "",
+                        isSuccess,
+                        isRetryableError
+                ),
+                isSuccess || isRetryableError? Level.INFO : Level.ERROR,
+                attributes
+        );
+    }
+
+    private void logWithTracker(ApplicationLog log, String tracker, @Nullable TableSpec tableSpec, String msg, Level level, Object [] extraAttributes) {
 
         // Enable JSON logging with Logback and SLF4J by enabling the Logstash JSON Encoder in your logback.xml configuration.
 
@@ -203,6 +250,9 @@ public class LoggingHelper {
                 kv("global_logger_name", this.loggerName),
                 kv("global_app_log", log),
                 kv("global_tracker", tracker),
+                kv("global_tablespec_project", tableSpec == null? null: tableSpec.getProject()),
+                kv("global_tablespec_dataset", tableSpec == null? null: tableSpec.getDataset()),
+                kv("global_tablespec_table", tableSpec == null? null: tableSpec.getTable()),
                 kv("global_run_id", runId),
                 kv("global_msg", msg),
                 kv("severity", level.toString()),

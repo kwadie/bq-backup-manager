@@ -83,7 +83,9 @@ public class Dispatcher {
                     pubSubMessageId);
             throw new NonRetryableApplicationException(msg);
         } else {
-            logger.logInfoWithTracker(runId, String.format("Persisting processing key for PubSub message ID %s", pubSubMessageId));
+            logger.logInfoWithTracker(runId,
+                    null,
+                    String.format("Persisting processing key for PubSub message ID %s", pubSubMessageId));
             persistentSet.add(flagFileName);
         }
 
@@ -125,10 +127,11 @@ public class Dispatcher {
             ConfiguratorRequest request = (ConfiguratorRequest) msg.getMsg();
 
             String logMsg = String.format("Failed to publish this PubSub messages %s", msg.toString());
-            logger.logWarnWithTracker(runId, logMsg);
+            logger.logWarnWithTracker(runId, request.getTargetTable(), logMsg);
 
             logger.logFailedDispatcherEntityId(
                     request.getTrackingId(),
+                    request.getTargetTable(),
                     request.getTargetTable().toSqlString(),
                     msg.getException()
             );
@@ -142,7 +145,7 @@ public class Dispatcher {
             logger.logSuccessDispatcherTrackingId(runId, request.getTrackingId(), request.getTargetTable());
         }
 
-        logger.logFunctionEnd(runId);
+        logger.logFunctionEnd(runId, null);
 
         return publishResults;
     }

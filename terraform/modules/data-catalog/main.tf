@@ -11,7 +11,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "config_source"
     display_name = "Configuration Source"
-    order = 1
+    order = 12
     type {
       enum_type {
         allowed_values {
@@ -22,12 +22,13 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
         }
       }
     }
+    is_required = true
   }
 
   fields {
     field_id = "backup_cron"
     display_name = "Cron expression for backup frequency"
-    order = 2
+    order = 11
     type {
       primitive_type = "STRING"
     }
@@ -37,7 +38,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_time_travel_offset_days"
     display_name = "Number of days in the past where the backup is taken relative to NOW"
-    order = 3
+    order = 10
     type {
       enum_type {
         allowed_values {
@@ -72,7 +73,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_method"
     display_name = "How to backup this table"
-    order = 4
+    order = 9
     type {
       enum_type {
         allowed_values {
@@ -92,7 +93,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "bq_snapshot_storage_project"
     display_name = "BigQuery - Project where the snapshot is stored"
-    order = 5
+    order = 8
     type {
       primitive_type = "STRING"
     }
@@ -102,7 +103,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "bq_snapshot_storage_dataset"
     display_name = "BigQuery - Dataset where the snapshot is stored"
-    order = 6
+    order = 7
     type {
       primitive_type = "STRING"
     }
@@ -112,7 +113,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "bq_snapshot_expiration_days"
     display_name = "BigQuery - Snapshot retention period in days"
-    order = 7
+    order = 6
     type {
       primitive_type = "DOUBLE"
     }
@@ -122,7 +123,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "gcs_snapshot_storage_location"
     display_name = "GCS - Parent path to store all table snapshots"
-    order = 8
+    order = 5
     type {
       primitive_type = "STRING"
     }
@@ -132,12 +133,9 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "gcs_snapshot_format"
     display_name = "GCS - Export format and compression"
-    order = 9
+    order = 4
     type {
       enum_type {
-        allowed_values {
-          display_name = "NOT_APPLICABLE"
-        }
         allowed_values {
           display_name = "CSV"
         }
@@ -176,7 +174,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "last_backup_at"
     display_name = "Read-Only - Timestamp of the latest backup taken"
-    order = 10
+    order = 3
     type {
       primitive_type = "TIMESTAMP"
     }
@@ -186,7 +184,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "last_gcs_snapshot_storage_uri"
     display_name = "Read-Only - Last GCS snapshot location"
-    order = 11
+    order = 2
     type {
       primitive_type = "STRING"
     }
@@ -196,7 +194,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "last_bq_snapshot_storage_uri"
     display_name = "Read-Only - Last BQ snapshot location"
-    order = 12
+    order = 1
     type {
       primitive_type = "STRING"
     }

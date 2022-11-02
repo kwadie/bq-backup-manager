@@ -4,16 +4,21 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.datacatalog.v1.Tag;
 import com.google.cloud.datacatalog.v1.TagField;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
+import com.google.common.base.Objects;
 import com.google.gson.Gson;
 
+import javax.annotation.Nonnull;
+import javax.annotation.Nullable;
+import java.util.ArrayList;
+import java.util.List;
 import java.util.Map;
-import java.util.Objects;
 
 public class BackupPolicy {
 
     private final String cron;
     private final BackupMethod method;
     private final TimeTravelOffsetDays timeTravelOffsetDays;
+
     private final Double bigQuerySnapshotExpirationDays;
     private final String bigQuerySnapshotStorageProject;
     private final String bigQuerySnapshotStorageDataset;
@@ -24,7 +29,65 @@ public class BackupPolicy {
     private String lastBqSnapshotStorageUri;
     private String lastGcsSnapshotStorageUri;
 
-    public BackupPolicy(String cron, BackupMethod method, TimeTravelOffsetDays timeTravelOffsetDays, Double bigQuerySnapshotExpirationDays, String bigQuerySnapshotStorageProject, String bigQuerySnapshotStorageDataset, String gcsSnapshotStorageLocation, GCSSnapshotFormat gcsExportFormat, BackupConfigSource configSource, Timestamp lastBackupAt, String lastBqSnapshotStorageUri, String lastGcsSnapshotStorageUri) {
+    public BackupPolicy(@Nonnull String cron,
+                        @Nonnull BackupMethod method,
+                        @Nonnull TimeTravelOffsetDays timeTravelOffsetDays,
+                        @Nullable Double bigQuerySnapshotExpirationDays,
+                        @Nullable String bigQuerySnapshotStorageProject,
+                        @Nullable String bigQuerySnapshotStorageDataset,
+                        @Nullable String gcsSnapshotStorageLocation,
+                        @Nullable GCSSnapshotFormat gcsExportFormat,
+                        @Nonnull BackupConfigSource configSource,
+                        @Nullable Timestamp lastBackupAt,
+                        @Nullable String lastBqSnapshotStorageUri,
+                        @Nullable String lastGcsSnapshotStorageUri) {
+
+        // validate that all required fields are provided depending on the backup method
+        List<DataCatalogBackupPolicyTagFields> missing = new ArrayList<>();
+
+        if(cron == null){
+            missing.add(DataCatalogBackupPolicyTagFields.backup_cron);
+        }
+        if(method == null){
+            missing.add(DataCatalogBackupPolicyTagFields.backup_method);
+        }
+        if(timeTravelOffsetDays == null){
+            missing.add(DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days);
+        }
+        if(configSource == null){
+            missing.add(DataCatalogBackupPolicyTagFields.config_source);
+        }
+
+        if(method.equals(BackupMethod.BIGQUERY_SNAPSHOT) || method.equals(BackupMethod.BOTH)){
+            if (bigQuerySnapshotStorageProject == null){
+                missing.add(DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project);
+            }
+            if(bigQuerySnapshotStorageDataset == null){
+                missing.add(DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset);
+            }
+            if(bigQuerySnapshotExpirationDays == null){
+                missing.add(DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days);
+            }
+        }
+
+        if(method.equals(BackupMethod.GCS_SNAPSHOT) || method.equals(BackupMethod.BOTH)){
+            if (gcsExportFormat == null){
+                missing.add(DataCatalogBackupPolicyTagFields.gcs_snapshot_format);
+            }
+            if(gcsSnapshotStorageLocation == null){
+                missing.add(DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location);
+            }
+        }
+
+        if(!missing.isEmpty()){
+            throw new IllegalArgumentException(
+                    String.format("Backup policy is invalid for backup method '%s'. The following fields are missing %s",
+                            method,
+                            missing
+                            )
+            );
+        }
+
         this.cron = cron;
         this.method = method;
         this.timeTravelOffsetDays = timeTravelOffsetDays;
@@ -37,6 +100,38 @@ public class BackupPolicy {
         this.lastBackupAt = lastBackupAt;
         this.lastBqSnapshotStorageUri = lastBqSnapshotStorageUri;
         this.lastGcsSnapshotStorageUri = lastGcsSnapshotStorageUri;
+    }
+
+    public boolean hasBigQuerySnapshotExpirationDays() {
+        return bigQuerySnapshotExpirationDays != null;
+    }
+
+    public boolean hasBigQuerySnapshotStorageProject() {
+        return bigQuerySnapshotStorageProject != null;
+    }
+
+    public boolean hasBigQuerySnapshotStorageDataset() {
+        return bigQuerySnapshotStorageDataset != null;
+    }
+
+    public boolean hasGcsSnapshotStorageLocation() {
+        return gcsSnapshotStorageLocation != null;
+    }
+
+    public boolean hasLastBqSnapshotStorageUri() {
+        return lastBqSnapshotStorageUri != null;
+    }
+
+    public boolean hasLastGcsSnapshotStorageUri() {
+        return lastGcsSnapshotStorageUri != null;
+    }
+
+    public boolean hasGcsExportFormat() {
+        return gcsExportFormat != null;
+    }
+
+    public boolean hasLastBackupAt() {
+        return lastBackupAt != null;
     }
 
     public String getCron() {
@@ -104,7 +199,7 @@ public class BackupPolicy {
         Gson gson = new Gson();
         Map<String, String> jsonMap = gson.fromJson(jsonStr, Map.class);
 
-        return fromMap(jsonMap, true);
+        return fromMap(jsonMap);
     }
 
     @Override
@@ -128,116 +223,147 @@ public class BackupPolicy {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof BackupPolicy)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         BackupPolicy that = (BackupPolicy) o;
-        return getCron().equals(that.getCron()) &&
-                getMethod() == that.getMethod() &&
-                getTimeTravelOffsetDays() == that.getTimeTravelOffsetDays() &&
-                getBigQuerySnapshotExpirationDays().equals(that.getBigQuerySnapshotExpirationDays()) &&
-                getBigQuerySnapshotStorageProject().equals(that.getBigQuerySnapshotStorageProject()) &&
-                getBigQuerySnapshotStorageDataset().equals(that.getBigQuerySnapshotStorageDataset()) &&
-                getGcsSnapshotStorageLocation().equals(that.getGcsSnapshotStorageLocation()) &&
-                getGcsExportFormat() == that.getGcsExportFormat() &&
-                getConfigSource() == that.getConfigSource() &&
-                getLastBackupAt().equals(that.getLastBackupAt()) &&
-                getLastBqSnapshotStorageUri().equals(that.getLastBqSnapshotStorageUri()) &&
-                getLastGcsSnapshotStorageUri().equals(that.getLastGcsSnapshotStorageUri());
+        return Objects.equal(cron, that.cron) && method == that.method && timeTravelOffsetDays == that.timeTravelOffsetDays && Objects.equal(bigQuerySnapshotExpirationDays, that.bigQuerySnapshotExpirationDays) && Objects.equal(bigQuerySnapshotStorageProject, that.bigQuerySnapshotStorageProject) && Objects.equal(bigQuerySnapshotStorageDataset, that.bigQuerySnapshotStorageDataset) && Objects.equal(gcsSnapshotStorageLocation, that.gcsSnapshotStorageLocation) && gcsExportFormat == that.gcsExportFormat && configSource == that.configSource && Objects.equal(lastBackupAt, that.lastBackupAt) && Objects.equal(lastBqSnapshotStorageUri, that.lastBqSnapshotStorageUri) && Objects.equal(lastGcsSnapshotStorageUri, that.lastGcsSnapshotStorageUri);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(getCron(), getMethod(), getTimeTravelOffsetDays(), getBigQuerySnapshotExpirationDays(), getBigQuerySnapshotStorageProject(), getBigQuerySnapshotStorageDataset(), getGcsSnapshotStorageLocation(), getGcsExportFormat(), getConfigSource(), getLastBackupAt(), getLastBqSnapshotStorageUri(), getLastGcsSnapshotStorageUri());
+        return Objects.hashCode(cron, method, timeTravelOffsetDays, bigQuerySnapshotExpirationDays, bigQuerySnapshotStorageProject, bigQuerySnapshotStorageDataset, gcsSnapshotStorageLocation, gcsExportFormat, configSource, lastBackupAt, lastBqSnapshotStorageUri, lastGcsSnapshotStorageUri);
     }
 
     /**
      * tagTemplateId is required.
      * tagName is optional. It's used to update an existing Tag on DataCatalog.
+     *
      * @param tagTemplateId
      * @param tagName
      * @return
      */
     public Tag toDataCatalogTag(String tagTemplateId, String tagName) {
 
-        TagField cronField =
-                TagField.newBuilder().setStringValue(cron).build();
+        Tag.Builder tagBuilder = Tag.newBuilder()
+                .setTemplate(tagTemplateId);
 
+        // required: cron
+        TagField cronField = TagField.newBuilder().setStringValue(cron).build();
+        tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_cron.toString(), cronField);
+
+        // required: backup method
         TagField methodField =
                 TagField.newBuilder().setEnumValue(
-                        TagField.EnumValue.newBuilder().setDisplayName(
-                                method.getText())
-                                .build())
+                                TagField.EnumValue.newBuilder().setDisplayName(
+                                                method.getText())
+                                        .build())
                         .build();
+        tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_method.toString(), methodField);
 
+
+        // required: time travel
         TagField timeTravelOffsetDaysField =
                 TagField.newBuilder().setEnumValue(
-                        TagField.EnumValue.newBuilder().setDisplayName(
-                                timeTravelOffsetDays.getText())
-                                .build())
+                                TagField.EnumValue.newBuilder().setDisplayName(
+                                                timeTravelOffsetDays.getText())
+                                        .build())
                         .build();
+        tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days.toString(),
+                timeTravelOffsetDaysField);
 
-        TagField bigQuerySnapshotExpirationDaysField =
-                TagField.newBuilder().setDoubleValue(bigQuerySnapshotExpirationDays).build();
+        // optional: bq snapshot expiration
+        if(bigQuerySnapshotExpirationDays != null){
+            TagField bigQuerySnapshotExpirationDaysField =
+                    TagField.newBuilder().setDoubleValue(bigQuerySnapshotExpirationDays).build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString(), bigQuerySnapshotExpirationDaysField);
+        }
 
-        TagField bigQuerySnapshotStorageProjectField =
-                TagField.newBuilder().setStringValue(bigQuerySnapshotStorageProject).build();
+        // optional: bq snapshot project
+        if(bigQuerySnapshotStorageProject != null){
+            TagField bigQuerySnapshotStorageProjectField =
+                    TagField.newBuilder().setStringValue(bigQuerySnapshotStorageProject).build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project.toString(),
+                   bigQuerySnapshotStorageProjectField);
+        }
 
-        TagField bigQuerySnapshotStorageDatasetField =
-                TagField.newBuilder().setStringValue(bigQuerySnapshotStorageDataset).build();
+        // optional: bq snapshot dataset
+        if(bigQuerySnapshotStorageDataset != null){
+            TagField bigQuerySnapshotStorageDatasetField =
+                    TagField.newBuilder().setStringValue(bigQuerySnapshotStorageDataset).build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString(),
+                    bigQuerySnapshotStorageDatasetField);
+        }
 
-        TagField gcsSnapshotStorageLocationField =
-                TagField.newBuilder().setStringValue(gcsSnapshotStorageLocation).build();
+        // optional: gcs snapshot storage location
+        if(gcsSnapshotStorageLocation != null){
+            TagField gcsSnapshotStorageLocationField =
+                    TagField.newBuilder().setStringValue(gcsSnapshotStorageLocation).build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString(),
+                    gcsSnapshotStorageLocationField);
+        }
 
-        TagField gcsExportFormatField =
-                TagField.newBuilder().setEnumValue(
-                        TagField.EnumValue.newBuilder().setDisplayName(
-                                gcsExportFormat.toString())
-                                .build())
-                        .build();
+        // optional: gcs export format
+        if(gcsExportFormat != null){
+            TagField gcsExportFormatField =
+                    TagField.newBuilder().setEnumValue(
+                                    TagField.EnumValue.newBuilder().setDisplayName(
+                                                    gcsExportFormat.toString())
+                                            .build())
+                            .build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.gcs_snapshot_format.toString(),
+                    gcsExportFormatField);
+        }
 
+
+        // required: config source
         TagField configSourceField =
                 TagField.newBuilder().setEnumValue(
-                        TagField.EnumValue.newBuilder().setDisplayName(
-                                configSource.toString())
-                                .build())
+                                TagField.EnumValue.newBuilder().setDisplayName(
+                                                configSource.toString())
+                                        .build())
                         .build();
+        tagBuilder.putFields(DataCatalogBackupPolicyTagFields.config_source.toString(), configSourceField);
 
-        TagField lastBackupAtField =
-                TagField.newBuilder().setTimestampValue(
-                        com.google.protobuf.Timestamp.newBuilder().setSeconds(lastBackupAt.getSeconds()).build()
-                ).build();
+        // optional: last backup at
+        if(lastBackupAt != null){
+            TagField lastBackupAtField =
+                    TagField.newBuilder().setTimestampValue(
+                            com.google.protobuf.Timestamp.newBuilder()
+                                    .setSeconds(lastBackupAt.getSeconds())
+                                    .setNanos(lastBackupAt.getNanos())
+                                    .build()
+                    ).build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.last_backup_at.toString(), lastBackupAtField);
+        }
 
-        TagField lastBqSnapshotUriField =
-                TagField.newBuilder().setStringValue(lastBqSnapshotStorageUri).build();
 
-        TagField lastGcsSnapshotUriField =
-                TagField.newBuilder().setStringValue(lastGcsSnapshotStorageUri).build();
+        // optional: last bq snapshot uri
+        if(lastBqSnapshotStorageUri != null){
+            TagField lastBqSnapshotUriField =
+                    TagField.newBuilder().setStringValue(lastBqSnapshotStorageUri).build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.last_bq_snapshot_storage_uri.toString(),
+                    lastBqSnapshotUriField);
+        }
 
+        // optional: last gcs snapshot uri
+        if(lastGcsSnapshotStorageUri != null){
+            TagField lastGcsSnapshotUriField =
+                    TagField.newBuilder().setStringValue(lastGcsSnapshotStorageUri).build();
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.last_gcs_snapshot_storage_uri.toString(),
+                    lastGcsSnapshotUriField);
+        }
 
-        Tag.Builder tagBuilder =  Tag.newBuilder()
-                .setTemplate(tagTemplateId)
-                .putFields(DataCatalogBackupPolicyTagFields.backup_cron.toString(), cronField)
-                .putFields(DataCatalogBackupPolicyTagFields.backup_method.toString(), methodField)
-                .putFields(DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days.toString(), timeTravelOffsetDaysField)
-                .putFields(DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString(), bigQuerySnapshotExpirationDaysField)
-                .putFields(DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project.toString(), bigQuerySnapshotStorageProjectField)
-                .putFields(DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString(), bigQuerySnapshotStorageDatasetField)
-                .putFields(DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString(), gcsSnapshotStorageLocationField)
-                .putFields(DataCatalogBackupPolicyTagFields.gcs_snapshot_format.toString(), gcsExportFormatField)
-                .putFields(DataCatalogBackupPolicyTagFields.config_source.toString(), configSourceField)
-                .putFields(DataCatalogBackupPolicyTagFields.last_backup_at.toString(), lastBackupAtField)
-                .putFields(DataCatalogBackupPolicyTagFields.last_bq_snapshot_storage_uri.toString(), lastBqSnapshotUriField)
-                .putFields(DataCatalogBackupPolicyTagFields.last_gcs_snapshot_storage_uri.toString(), lastGcsSnapshotUriField);
-
-        if(tagName != null){
+        if (tagName != null) {
             tagBuilder.setName(tagName);
         }
 
         return tagBuilder.build();
     }
 
-    public static BackupPolicy fromMap(Map<String, String> tagTemplate, boolean fromFallbackConfig) throws IllegalArgumentException {
 
-        // parse common settings
+    // used to parse from json map (fallback policies) or data catalog tags (backup policies)
+    public static BackupPolicy fromMap(Map<String, String> tagTemplate) throws IllegalArgumentException {
+
+        // parse required fields
         String cron = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_cron.toString());
 
         BackupMethod method = BackupMethod.fromString(
@@ -248,51 +374,59 @@ public class BackupPolicy {
                 Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days.toString())
         );
 
-        // parse BQ snapshot settings
-        String bqSnapshotStorageProject = Utils.getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project.toString());
-        String bqSnapshotStorageDataset = Utils.getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString());
-        String bqSnapshotExpirationDays = Utils.getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString());
+        // parse optional fields
+        // these fields might not exist in the attached tag template if not filled. Same for fallback policies
 
-        // parse GCS snapshot settings
-        String gcsSnapshotStorageLocation = Utils.getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString());
 
-        String gcsSnapshotFormatStr = Utils.getOrFail(tagTemplate,
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_format.toString());
-        GCSSnapshotFormat gcsSnapshotFormat = gcsSnapshotFormatStr.isEmpty() ? GCSSnapshotFormat.NOT_APPLICABLE : GCSSnapshotFormat.valueOf(gcsSnapshotFormatStr);
+        // parse optional BQ snapshot settings
+        String bqSnapshotStorageProject = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_project.toString(),
+                null);
 
-        // these fields are only used when we read from a data catalog tag
-        // when we read from fallback configurations we can provide default values
-        BackupConfigSource configSource = BackupConfigSource.SYSTEM;
-        Timestamp lastBackupAt = Timestamp.MIN_VALUE;
-        String lastBqSnapshotUri = "";
-        String lastGcsSnapshotUri = "";
+        String bqSnapshotStorageDataset = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString(),
+                null);
 
-        if(!fromFallbackConfig){
-            configSource = BackupConfigSource.fromString(
-                    Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.config_source.toString())
-            );
+        String bqSnapshotExpirationDays = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days.toString(),
+                null);
 
-            String lastBackupAtStr = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.last_backup_at.toString());
-            if (lastBackupAtStr.isEmpty()) {
-                lastBackupAt = Timestamp.MIN_VALUE;
-            } else {
-                lastBackupAt = Timestamp.parseTimestamp(lastBackupAtStr);
-            }
+        // parse optional GCS snapshot settings
+        String gcsSnapshotStorageLocation = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location.toString(),
+                null);
 
-            lastBqSnapshotUri = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.last_bq_snapshot_storage_uri.toString());
-            lastGcsSnapshotUri = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.last_gcs_snapshot_storage_uri.toString());
-        }
+        String gcsSnapshotFormatStr = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.gcs_snapshot_format.toString(),
+                null);
 
+        GCSSnapshotFormat gcsSnapshotFormat = gcsSnapshotFormatStr == null ? null : GCSSnapshotFormat.valueOf(gcsSnapshotFormatStr);
+
+        // config source is not required in the fallback policies. It defaults to SYSTEM if not present
+        String configSourceStr = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.config_source.toString(),
+                null);
+
+        BackupConfigSource configSource = configSourceStr == null ? BackupConfigSource.SYSTEM : BackupConfigSource.fromString(configSourceStr);
+
+        String lastBackupAtStr = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.last_backup_at.toString(),
+                null);
+        Timestamp lastBackupAt = lastBackupAtStr == null ? null : Timestamp.parseTimestamp(lastBackupAtStr);
+
+        String lastBqSnapshotUri = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.last_bq_snapshot_storage_uri.toString(),
+                null);
+
+        String lastGcsSnapshotUri = tagTemplate.getOrDefault(
+                DataCatalogBackupPolicyTagFields.last_gcs_snapshot_storage_uri.toString(),
+                null);
 
         return new BackupPolicy(
                 cron,
                 method,
                 timeTravelOffsetDays,
-                Double.valueOf(bqSnapshotExpirationDays),
+                bqSnapshotExpirationDays == null? null :Double.valueOf(bqSnapshotExpirationDays),
                 bqSnapshotStorageProject,
                 bqSnapshotStorageDataset,
                 gcsSnapshotStorageLocation,

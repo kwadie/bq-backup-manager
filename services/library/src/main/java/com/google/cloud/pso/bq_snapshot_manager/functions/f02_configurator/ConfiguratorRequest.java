@@ -1,11 +1,9 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator;
 
-import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequestResponse;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
-import com.google.gson.Gson;
 
-public class ConfiguratorRequest extends TableOperationRequest {
+public class ConfiguratorRequest extends TableOperationRequestResponse {
 
     private boolean isForceRun;
 

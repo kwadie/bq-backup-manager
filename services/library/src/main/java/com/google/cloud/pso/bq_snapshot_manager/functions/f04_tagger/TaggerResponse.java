@@ -1,17 +1,16 @@
-package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
+package com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger;
 
-import com.google.cloud.Timestamp;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequestResponse;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 
 import java.util.Objects;
 
-public class BigQuerySnapshoterRequest extends TableOperationRequestResponse {
+public class TaggerResponse extends TableOperationRequestResponse {
 
     private final BackupPolicy backupPolicy;
 
-    public BigQuerySnapshoterRequest(TableSpec targetTable, String runId, String trackingId, BackupPolicy backupPolicy) {
+    public TaggerResponse(TableSpec targetTable, String runId, String trackingId, BackupPolicy backupPolicy) {
         super(targetTable, runId, trackingId);
         this.backupPolicy = backupPolicy;
     }
@@ -20,13 +19,12 @@ public class BigQuerySnapshoterRequest extends TableOperationRequestResponse {
         return backupPolicy;
     }
 
-
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
-        BigQuerySnapshoterRequest that = (BigQuerySnapshoterRequest) o;
+        TaggerResponse that = (TaggerResponse) o;
         return backupPolicy.equals(that.backupPolicy);
     }
 
@@ -37,8 +35,8 @@ public class BigQuerySnapshoterRequest extends TableOperationRequestResponse {
 
     @Override
     public String toString() {
-        return "BigQuerySnapshoterRequest{" +
+        return "TaggerResponse{" +
                 "backupPolicy=" + backupPolicy +
-                '}';
+                "} " + super.toString();
     }
 }
