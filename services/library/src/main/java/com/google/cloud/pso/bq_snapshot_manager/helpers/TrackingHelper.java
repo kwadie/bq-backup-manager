@@ -26,10 +26,16 @@ public class TrackingHelper {
     public static final String MIN_RUN_ID = "0000000000000-z";
 
     private static final String heartBeatRunSuffix = "-H";
+
+    private static final String forcedRunSuffix = "-F";
     private static final Integer suffixLength = 2;
 
     public static String generateHeartBeatRunId(){
         return generateRunId(heartBeatRunSuffix);
+    }
+
+    public static String generateForcedRunId(){
+        return generateRunId(forcedRunSuffix);
     }
 
     private static String generateRunId(String suffix){

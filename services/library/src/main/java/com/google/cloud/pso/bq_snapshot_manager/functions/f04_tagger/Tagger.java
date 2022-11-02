@@ -41,7 +41,14 @@ public class Tagger {
         this.persistentSetObjectPrefix = persistentSetObjectPrefix;
     }
 
-    public void execute(
+    /**
+     *
+     * @param request
+     * @param pubSubMessageId
+     * @return The backup policy attached to the target table
+     * @throws NonRetryableApplicationException
+     */
+    public TaggerResponse execute(
             TaggerRequest request,
             String pubSubMessageId
     ) throws NonRetryableApplicationException {
@@ -57,7 +64,8 @@ public class Tagger {
 
         logger.logInfoWithTracker(
                 request.getTrackingId(),
-                String.format("Will process %s", request.toString())
+                request.getTargetTable(),
+                String.format("Will process %s", request)
         );
 
         // prepare the backup policy tag
@@ -67,7 +75,7 @@ public class Tagger {
         backupPolicy.setLastBackupAt(request.getLastBackUpAt());
 
         if(request.getAppliedBackupMethod().equals(BackupMethod.BIGQUERY_SNAPSHOT)){
-            backupPolicy.setLastBqSnapshotStorageUri(request.getBigQuerySnapshotUri());
+            backupPolicy.setLastBqSnapshotStorageUri(request.getBigQuerySnapshotTableSpec().toResourceUrl());
         }
 
         if(request.getAppliedBackupMethod().equals(BackupMethod.GCS_SNAPSHOT)){
@@ -89,6 +97,13 @@ public class Tagger {
                 persistentSet,
                 persistentSetObjectPrefix,
                 pubSubMessageId
+        );
+
+        return new TaggerResponse(
+                request.getTargetTable(),
+                request.getRunId(),
+                request.getTrackingId(),
+                backupPolicy
         );
     }
 }

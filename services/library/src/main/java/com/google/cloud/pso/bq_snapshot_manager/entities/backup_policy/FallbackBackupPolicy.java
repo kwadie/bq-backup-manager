@@ -3,13 +3,11 @@ package com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy;
 import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.gson.Gson;
 import com.google.gson.reflect.TypeToken;
 
 import java.lang.reflect.Type;
 import java.util.HashMap;
-import java.util.List;
 import java.util.Map;
 import java.util.Objects;
 
@@ -144,7 +142,7 @@ public class FallbackBackupPolicy {
         for(String key: jsonNodeMap.keySet()){
             policyMap.put(
                     key,
-                    BackupPolicy.fromMap(jsonNodeMap.get(key), true)
+                    BackupPolicy.fromMap(jsonNodeMap.get(key))
             );
         }
 

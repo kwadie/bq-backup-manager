@@ -19,13 +19,16 @@ package com.google.cloud.pso.bq_snapshot_manager.helpers;
 import com.google.api.gax.rpc.ApiException;
 import com.google.api.gax.rpc.ResourceExhaustedException;
 import com.google.cloud.BaseServiceException;
+import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.common.collect.Sets;
 import io.grpc.Status;
 import io.grpc.StatusRuntimeException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 
+import javax.annotation.Nullable;
 import java.util.Set;
 
 public class ControllerExceptionHelper {
@@ -130,35 +133,34 @@ public class ControllerExceptionHelper {
         }
     }
 
-    public static ResponseEntity handleException(Exception ex, LoggingHelper logger, String trackingId){
+    /**
+     *
+     * @param ex
+     * @param logger
+     * @param trackingId
+     * @return Tuple<ResponseEntity, Boolean> where the Boolean value indicates if the exception is retyrable or not
+     */
+    public static Tuple<ResponseEntity, Boolean> handleException(Exception ex,
+                                                                 LoggingHelper logger,
+                                                                 String trackingId,
+                                                                 @Nullable TableSpec tableSpec){
 
         ThrowableInfo exInfo = causedByRetryableException(ex);
 
         if(exInfo.isRetryable()){
-            logger.logRetryableExceptions(trackingId, ex, exInfo.getNotes());
-            return new ResponseEntity(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS);
+            logger.logRetryableExceptions(trackingId, tableSpec, ex, exInfo.getNotes());
+            return Tuple.of(
+                    new ResponseEntity(ex.getMessage(), HttpStatus.TOO_MANY_REQUESTS),
+                    true);
 
         }else{
 
-            // Debug BigQuery exceptions in more details
-            Class exceptionClass = ex.getClass();
-            if(BigQueryException.class.isAssignableFrom(exceptionClass)){
-                BigQueryException bigQueryException = (BigQueryException) ex;
-                // when hitting the concurrent interactive queries
-                String msg = String.format("BigQuery Exception: msg: %s - reason: %s - code: %s - isRetryable: %s - full exception: %s",
-                        bigQueryException.getMessage(),
-                        bigQueryException.getReason() != null? bigQueryException.getReason() : "<NULL Reason>",
-                        bigQueryException.getCode(),
-                        bigQueryException.isRetryable(),
-                        bigQueryException.toString()
-                        );
-                logger.logDebugWithTracker(trackingId, msg);
-            }
-
-            // if not, log and ACK so that it's not retried
+            // if it's not retryable, log and ACK so that it's not retried
             ex.printStackTrace();
-            logger.logNonRetryableExceptions(trackingId, ex);
-            return new ResponseEntity(ex.getMessage(), HttpStatus.OK);
+            logger.logNonRetryableExceptions(trackingId, tableSpec, ex);
+            return Tuple.of(
+                    new ResponseEntity(ex.getMessage(), HttpStatus.OK),
+                    false);
         }
     }
 

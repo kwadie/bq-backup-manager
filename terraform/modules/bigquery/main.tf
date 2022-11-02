@@ -40,6 +40,24 @@ resource "google_bigquery_table" "logging_table" {
 
 ### Monitoring Views ##################################################
 
+resource "google_bigquery_table" "view_unified_logging" {
+  dataset_id = google_bigquery_dataset.results_dataset.dataset_id
+  table_id = "v_unified_logging"
+
+  deletion_protection = false
+
+  view {
+    use_legacy_sql = false
+    query = templatefile("modules/bigquery/views/v_unified_log.tpl",
+      {
+        project = var.project
+        dataset = var.dataset
+        logging_table = google_bigquery_table.logging_table.table_id
+      }
+    )
+  }
+}
+
 resource "google_bigquery_table" "logging_view_steps" {
   dataset_id = google_bigquery_dataset.results_dataset.dataset_id
   table_id = "v_steps"
@@ -76,25 +94,6 @@ resource "google_bigquery_table" "view_service_calls" {
   }
 }
 
-resource "google_bigquery_table" "logging_view_broken_steps" {
-  dataset_id = google_bigquery_dataset.results_dataset.dataset_id
-  table_id = "v_broken_steps"
-
-  deletion_protection = false
-
-  view {
-    use_legacy_sql = false
-    query = templatefile("modules/bigquery/views/v_broken_steps.tpl",
-    {
-      project = var.project
-      dataset = var.dataset
-      v_service_calls = google_bigquery_table.view_service_calls.table_id
-      logging_table = google_bigquery_table.logging_table.table_id
-    }
-    )
-  }
-}
-
 resource "google_bigquery_table" "view_run_summary" {
   dataset_id = google_bigquery_dataset.results_dataset.dataset_id
   table_id = "v_run_summary"
@@ -107,8 +106,7 @@ resource "google_bigquery_table" "view_run_summary" {
     {
       project = var.project
       dataset = var.dataset
-      v_service_calls = google_bigquery_table.view_service_calls.table_id
-      v_broken_steps = google_bigquery_table.logging_view_broken_steps.table_id
+      v_unified_logging = google_bigquery_table.view_unified_logging.table_id
     }
     )
   }

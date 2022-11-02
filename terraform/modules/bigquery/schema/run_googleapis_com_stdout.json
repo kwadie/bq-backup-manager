@@ -55,6 +55,52 @@
   },
   {
     "fields": [
+
+      {
+        "mode": "NULLABLE",
+        "name": "unified_component",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_run_id",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_tracking_id",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_target_table",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_input_json",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_output_json",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_is_successful",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_error",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "unified_is_retryable_error",
+        "type": "STRING"
+      },
       {
         "mode": "NULLABLE",
         "name": "function_lifecycle_event",
@@ -78,6 +124,21 @@
       {
         "mode": "NULLABLE",
         "name": "global_logger_name",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "global_tablespec_project",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "global_tablespec_dataset",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
+        "name": "global_tablespec_table",
         "type": "STRING"
       },
       {

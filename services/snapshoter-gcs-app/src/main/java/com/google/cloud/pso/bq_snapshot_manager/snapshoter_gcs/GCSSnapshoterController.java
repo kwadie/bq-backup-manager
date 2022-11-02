@@ -19,6 +19,8 @@ package com.google.cloud.pso.bq_snapshot_manager.snapshoter_gcs;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerResponse;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
@@ -58,12 +60,20 @@ public class GCSSnapshoterController {
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
         String trackingId = TrackingHelper.MIN_RUN_ID;
+        BigQuerySnapshoterRequest operation = null;
+        // These values will be updated based on the execution flow and logged at the end
+        ResponseEntity responseEntity;
+        TaggerRequest taggerRequest = null;
+        TaggerResponse taggerResponse = null;
+        boolean isSuccess;
+        String error = "";
+        boolean isRetryableError= false;
 
         try {
 
             if (requestBody == null || requestBody.getMessage() == null) {
                 String msg = "Bad Request: invalid message format";
-                logger.logSevereWithTracker(trackingId, msg);
+                logger.logSevereWithTracker(trackingId, null, msg);
                 throw new NonRetryableApplicationException("Request body or message is Null.");
             }
 
@@ -72,13 +82,13 @@ public class GCSSnapshoterController {
             // remove any escape characters (e.g. from Terraform
             requestJsonString = requestJsonString.replace("\\", "");
 
-            logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
+            logger.logInfoWithTracker(trackingId, null, String.format("Received payload: %s", requestJsonString));
 
-            BigQuerySnapshoterRequest operation = gson.fromJson(requestJsonString, BigQuerySnapshoterRequest.class);
+            operation = gson.fromJson(requestJsonString, BigQuerySnapshoterRequest.class);
 
             trackingId = operation.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", operation.toString()));
+            logger.logInfoWithTracker(trackingId, operation.getTargetTable(), String.format("Parsed Request: %s", operation.toString()));
 
             //TODO: create snapshoter and execute
 //            Snapshoter snapshoter = new Snapshoter(
@@ -95,7 +105,12 @@ public class GCSSnapshoterController {
             return new ResponseEntity("Process completed successfully.", HttpStatus.OK);
 
         } catch (Exception e) {
-            return ControllerExceptionHelper.handleException(e, logger, trackingId);
+            return ControllerExceptionHelper.handleException(
+                    e,
+                    logger,
+                    trackingId,
+                    operation == null? null: operation.getTargetTable()
+            ).x();
 
         }
     }

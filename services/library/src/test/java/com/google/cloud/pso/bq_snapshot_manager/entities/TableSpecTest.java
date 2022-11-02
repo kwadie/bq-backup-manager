@@ -17,5 +17,15 @@ public class TableSpecTest {
         assertEquals(expected, actual);
     }
 
+    @Test
+    public void testToDataCatalogLinkedResource(){
+        TableSpec table = new TableSpec("test_project", "test_dataset", "test_table");
+        String actual = table.toResourceUrl();
+
+        String expected = "https://console.cloud.google.com/bigquery?d=test_dataset&p=test_project&page=table&t=test_table";
+
+        assertEquals(expected, actual);
+    }
+
 
 }

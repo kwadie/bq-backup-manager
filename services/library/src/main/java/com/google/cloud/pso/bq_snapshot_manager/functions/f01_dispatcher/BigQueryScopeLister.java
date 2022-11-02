@@ -99,15 +99,16 @@ public class BigQueryScopeLister {
         List<TableSpec> output = new ArrayList<>();
 
         for (String table : tableIncludeList) {
+            TableSpec tableSpec = TableSpec.fromSqlString(table);
             try {
                 if (!tableExcludeList.contains(table)) {
-                    output.add(TableSpec.fromSqlString(table));
+                    output.add(tableSpec);
                 } else {
-                    logger.logInfoWithTracker(runId, String.format("Table %s is excluded", table));
+                    logger.logInfoWithTracker(runId, tableSpec, String.format("Table %s is excluded", table));
                 }
             } catch (Exception ex) {
                 // log and continue
-                logger.logFailedDispatcherEntityId(runId, table, ex);
+                logger.logFailedDispatcherEntityId(runId, tableSpec ,table, ex);
             }
         }
         return output;
@@ -139,16 +140,16 @@ public class BigQueryScopeLister {
                                 "No Tables found under dataset '%s'",
                                 dataset);
 
-                        logger.logWarnWithTracker(runId, msg);
+                        logger.logWarnWithTracker(runId, null, msg);
                     } else {
-                        logger.logInfoWithTracker(runId, String.format("Tables found in dataset %s : %s", dataset, datasetTables));
+                        logger.logInfoWithTracker(runId, null, String.format("Tables found in dataset %s : %s", dataset, datasetTables));
                     }
                 } else {
-                    logger.logInfoWithTracker(runId, String.format("Dataset %s is excluded", dataset));
+                    logger.logInfoWithTracker(runId, null, String.format("Dataset %s is excluded", dataset));
                 }
             } catch (Exception exception) {
                 // log and continue
-                logger.logFailedDispatcherEntityId(runId, dataset, exception);
+                logger.logFailedDispatcherEntityId(runId, null, dataset, exception);
             }
         }
         return processTables(tablesIncludeList, tableExcludeList);
@@ -164,13 +165,13 @@ public class BigQueryScopeLister {
 
         List<String> datasetIncludeList = new ArrayList<>();
 
-        logger.logInfoWithTracker(runId, String.format("Will process projects %s", projectIncludeList));
+        logger.logInfoWithTracker(runId, null, String.format("Will process projects %s", projectIncludeList));
 
         for (String project : projectIncludeList) {
             try {
                 if (!projectExcludeList.contains(project)) {
 
-                    logger.logInfoWithTracker(runId, String.format("Inspecting project %s", project));
+                    logger.logInfoWithTracker(runId, null, String.format("Inspecting project %s", project));
 
                     // get all datasets in this project
                     List<String> projectDatasets = resourceScanner.listDatasets(project);
@@ -181,18 +182,18 @@ public class BigQueryScopeLister {
                                 "No datasets found under project '%s' or no enough permissions to list BigQuery resources.",
                                 project);
 
-                        logger.logWarnWithTracker(runId, msg);
+                        logger.logWarnWithTracker(runId, null, msg);
                     } else {
 
-                        logger.logInfoWithTracker(runId, String.format("Datasets found in project %s : %s", project, projectDatasets));
+                        logger.logInfoWithTracker(runId, null, String.format("Datasets found in project %s : %s", project, projectDatasets));
                     }
                 } else {
-                    logger.logInfoWithTracker(runId, String.format("Project %s is excluded", project));
+                    logger.logInfoWithTracker(runId, null, String.format("Project %s is excluded", project));
                 }
 
             } catch (Exception exception) {
                 // log and continue
-                logger.logFailedDispatcherEntityId(runId, project, exception);
+                logger.logFailedDispatcherEntityId(runId, null, project, exception);
             }
 
         }
@@ -208,12 +209,12 @@ public class BigQueryScopeLister {
 
         List<String> projectIncludeList = new ArrayList<>();
 
-        logger.logInfoWithTracker(runId, String.format("Will process folders %s", folderIncludeList));
+        logger.logInfoWithTracker(runId, null, String.format("Will process folders %s", folderIncludeList));
 
         for (Long folder : folderIncludeList) {
             try {
 
-                logger.logInfoWithTracker(runId, String.format("Inspecting folder %s", folder));
+                logger.logInfoWithTracker(runId, null, String.format("Inspecting folder %s", folder));
 
                 // get all projects in this folder
                 List<String> folderProjects = resourceScanner.listProjects(folder);
@@ -224,15 +225,15 @@ public class BigQueryScopeLister {
                             "No projects found under folder '%s' or no enough permissions to list.",
                             folder);
 
-                    logger.logWarnWithTracker(runId, msg);
+                    logger.logWarnWithTracker(runId, null, msg);
                 } else {
 
-                    logger.logInfoWithTracker(runId, String.format("Projects found in folder %s : %s", folder, folderProjects));
+                    logger.logInfoWithTracker(runId,null, String.format("Projects found in folder %s : %s", folder, folderProjects));
                 }
 
             } catch (Exception exception) {
                 // log and continue
-                logger.logFailedDispatcherEntityId(runId, folder.toString(), exception);
+                logger.logFailedDispatcherEntityId(runId, null, folder.toString(), exception);
             }
 
         }

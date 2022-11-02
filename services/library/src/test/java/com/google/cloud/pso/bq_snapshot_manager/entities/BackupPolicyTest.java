@@ -24,8 +24,7 @@ public class BackupPolicyTest {
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "    \"gcs_snapshot_format\": \"AVRO\",\n" +
-                "    \"config_source\": \"SYSTEM\",\n" +
-                "    \"last_backup_at\": \"\"\n" +
+                "    \"config_source\": \"SYSTEM\"\n" +
                 "  }";
 
         BackupPolicy expected = new BackupPolicy(
@@ -38,9 +37,9 @@ public class BackupPolicyTest {
                 "gs://bla/",
                 GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE,
-                "",
-                ""
+                null,
+                null,
+                null
         );
 
         BackupPolicy actual = BackupPolicy.fromJson(jsonPolicyStr);
@@ -80,22 +79,57 @@ public class BackupPolicyTest {
     }
 
     @Test
-    public void testFromMapFromFallbackFalse() throws IOException, IllegalArgumentException {
+    public void testFromMapFromDCTagManualInitial() throws IOException, IllegalArgumentException {
+
+        // data catalog manual assigned tag
+        // is first run (last_xys fields are not set)
+        Map<String, String> tagMap = new HashMap<>();
+
+        tagMap.put("backup_cron", "test-cron");
+        tagMap.put("backup_method", "BigQuery Snapshot");
+        tagMap.put("config_source", "Manual");
+        tagMap.put("backup_time_travel_offset_days", "0");
+        tagMap.put("bq_snapshot_storage_project", "test-project");
+        tagMap.put("bq_snapshot_storage_dataset", "test-dataset");
+        tagMap.put("bq_snapshot_expiration_days", "0.0");
+
+        BackupPolicy expected = new BackupPolicy(
+                "test-cron",
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_0,
+                0.0,
+                "test-project",
+                "test-dataset",
+                null,
+                null,
+                BackupConfigSource.MANUAL,
+                null,
+                null,
+                null
+        );
+
+        BackupPolicy actual = BackupPolicy.fromMap(tagMap);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFromMapFromDCTagManualSubsequent() throws IOException, IllegalArgumentException {
+
+        // data catalog manual assigned tag
+        // NOT first run (last_xys fields are set)
 
         Map<String, String> tagMap = new HashMap<>();
 
         tagMap.put("backup_cron", "test-cron");
         tagMap.put("backup_method", "BigQuery Snapshot");
-        tagMap.put("config_source", "System");
+        tagMap.put("config_source", "Manual");
         tagMap.put("backup_time_travel_offset_days", "0");
         tagMap.put("bq_snapshot_storage_project", "test-project");
         tagMap.put("bq_snapshot_storage_dataset", "test-dataset");
         tagMap.put("bq_snapshot_expiration_days", "0.0");
-        tagMap.put("gcs_snapshot_storage_location", "test-bucket");
-        tagMap.put("gcs_snapshot_format", "");
         tagMap.put("last_backup_at", Timestamp.MAX_VALUE.toString());
         tagMap.put("last_bq_snapshot_storage_uri", "last bq uri");
-        tagMap.put("last_gcs_snapshot_storage_uri", "last gcs uri");
 
 
         BackupPolicy expected = new BackupPolicy(
@@ -105,18 +139,93 @@ public class BackupPolicyTest {
                 0.0,
                 "test-project",
                 "test-dataset",
-                "test-bucket",
+                null,
+                null,
+                BackupConfigSource.MANUAL,
+                Timestamp.MAX_VALUE,
+                "last bq uri",
+                null
+        );
+
+        BackupPolicy actual = BackupPolicy.fromMap(tagMap);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFromMapFromFallbackTagInitial() throws IOException, IllegalArgumentException {
+
+        // system assigned tags. no config_source field
+        // first run (last_xys fields are not set)
+
+        Map<String, String> tagMap = new HashMap<>();
+
+        tagMap.put("backup_cron", "test-cron");
+        tagMap.put("backup_method", "BigQuery Snapshot");
+        tagMap.put("backup_time_travel_offset_days", "0");
+        tagMap.put("bq_snapshot_storage_project", "test-project");
+        tagMap.put("bq_snapshot_storage_dataset", "test-dataset");
+        tagMap.put("bq_snapshot_expiration_days", "0.0");
+
+        BackupPolicy expected = new BackupPolicy(
+                "test-cron",
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_0,
+                0.0,
+                "test-project",
+                "test-dataset",
+                null,
+                null,
+                BackupConfigSource.SYSTEM,
+                null,
+                null,
+                null
+        );
+
+        BackupPolicy actual = BackupPolicy.fromMap(tagMap);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFromMapFromFallbackTagManualSubsequent() throws IOException, IllegalArgumentException {
+
+        // system assigned tags. no config_source field
+        // NOT first run (last_xys fields are set)
+
+        Map<String, String> tagMap = new HashMap<>();
+
+        tagMap.put("backup_cron", "test-cron");
+        tagMap.put("backup_method", "BigQuery Snapshot");
+        tagMap.put("backup_time_travel_offset_days", "0");
+        tagMap.put("bq_snapshot_storage_project", "test-project");
+        tagMap.put("bq_snapshot_storage_dataset", "test-dataset");
+        tagMap.put("bq_snapshot_expiration_days", "0.0");
+        tagMap.put("last_backup_at", Timestamp.MAX_VALUE.toString());
+        tagMap.put("last_bq_snapshot_storage_uri", "last bq uri");
+
+
+        BackupPolicy expected = new BackupPolicy(
+                "test-cron",
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_0,
+                0.0,
+                "test-project",
+                "test-dataset",
+                null,
                 null,
                 BackupConfigSource.SYSTEM,
                 Timestamp.MAX_VALUE,
                 "last bq uri",
-                "last gcs uri"
+                null
         );
 
-        BackupPolicy actual = BackupPolicy.fromMap(tagMap, false);
+        BackupPolicy actual = BackupPolicy.fromMap(tagMap);
 
         assertEquals(expected, actual);
     }
+
+
 
     @Test(expected = IllegalArgumentException.class)
     public void testFromMapFromFallbackFalse_exception()  {
@@ -149,47 +258,23 @@ public class BackupPolicyTest {
                 "last gcs uri"
         );
 
-        BackupPolicy actual = BackupPolicy.fromMap(tagMap, false);
+        BackupPolicy actual = BackupPolicy.fromMap(tagMap);
 
         assertEquals(expected, actual);
     }
 
-    @Test
-    public void testFromMapFromFallbackTrue() throws IOException, IllegalArgumentException {
+    @Test //(expected = IllegalArgumentException.class)
+    public void testMissingValues()  {
 
         Map<String, String> tagMap = new HashMap<>();
 
+        //3 missing fields (last_backup, last_bq, last_gcs) should throw an exception
         tagMap.put("backup_cron", "test-cron");
         tagMap.put("backup_method", "BigQuery Snapshot");
         tagMap.put("config_source", "System");
         tagMap.put("backup_time_travel_offset_days", "0");
-        tagMap.put("bq_snapshot_storage_project", "test-project");
-        tagMap.put("bq_snapshot_storage_dataset", "test-dataset");
-        tagMap.put("bq_snapshot_expiration_days", "0.0");
-        tagMap.put("gcs_snapshot_storage_location", "test-bucket");
-        tagMap.put("gcs_snapshot_format", "");
+        // missing bq_snapshot_storage_project and bq_snapshot_storage_dataset and bq_snapshot_expiration_days
 
-        // this is not required when using fromFallbackConfig='True' and should have no effect
-        tagMap.put("last_gcs_snapshot_storage_uri", "last gcs uri");
-
-
-        BackupPolicy expected = new BackupPolicy(
-                "test-cron",
-                BackupMethod.BIGQUERY_SNAPSHOT,
-                TimeTravelOffsetDays.DAYS_0,
-                0.0,
-                "test-project",
-                "test-dataset",
-                "test-bucket",
-                null,
-                BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE,
-                "",
-                "" // should be empty string
-        );
-
-        BackupPolicy actual = BackupPolicy.fromMap(tagMap, true);
-
-        assertEquals(expected, actual);
+        BackupPolicy.fromMap(tagMap);
     }
 }

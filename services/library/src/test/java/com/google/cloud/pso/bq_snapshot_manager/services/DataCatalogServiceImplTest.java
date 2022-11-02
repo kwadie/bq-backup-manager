@@ -22,19 +22,6 @@ import static org.junit.Assert.assertEquals;
 public class DataCatalogServiceImplTest {
 
     @Test
-    public void test() throws IOException, IllegalArgumentException {
-
-        DataCatalogServiceImpl s = new DataCatalogServiceImpl();
-        TableSpec tableSpec = new TableSpec("bqsm-data-1", "london", "fake_data");
-
-//        Map<String, TagField> out = s.getTagTemplate(tableSpec, "projects/bqsm-host/locations/eu/tagTemplates/bq_backup_manager_template");
-//        System.out.println(out);
-
-        BackupPolicy tag = s.getBackupPolicyTag(tableSpec, "projects/bqsm-host/locations/eu/tagTemplates/bq_backup_manager_template");
-        System.out.println(tag);
-    }
-
-    @Test
     public void testConvertTagFieldMapToStrMap() {
 
         Map<String, TagField> tagMap = new HashMap<>();

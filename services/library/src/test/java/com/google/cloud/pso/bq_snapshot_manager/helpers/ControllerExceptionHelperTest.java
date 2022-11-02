@@ -54,7 +54,7 @@ public class ControllerExceptionHelperTest {
             assertEquals(
                     HttpStatus.TOO_MANY_REQUESTS,
                     ControllerExceptionHelper
-                            .handleException(e, logger, "retryableTracker")
+                            .handleException(e, logger, "retryableTracker", null).x()
                             .getStatusCode()
                     );
 
@@ -85,7 +85,7 @@ public class ControllerExceptionHelperTest {
             assertEquals(
                     HttpStatus.OK,
                     ControllerExceptionHelper
-                            .handleException(e, logger, "nonRetryableTracker")
+                            .handleException(e, logger, "nonRetryableTracker", null).x()
                             .getStatusCode()
                     );
 
@@ -106,7 +106,7 @@ public class ControllerExceptionHelperTest {
             assertEquals(
                     HttpStatus.TOO_MANY_REQUESTS,
                     ControllerExceptionHelper
-                            .handleException(e, logger, "retryableTracker")
+                            .handleException(e, logger, "retryableTracker", null).x()
                             .getStatusCode()
                     );
 
@@ -126,7 +126,7 @@ public class ControllerExceptionHelperTest {
             assertEquals(
                     HttpStatus.TOO_MANY_REQUESTS,
                     ControllerExceptionHelper
-                            .handleException(e, logger, "resourceExhaustedTracker")
+                            .handleException(e, logger, "resourceExhaustedTracker", null).x()
                             .getStatusCode()
             );
 
@@ -160,7 +160,7 @@ public class ControllerExceptionHelperTest {
             assertEquals(
                     HttpStatus.TOO_MANY_REQUESTS,
                     ControllerExceptionHelper
-                            .handleException(e, logger, "resourceExhaustedTracker")
+                            .handleException(e, logger, "resourceExhaustedTracker", null).x()
                             .getStatusCode()
             );
 
@@ -186,7 +186,7 @@ public class ControllerExceptionHelperTest {
             assertEquals(
                     HttpStatus.TOO_MANY_REQUESTS,
                     ControllerExceptionHelper
-                            .handleException(e, logger, "resourceExhaustedTracker")
+                            .handleException(e, logger, "resourceExhaustedTracker", null).x()
                             .getStatusCode()
             );
 
@@ -207,11 +207,9 @@ public class ControllerExceptionHelperTest {
             assertEquals(
                     HttpStatus.OK,
                     ControllerExceptionHelper
-                            .handleException(e, logger, "nonRetryableTracker")
+                            .handleException(e, logger, "nonRetryableTracker", null).x()
                             .getStatusCode()
                     );
-
         }
-
     }
 }

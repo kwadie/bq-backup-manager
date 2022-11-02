@@ -15,15 +15,16 @@
  */
 package com.google.cloud.pso.bq_snapshot_manager.tagger;
 
+import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.Tagger;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerResponse;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
-import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
-import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
@@ -62,11 +63,19 @@ public class TaggerController {
         String trackingId = TrackingHelper.MIN_RUN_ID;
         DataCatalogServiceImpl dataCatalogService = null;
 
+        // These values will be updated based on the execution flow and logged at the end
+        ResponseEntity responseEntity;
+        TaggerRequest taggerRequest = null;
+        TaggerResponse taggerResponse = null;
+        boolean isSuccess;
+        Exception error = null;
+        boolean isRetryableError= false;
+
         try {
 
             if (requestBody == null || requestBody.getMessage() == null) {
                 String msg = "Bad Request: invalid message format";
-                logger.logSevereWithTracker(trackingId, msg);
+                logger.logSevereWithTracker(trackingId, null, msg);
                 throw new NonRetryableApplicationException("Request body or message is Null.");
             }
 
@@ -75,13 +84,13 @@ public class TaggerController {
             // remove any escape characters (e.g. from Terraform
             requestJsonString = requestJsonString.replace("\\", "");
 
-            logger.logInfoWithTracker(trackingId, String.format("Received payload: %s", requestJsonString));
+            logger.logInfoWithTracker(trackingId, null, String.format("Received payload: %s", requestJsonString));
 
-            TaggerRequest taggerRequest = gson.fromJson(requestJsonString, TaggerRequest.class);
+            taggerRequest = gson.fromJson(requestJsonString, TaggerRequest.class);
 
             trackingId = taggerRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, String.format("Parsed Request: %s", taggerRequest.toString()));
+            logger.logInfoWithTracker(trackingId, taggerRequest.getTargetTable(), String.format("Parsed Request: %s", taggerRequest.toString()));
 
             dataCatalogService = new DataCatalogServiceImpl();
             Tagger tagger = new Tagger(
@@ -92,20 +101,44 @@ public class TaggerController {
                     "tagger-flags"
             );
 
-            tagger.execute(
+            taggerResponse = tagger.execute(
                     taggerRequest,
                     requestBody.getMessage().getMessageId()
             );
 
-            return new ResponseEntity("Process completed successfully.", HttpStatus.OK);
+            responseEntity = new ResponseEntity("Process completed successfully.", HttpStatus.OK);
+            isSuccess = true;
         } catch (Exception e) {
 
-            return ControllerExceptionHelper.handleException(e, logger, trackingId);
+            Tuple<ResponseEntity, Boolean> handlingResults  = ControllerExceptionHelper.handleException(e,
+                    logger,
+                    trackingId,
+                    taggerRequest == null? null: taggerRequest.getTargetTable()
+                    );
+            isSuccess = false;
+            responseEntity = handlingResults.x();
+            isRetryableError = handlingResults.y();
+            error = e;
+
         }finally {
             if(dataCatalogService != null){
                 dataCatalogService.shutdown();
             }
         }
+
+        logger.logUnified(
+                functionNumber.toString(),
+                taggerRequest == null? null: taggerRequest.getRunId(),
+                taggerRequest == null? null: taggerRequest.getTrackingId(),
+                taggerRequest == null? null : taggerRequest.getTargetTable(),
+                taggerRequest,
+                taggerResponse,
+                isSuccess,
+                error,
+                isRetryableError
+        );
+
+        return responseEntity;
     }
 
     public static void main(String[] args) {

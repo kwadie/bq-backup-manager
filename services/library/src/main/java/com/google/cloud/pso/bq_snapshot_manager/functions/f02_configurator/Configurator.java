@@ -66,7 +66,7 @@ public class Configurator {
         );
     }
 
-    public Tuple<PubSubPublishResults, PubSubPublishResults> execute(ConfiguratorRequest request, String pubSubMessageId) throws IOException, NonRetryableApplicationException, InterruptedException {
+    public ConfiguratorResponse execute(ConfiguratorRequest request, String pubSubMessageId) throws IOException, NonRetryableApplicationException, InterruptedException {
 
         // run common service start logging and checks
         Utils.runServiceStartRoutines(
@@ -82,18 +82,21 @@ public class Configurator {
 
         //TODO: log this into another logger for reporting on table backup configurations
         logger.logInfoWithTracker(request.getTrackingId(),
+                request.getTargetTable(),
                 String.format("Backup policy for table %s is %s",
                         request.getTargetTable().toSqlString(),
                         backupPolicy.toString()));
 
         // 2. Determine if we should take a backup at this run given the policy CRON expression
         // if the table has been backed up before then check if we should backup at this run
-        boolean takeBackup = isBackupTime(
+
+        // use the start time of this run as a reference point in time for CRON checks across all requests in this run
+        Timestamp refTs = TrackingHelper.parseRunIdAsTimestamp(request.getRunId());
+        boolean isBackupTime = isBackupTime(
                 request.isForceRun(),
                 request.getTargetTable(),
                 backupPolicy.getCron(),
-                // use the start time of this run as a reference point in time for CRON checks across all requests in this run
-                TrackingHelper.parseRunIdAsTimestamp(request.getRunId()),
+                refTs,
                 backupPolicy.getConfigSource(),
                 backupPolicy.getLastBackupAt(),
                 logger,
@@ -101,18 +104,31 @@ public class Configurator {
         );
 
         // 3. Prepare and send the backup request(s) if required
+        BigQuerySnapshoterRequest bqSnapshotRequest = null;
+        GCSSnapshoterRequest gcsSnapshotRequest = null;
         PubSubPublishResults bqSnapshotPublishResults = null;
         PubSubPublishResults gcsSnapshotPublishResults = null;
-        if (takeBackup) {
-            Tuple<List<JsonMessage>, List<JsonMessage>> snapshotRequestsTuple = prepareSnapshotRequests(
+        if (isBackupTime) {
+            Tuple<BigQuerySnapshoterRequest, GCSSnapshoterRequest> snapshotRequestsTuple = prepareSnapshotRequests(
                     backupPolicy,
                     request
             );
-            List<JsonMessage> bqSnapshotRequests = snapshotRequestsTuple.x();
-            List<JsonMessage> gcsSnapshotRequests = snapshotRequestsTuple.y();
+
+            List<JsonMessage> bqSnapshotRequests = new ArrayList<>(1);
+            if (snapshotRequestsTuple.x() != null) {
+                bqSnapshotRequest = snapshotRequestsTuple.x();
+                bqSnapshotRequests.add(bqSnapshotRequest);
+            }
+
+            List<JsonMessage> gcsSnapshotRequests = new ArrayList<>(1);
+            if (snapshotRequestsTuple.y() != null) {
+                gcsSnapshotRequest = snapshotRequestsTuple.y();
+                gcsSnapshotRequests.add(gcsSnapshotRequest);
+            }
 
             logger.logInfoWithTracker(
                     request.getTrackingId(),
+                    request.getTargetTable(),
                     String.format("Will publish the following snapshot requests for table %s: %s %s",
                             request.getTargetTable().toSqlString(),
                             bqSnapshotRequests,
@@ -136,6 +152,7 @@ public class Configurator {
 
             if (!bqSnapshotPublishResults.getSuccessMessages().isEmpty()) {
                 logger.logInfoWithTracker(request.getTrackingId(),
+                        request.getTargetTable(),
                         String.format("Published %s BigQuery Snapshot requests %s",
                                 bqSnapshotPublishResults.getSuccessMessages().size(),
                                 bqSnapshotPublishResults.getSuccessMessages())
@@ -144,6 +161,7 @@ public class Configurator {
 
             if (!gcsSnapshotPublishResults.getSuccessMessages().isEmpty()) {
                 logger.logInfoWithTracker(request.getTrackingId(),
+                        request.getTargetTable(),
                         String.format("Published %s GCS Snapshot requests %s",
                                 gcsSnapshotPublishResults.getSuccessMessages().size(),
                                 gcsSnapshotPublishResults.getSuccessMessages())
@@ -153,6 +171,7 @@ public class Configurator {
             if (!bqSnapshotPublishResults.getFailedMessages().isEmpty()) {
                 logger.logWarnWithTracker(
                         request.getTrackingId(),
+                        request.getTargetTable(),
                         String.format("Failed to publish BigQuery Snapshot request %s", bqSnapshotPublishResults.getFailedMessages().toString())
 
                 );
@@ -161,6 +180,7 @@ public class Configurator {
             if (!gcsSnapshotPublishResults.getFailedMessages().isEmpty()) {
                 logger.logWarnWithTracker(
                         request.getTrackingId(),
+                        request.getTargetTable(),
                         String.format("Failed to publish GCS Snapshot request %s", gcsSnapshotPublishResults.getFailedMessages().toString())
 
                 );
@@ -176,7 +196,18 @@ public class Configurator {
                 pubSubMessageId
         );
 
-        return Tuple.of(bqSnapshotPublishResults, gcsSnapshotPublishResults);
+        return new ConfiguratorResponse(
+                request.getTargetTable(),
+                request.getRunId(),
+                request.getTrackingId(),
+                backupPolicy,
+                refTs,
+                isBackupTime,
+                bqSnapshotRequest,
+                gcsSnapshotRequest,
+                bqSnapshotPublishResults,
+                gcsSnapshotPublishResults
+                );
     }
 
     public BackupPolicy getBackupPolicy(ConfiguratorRequest request) throws IOException {
@@ -190,6 +221,7 @@ public class Configurator {
         if (backupPolicy != null) {
             // use table backup policy
             logger.logInfoWithTracker(request.getTrackingId(),
+                    request.getTargetTable(),
                     String.format("Will use attached tag template backup policy for table '%s'",
                             request.getTargetTable().toSqlString()
                     )
@@ -198,10 +230,12 @@ public class Configurator {
             // If no attached policy, find a default backup policy
 
             // find the most granular fallback policy table > dataset > project
-            Tuple<String, BackupPolicy> fallbackTuple = findFallbackBackupPolicy(fallbackBackupPolicy, request.getTargetTable());
+            Tuple<String, BackupPolicy> fallbackTuple = findFallbackBackupPolicy(fallbackBackupPolicy,
+                    request.getTargetTable());
 
             //TODO: log this into another logger for reporting on table backup configurations
             logger.logInfoWithTracker(request.getTrackingId(),
+                    request.getTargetTable(),
                     String.format("Will use %s-level fallback backup policy for table %s",
                             fallbackTuple.x(), request.getTargetTable()));
 
@@ -225,14 +259,14 @@ public class Configurator {
 
         if (isForceRun
                 || (configSource.equals(BackupConfigSource.SYSTEM)
-                && lastBackupAt.equals(Timestamp.MIN_VALUE))) {
+                && lastBackupAt == null)) {
             // this means the table has not been backed up before
             // CASE 1: It's a force run --> take backup
             // CASE 2: It's a fallback configuration (SYSTEM) running for the first time (MIN_VALUE) --> take backup
             takeBackup = true;
         } else {
 
-            if (lastBackupAt.equals(Timestamp.MIN_VALUE)) {
+            if (lastBackupAt == null) {
                 // this means the table has not been backed up before
                 // CASE 3: It's a MANUAL config but running for the first time (MIN_VALUE)
                 takeBackup = true;
@@ -253,6 +287,7 @@ public class Configurator {
                     takeBackup = true;
                     logger.logInfoWithTracker(
                             trackingId,
+                            targetTable,
                             String.format("Will backup table %s at this run. Calculated next backup time is %s and this run is %s",
                                     targetTable.toSqlString(), takeBackupTuple.y(), referencePoint));
 
@@ -260,6 +295,7 @@ public class Configurator {
                     takeBackup = false;
                     logger.logInfoWithTracker(
                             trackingId,
+                            targetTable,
                             String.format("Will skip backup for table %s at this run. Calculated next backup time is %s and this run is %s",
                                     targetTable.toSqlString(), takeBackupTuple.y(), referencePoint));
                 }
@@ -304,31 +340,31 @@ public class Configurator {
         );
     }
 
-    public Tuple<List<JsonMessage>, List<JsonMessage>> prepareSnapshotRequests(BackupPolicy backupPolicy, ConfiguratorRequest request) {
+    public Tuple<BigQuerySnapshoterRequest, GCSSnapshoterRequest> prepareSnapshotRequests(BackupPolicy backupPolicy, ConfiguratorRequest request) {
 
-        List<JsonMessage> bqSnapshotRequests = new ArrayList<>();
-        List<JsonMessage> gcsSnapshotRequests = new ArrayList<>();
+        BigQuerySnapshoterRequest bqSnapshotRequest = null;
+        GCSSnapshoterRequest gcsSnapshotRequest = null;
 
         if (backupPolicy.getMethod().equals(BackupMethod.BIGQUERY_SNAPSHOT) || backupPolicy.getMethod().equals(BackupMethod.BOTH)) {
-            bqSnapshotRequests.add(new BigQuerySnapshoterRequest(
+            bqSnapshotRequest = new BigQuerySnapshoterRequest(
                     request.getTargetTable(),
                     request.getRunId(),
                     request.getTrackingId(),
                     backupPolicy
-            ));
+            );
         }
 
         if (backupPolicy.getMethod().equals(BackupMethod.GCS_SNAPSHOT) || backupPolicy.getMethod().equals(BackupMethod.BOTH)) {
-            gcsSnapshotRequests.add(new GCSSnapshoterRequest(
+            gcsSnapshotRequest = new GCSSnapshoterRequest(
                     request.getTargetTable(),
                     request.getRunId(),
                     request.getTrackingId(),
                     backupPolicy.getGcsSnapshotStorageLocation(),
                     backupPolicy.getGcsExportFormat()
-            ));
+            );
         }
 
-        return Tuple.of(bqSnapshotRequests, gcsSnapshotRequests);
+        return Tuple.of(bqSnapshotRequest, gcsSnapshotRequest);
     }
 
     public static Tuple<String, BackupPolicy> findFallbackBackupPolicy(FallbackBackupPolicy

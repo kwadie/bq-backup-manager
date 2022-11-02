@@ -1,11 +1,12 @@
 package com.google.cloud.pso.bq_snapshot_manager.services.catalog;
 
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.datacatalog.v1.*;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
-import com.google.protobuf.FieldMask;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.util.HashMap;
 import java.util.List;
@@ -64,35 +65,15 @@ public class DataCatalogServiceImpl implements DataCatalogService {
     }
 
 
-    public void updateBackupPolicyTag(TableSpec tableSpec, BackupPolicy backupPolicy, String backupPolicyTagTemplateId){
-
-        // API Call
-        Tag tag = getTag(tableSpec, backupPolicyTagTemplateId);
-
-        // convert the backup policy to a data catalog Tag and link it to the existing tag by name
-        Tag policyTag = backupPolicy.toDataCatalogTag(backupPolicyTagTemplateId, tag.getName());
-
-        // API Call
-        dataCatalogClient.updateTag(policyTag);
-    }
-
-    public void createBackupPolicyTag(TableSpec tableSpec, BackupPolicy backupPolicy, String backupPolicyTagTemplateId){
-
-        // API Call
-        String parent = getBigQueryEntryName(tableSpec);
-
-        // API Call
-        Tag tag = dataCatalogClient.createTag(parent, backupPolicy.toDataCatalogTag(backupPolicyTagTemplateId, null));
-    }
-
     /**
      * Return the attached backup policy tag template or null if no template is attached
+     *
      * @param tableSpec
      * @param backupPolicyTagTemplateId
      * @return
      * @throws IllegalArgumentException
      */
-    public BackupPolicy getBackupPolicyTag(TableSpec tableSpec, String backupPolicyTagTemplateId) throws IllegalArgumentException {
+    public @Nullable BackupPolicy getBackupPolicyTag(TableSpec tableSpec, String backupPolicyTagTemplateId) throws IllegalArgumentException {
 
         Map<String, TagField> tagTemplate = getTagFieldsMap(tableSpec, backupPolicyTagTemplateId);
 
@@ -100,7 +81,7 @@ public class DataCatalogServiceImpl implements DataCatalogService {
             // no backup tag template is attached to this table
             return null;
         }else{
-            return BackupPolicy.fromMap(convertTagFieldMapToStrMap(tagTemplate), false);
+            return BackupPolicy.fromMap(convertTagFieldMapToStrMap(tagTemplate));
         }
     }
 
@@ -154,7 +135,10 @@ public class DataCatalogServiceImpl implements DataCatalogService {
                 strValue = String.valueOf(entry.getValue().getEnumValue().getDisplayName());
             }
             if(entry.getValue().hasTimestampValue()){
-                strValue = String.valueOf(entry.getValue().getTimestampValue());
+                strValue = Timestamp.ofTimeSecondsAndNanos(
+                        entry.getValue().getTimestampValue().getSeconds(),
+                        entry.getValue().getTimestampValue().getNanos()
+                ).toString();
             }
             if(entry.getValue().hasRichtextValue()){
                 strValue = String.valueOf(entry.getValue().getRichtextValue());

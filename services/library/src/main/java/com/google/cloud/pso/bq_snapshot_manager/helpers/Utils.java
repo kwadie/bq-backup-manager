@@ -17,7 +17,7 @@
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequest;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequestResponse;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 
 import java.util.ArrayList;
@@ -79,13 +79,14 @@ public class Utils {
 
 
     public static void runServiceStartRoutines(LoggingHelper logger,
-                                               TableOperationRequest request,
+                                               TableOperationRequestResponse request,
                                                PersistentSet persistentSet,
                                                String persistentSetObjectPrefix,
                                                String pubSubMessageId
     ) throws NonRetryableApplicationException {
-        logger.logFunctionStart(request.getTrackingId());
+        logger.logFunctionStart(request.getTrackingId(), request.getTargetTable());
         logger.logInfoWithTracker(request.getTrackingId(),
+                request.getTargetTable(),
                 String.format("Request : %s", request.toString()));
 
         /**
@@ -104,7 +105,7 @@ public class Utils {
     }
 
     public static void runServiceEndRoutines(LoggingHelper logger,
-                                             TableOperationRequest request,
+                                             TableOperationRequestResponse request,
                                              PersistentSet persistentSet,
                                              String persistentSetObjectPrefix,
                                              String pubSubMessageId) {
@@ -112,9 +113,11 @@ public class Utils {
         // are required in case PubSub is in a loop of retrying due to ACK timeout while the service has already processed the request
         // This is an extra measure to avoid unnecessary cost due to config issues.
         String flagFileName = String.format("%s/%s", persistentSetObjectPrefix, pubSubMessageId);
-        logger.logInfoWithTracker(request.getTrackingId(), String.format("Persisting processing key for PubSub message ID %s", pubSubMessageId));
+        logger.logInfoWithTracker(request.getTrackingId(),
+                request.getTargetTable(),
+                String.format("Persisting processing key for PubSub message ID %s", pubSubMessageId));
         persistentSet.add(flagFileName);
 
-        logger.logFunctionEnd(request.getTrackingId());
+        logger.logFunctionEnd(request.getTrackingId(), request.getTargetTable());
     }
 }
