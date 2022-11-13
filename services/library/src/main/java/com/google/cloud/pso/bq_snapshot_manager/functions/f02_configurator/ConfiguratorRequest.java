@@ -7,8 +7,8 @@ public class ConfiguratorRequest extends TableOperationRequestResponse {
 
     private boolean isForceRun;
 
-    public ConfiguratorRequest( boolean isForceRun, TableSpec targetTable, String runId, String trackingId) {
-        super(targetTable, runId, trackingId);
+    public ConfiguratorRequest(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, boolean isForceRun) {
+        super(targetTable, runId, trackingId, isDryRun);
         this.isForceRun = isForceRun;
     }
 
@@ -19,10 +19,7 @@ public class ConfiguratorRequest extends TableOperationRequestResponse {
     @Override
     public String toString() {
         return "ConfiguratorRequest{" +
-                "isForceRun=" + isForceRun() +
-                ", targetTable=" + getTargetTable() +
-                ", runId='" + getRunId() + '\'' +
-                ", trackingId='" + getTrackingId() + '\'' +
-                '}';
+                "isForceRun=" + isForceRun +
+                "} " + super.toString();
     }
 }

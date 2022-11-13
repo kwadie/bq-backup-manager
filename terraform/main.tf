@@ -321,13 +321,13 @@ module "pubsub-tagger" {
 
 module "cloud-scheduler" {
   source = "./modules/cloud-scheduler"
-
+  count = length(var.schedulers)
   project = var.project
   target_uri = module.pubsub-dispatcher.topic-id
 
-  scheduler_name = lookup(var.scheduler, "name")
-  cron_expression = lookup(var.scheduler, "cron")
-  payload = lookup(var.scheduler, "payload")
+  scheduler_name = lookup(var.schedulers[count.index], "name")
+  cron_expression = lookup(var.schedulers[count.index], "cron")
+  payload = lookup(var.schedulers[count.index], "payload")
 }
 
 module "data-catalog" {

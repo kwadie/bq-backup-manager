@@ -77,6 +77,7 @@ public class BigQuerySnapshoterTest {
                         sourceTable,
                         "runId",
                         "trackingId",
+                        false,
                         backupPolicy
                 ),
                 operationTime,
@@ -87,6 +88,7 @@ public class BigQuerySnapshoterTest {
                 sourceTable,
                 "runId",
                 "trackingId",
+                false,
                 backupPolicy,
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 expectedSnapshotTable,

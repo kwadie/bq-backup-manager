@@ -27,6 +27,7 @@ variable "cron_expression" {
 variable "payload" {
   type = object({
     is_force_run = bool,
+    is_dry_run = bool
     folders_include_list = list(number),
     projects_include_list = list(string),
     projects_exclude_list = list(string),

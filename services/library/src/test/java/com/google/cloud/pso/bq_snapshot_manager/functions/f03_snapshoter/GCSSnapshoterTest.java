@@ -75,6 +75,7 @@ public class GCSSnapshoterTest {
                         sourceTable,
                         "runId",
                         "trackingId",
+                        false,
                         backupPolicy
                 ),
                 operationTime,
@@ -85,6 +86,7 @@ public class GCSSnapshoterTest {
                 sourceTable,
                 "runId",
                 "trackingId",
+                false,
                 backupPolicy,
                 BackupMethod.GCS_SNAPSHOT,
                 null,

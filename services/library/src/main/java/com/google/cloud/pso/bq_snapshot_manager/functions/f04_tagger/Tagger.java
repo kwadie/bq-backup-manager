@@ -62,12 +62,6 @@ public class Tagger {
                 pubSubMessageId
         );
 
-        logger.logInfoWithTracker(
-                request.getTrackingId(),
-                request.getTargetTable(),
-                String.format("Will process %s", request)
-        );
-
         // prepare the backup policy tag
         BackupPolicy originalBackupPolicy = request.getBackupPolicy();
         BackupPolicy.BackupPolicyBuilder updatedPolicyBuilder = BackupPolicy.BackupPolicyBuilder.from(originalBackupPolicy);
@@ -85,13 +79,15 @@ public class Tagger {
 
         BackupPolicy upDatedBackupPolicy = updatedPolicyBuilder.build();
 
-        // update the tag
-        // API Calls
-        dataCatalogService.createOrUpdateBackupPolicyTag(
-                request.getTargetTable(),
-                upDatedBackupPolicy,
-                config.getTagTemplateId()
-        );
+        if(!request.isDryRun()){
+            // update the tag
+            // API Calls
+            dataCatalogService.createOrUpdateBackupPolicyTag(
+                    request.getTargetTable(),
+                    upDatedBackupPolicy,
+                    config.getTagTemplateId()
+            );
+        }
 
         // run common service end logging and adding pubsub message to processed list
         Utils.runServiceEndRoutines(
@@ -106,6 +102,7 @@ public class Tagger {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
+                request.isDryRun(),
                 upDatedBackupPolicy
         );
     }

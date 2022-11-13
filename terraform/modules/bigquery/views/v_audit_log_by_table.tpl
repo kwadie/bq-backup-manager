@@ -20,6 +20,7 @@ CAST(jsonPayload.unified_is_retryable_error AS BOOL) AS configurator_is_retryabl
 CAST(JSON_VALUE(jsonPayload.unified_input_json, '$.isForceRun') AS BOOL) AS is_force_run,
 CAST(JSON_VALUE(jsonPayload.unified_output_json, '$.isBackupTime') AS BOOL) AS is_backup_time,
 JSON_VALUE(jsonPayload.unified_output_json, '$.backupPolicy.method') AS backup_method,
+CAST(JSON_VALUE(jsonPayload.unified_input_json, '$.isDryRun') AS BOOL) AS is_dry_run,
 timestamp AS configurator_log_ts
 FROM `${project}.${dataset}.${logging_table}`
 WHERE jsonPayload.global_app_log = 'UNIFIED_LOG'
@@ -86,6 +87,7 @@ c.tracking_id,
 c.is_force_run,
 c.is_backup_time,
 c.backup_method,
+c.is_dry_run,
 
 CASE
 -- if configurator finish successfully but it's not a backup time and no snapshoters should run
@@ -130,6 +132,7 @@ d.run_id,
 d.configurator_log_ts AS execution_ts,
 d.run_start_ts,
 d.tracking_id,
+d.is_dry_run,
 d.is_force_run,
 d.is_backup_time,
 d.backup_method,

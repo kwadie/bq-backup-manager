@@ -13,8 +13,8 @@ public class GCSSnapshoterResponse extends TableOperationRequestResponse {
     private final TaggerRequest outputTaggerRequest;
     private final PubSubPublishResults pubSubPublishResults;
 
-    public GCSSnapshoterResponse(TableSpec targetTable, String runId, String trackingId, Timestamp operationTs, TableSpec computedSourceTable, TaggerRequest outputTaggerRequest, PubSubPublishResults pubSubPublishResults) {
-        super(targetTable, runId, trackingId);
+    public GCSSnapshoterResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, Timestamp operationTs, TableSpec computedSourceTable, TaggerRequest outputTaggerRequest, PubSubPublishResults pubSubPublishResults) {
+        super(targetTable, runId, trackingId, isDryRun);
         this.operationTs = operationTs;
         this.computedSourceTable = computedSourceTable;
         this.outputTaggerRequest = outputTaggerRequest;

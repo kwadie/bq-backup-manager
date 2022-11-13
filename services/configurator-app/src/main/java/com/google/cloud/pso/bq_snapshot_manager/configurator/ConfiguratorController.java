@@ -116,7 +116,7 @@ public class ConfiguratorController {
 
             trackingId = configuratorRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, configuratorRequest.getTargetTable(), String.format("Parsed Request: %s", configuratorRequest.toString()));
+            logger.logInfoWithTracker(configuratorRequest.isDryRun(), trackingId, configuratorRequest.getTargetTable(), String.format("Parsed Request: %s", configuratorRequest.toString()));
 
             dataCatalogService = new DataCatalogServiceImpl();
 
@@ -156,6 +156,7 @@ public class ConfiguratorController {
         }
 
         logger.logUnified(
+                configuratorRequest == null? null: configuratorRequest.isDryRun(),
                 functionNumber.toString(),
                 configuratorRequest == null? null: configuratorRequest.getRunId(),
                 configuratorRequest == null? null: configuratorRequest.getTrackingId(),

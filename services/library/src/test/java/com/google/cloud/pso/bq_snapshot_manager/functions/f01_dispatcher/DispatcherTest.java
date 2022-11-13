@@ -85,17 +85,17 @@ public class DispatcherTest {
                 return new PubSubPublishResults(
                         Arrays.asList(
                                 new SuccessPubSubMessage(
-                                        new ConfiguratorRequest(false, TableSpec.fromSqlString("p1.d1.t1"), "runId", "trackingId"),
+                                        new ConfiguratorRequest( TableSpec.fromSqlString("p1.d1.t1"), "runId", "trackingId", false, false),
                                         "publishedMessageId"
                                 ),
                                 new SuccessPubSubMessage(
-                                        new ConfiguratorRequest(false, TableSpec.fromSqlString("p1.d1.t2"), "runId", "trackingId"),
+                                        new ConfiguratorRequest( TableSpec.fromSqlString("p1.d1.t2"), "runId", "trackingId",false, false),
                                         "publishedMessageId"
                                 )
                         ),
                         Arrays.asList(
                                 new FailedPubSubMessage(
-                                        new ConfiguratorRequest(false, TableSpec.fromSqlString("test.fail.msg"), "runId", "trackingId"),
+                                        new ConfiguratorRequest(TableSpec.fromSqlString("test.fail.msg"), "runId", "trackingId",false, false),
                                         new Exception("test fail message")
                                 )
                         )
@@ -117,7 +117,7 @@ public class DispatcherTest {
         );
 
         PubSubPublishResults results = dispatcher.execute(
-                new DispatcherRequest(false, bigQueryScope),
+                new DispatcherRequest(bigQueryScope,false, false),
                 "NA");
 
         List<String> actual = results.getSuccessMessages().stream().map(x -> ((ConfiguratorRequest) x.getMsg()).getTargetTable().toSqlString()).collect(Collectors.toList());

@@ -24,6 +24,7 @@ import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
+import javax.swing.text.StyledEditorKit;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -45,24 +46,40 @@ public class LoggingHelper {
         logger = LoggerFactory.getLogger(loggerName);
     }
 
+    public void logDebugWithTracker(Boolean isDryRun, String tracker, @Nullable TableSpec tableSpec, String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, isDryRun, tableSpec, tracker, msg, Level.DEBUG);
+    }
+
     public void logDebugWithTracker(String tracker, @Nullable TableSpec tableSpec, String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.DEBUG);
+        logWithTracker(ApplicationLog.DEFAULT_LOG, null, tableSpec, tracker, msg, Level.DEBUG);
+    }
+
+    public void logInfoWithTracker(Boolean isDryRun, String tracker, @Nullable TableSpec tableSpec, String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, isDryRun, tableSpec, tracker, msg, Level.INFO);
     }
 
     public void logInfoWithTracker(String tracker, @Nullable TableSpec tableSpec, String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.INFO);
+        logWithTracker(ApplicationLog.DEFAULT_LOG, null, tableSpec, tracker, msg, Level.INFO);
     }
 
-    public void logWarnWithTracker(String tracker, @Nullable TableSpec tableSpec,String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.WARN);
+    public void logWarnWithTracker(Boolean isDryRun, String tracker, @Nullable TableSpec tableSpec,String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, isDryRun, tableSpec, tracker, msg, Level.WARN);
+    }
+
+    public void logWarnWithTracker( String tracker, @Nullable TableSpec tableSpec,String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, null, tableSpec, tracker, msg, Level.WARN);
+    }
+
+    public void logSevereWithTracker(Boolean isDryRun, String tracker, @Nullable TableSpec tableSpec, String msg) {
+        logWithTracker(ApplicationLog.DEFAULT_LOG, isDryRun, tableSpec, tracker, msg, Level.ERROR);
     }
 
     public void logSevereWithTracker(String tracker, @Nullable TableSpec tableSpec, String msg) {
-        logWithTracker(ApplicationLog.DEFAULT_LOG, tableSpec, tracker, msg, Level.ERROR);
+        logWithTracker(ApplicationLog.DEFAULT_LOG, null, tableSpec, tracker, msg, Level.ERROR);
     }
 
-    private void logWithTracker(ApplicationLog log, @Nullable TableSpec tableSpec, String tracker, String msg, Level level) {
-        logWithTracker(log, tracker, tableSpec, msg, level, new Object[]{});
+    private void logWithTracker(ApplicationLog log, Boolean isDryRun, @Nullable TableSpec tableSpec, String tracker, String msg, Level level) {
+        logWithTracker(log,isDryRun, tracker, tableSpec, msg, level, new Object[]{});
     }
 
     public void logSuccessDispatcherTrackingId(String trackingId, String dispatchedTrackingId, TableSpec tableSpec) {
@@ -77,6 +94,7 @@ public class LoggingHelper {
 
         logWithTracker(
                 ApplicationLog.DISPATCHED_REQUESTS_LOG,
+                null,
                 trackingId,
                 tableSpec,
                 String.format("Dispatched request for table '%s' with trackindId `%s`", tableSpec.toSqlString(), dispatchedTrackingId),
@@ -96,6 +114,7 @@ public class LoggingHelper {
 
         logWithTracker(
                 ApplicationLog.FAILED_DISPATCHED_REQUESTS_LOG,
+                null,
                 trackingId,
                 tableSpec,
                 String.format("Failed to process entity `%s`.Exception: %s. Msg: %s",
@@ -119,6 +138,7 @@ public class LoggingHelper {
 
         logWithTracker(
                 ApplicationLog.NON_RETRYABLE_EXCEPTIONS_LOG,
+                null,
                 trackingId,
                 tableSpec,
                 String.format("Caught a Non-Retryable exception while processing tracker `%s`. Exception: %s. Msg: %s", trackingId, ex.getClass().getName(), ex.getMessage()),
@@ -140,6 +160,7 @@ public class LoggingHelper {
 
         logWithTracker(
                 ApplicationLog.RETRYABLE_EXCEPTIONS_LOG,
+                null,
                 trackingId,
                 tableSpec,
                 String.format("Caught a Retryable exception while processing tracker `%s`. Exception: %s. Msg: %s. Classification Reason: %s.",
@@ -159,7 +180,7 @@ public class LoggingHelper {
     }
 
     public void logFunctionEnd(String trackingId, @Nullable TableSpec tableSpec) {
-        logFunctionLifeCycleEvent(trackingId, tableSpec, FunctionLifeCycleEvent.END);
+        logFunctionLifeCycleEvent( trackingId, tableSpec, FunctionLifeCycleEvent.END);
     }
 
     private void logFunctionLifeCycleEvent(String trackingId, @Nullable TableSpec tableSpec, FunctionLifeCycleEvent event) {
@@ -171,6 +192,7 @@ public class LoggingHelper {
 
         logWithTracker(
                 ApplicationLog.TRACKER_LOG,
+                null,
                 trackingId,
                 tableSpec,
                 String.format("%s | %s | %s | %s",
@@ -187,6 +209,7 @@ public class LoggingHelper {
 
 
     public void logUnified(
+            Boolean isDryRun,
             String component,
             String runId,
             String trackingId,
@@ -212,6 +235,7 @@ public class LoggingHelper {
 
         logWithTracker(
                 ApplicationLog.UNIFIED_LOG,
+                isDryRun,
                 trackingId,
                 targetTable,
                 String.format("Unified log event for component '%s' processing target table '%s' with isSuccess status = '%s' and isRetryable = '%s'",
@@ -225,14 +249,15 @@ public class LoggingHelper {
         );
     }
 
-    private void logWithTracker(ApplicationLog log, String tracker, @Nullable TableSpec tableSpec, String msg, Level level, Object [] extraAttributes) {
+    private void logWithTracker(ApplicationLog log, Boolean isDryRun, String tracker, @Nullable TableSpec tableSpec, String msg, Level level, Object [] extraAttributes) {
 
         // Enable JSON logging with Logback and SLF4J by enabling the Logstash JSON Encoder in your logback.xml configuration.
 
-        String payload = String.format("%s | %s | %s | %s | %s",
+        String payload = String.format("%s | %s | %s | %s | %s | %s",
                 Globals.APPLICATION_NAME,
                 log,
                 loggerName,
+                isDryRun!=null? (isDryRun?"Dry-Run":"Wet-Run") : null,
                 tracker,
                 msg
         );
@@ -250,6 +275,7 @@ public class LoggingHelper {
                 kv("global_logger_name", this.loggerName),
                 kv("global_app_log", log),
                 kv("global_tracker", tracker),
+                kv("global_is_dry_run", isDryRun == null? null: isDryRun.toString()),
                 kv("global_tablespec_project", tableSpec == null? null: tableSpec.getProject()),
                 kv("global_tablespec_dataset", tableSpec == null? null: tableSpec.getDataset()),
                 kv("global_tablespec_table", tableSpec == null? null: tableSpec.getTable()),

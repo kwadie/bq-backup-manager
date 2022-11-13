@@ -8,6 +8,7 @@ ARRAY_AGG (
      d.execution_ts,
      d.run_start_ts,
      d.tracking_id,
+     d.is_dry_run,
      d.is_force_run,
      d.is_backup_time,
      d.backup_method,

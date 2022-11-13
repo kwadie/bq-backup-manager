@@ -73,13 +73,6 @@ public class Configurator {
         // 1. Find the backup policy of this table
         BackupPolicy backupPolicy = getBackupPolicy(request);
 
-        //TODO: log this into another logger for reporting on table backup configurations
-        logger.logInfoWithTracker(request.getTrackingId(),
-                request.getTargetTable(),
-                String.format("Backup policy for table %s is %s",
-                        request.getTargetTable().toSqlString(),
-                        backupPolicy.toString()));
-
         // 2. Determine if we should take a backup at this run given the policy CRON expression
         // if the table has been backed up before then check if we should backup at this run
 
@@ -119,16 +112,6 @@ public class Configurator {
                 gcsSnapshotRequests.add(gcsSnapshotRequest);
             }
 
-            logger.logInfoWithTracker(
-                    request.getTrackingId(),
-                    request.getTargetTable(),
-                    String.format("Will publish the following snapshot requests for table %s: %s %s",
-                            request.getTargetTable().toSqlString(),
-                            bqSnapshotRequests,
-                            gcsSnapshotRequests
-                    )
-            );
-
             // Publish the list of bq snapshot requests to PubSub
             bqSnapshotPublishResults = pubSubService.publishTableOperationRequests(
                     config.getProjectId(),
@@ -144,7 +127,9 @@ public class Configurator {
             );
 
             if (!bqSnapshotPublishResults.getSuccessMessages().isEmpty()) {
-                logger.logInfoWithTracker(request.getTrackingId(),
+                logger.logInfoWithTracker(
+                        request.isDryRun(),
+                        request.getTrackingId(),
                         request.getTargetTable(),
                         String.format("Published %s BigQuery Snapshot requests %s",
                                 bqSnapshotPublishResults.getSuccessMessages().size(),
@@ -153,7 +138,9 @@ public class Configurator {
             }
 
             if (!gcsSnapshotPublishResults.getSuccessMessages().isEmpty()) {
-                logger.logInfoWithTracker(request.getTrackingId(),
+                logger.logInfoWithTracker(
+                        request.isDryRun(),
+                        request.getTrackingId(),
                         request.getTargetTable(),
                         String.format("Published %s GCS Snapshot requests %s",
                                 gcsSnapshotPublishResults.getSuccessMessages().size(),
@@ -163,6 +150,7 @@ public class Configurator {
 
             if (!bqSnapshotPublishResults.getFailedMessages().isEmpty()) {
                 logger.logWarnWithTracker(
+                        request.isDryRun(),
                         request.getTrackingId(),
                         request.getTargetTable(),
                         String.format("Failed to publish BigQuery Snapshot request %s", bqSnapshotPublishResults.getFailedMessages().toString())
@@ -172,6 +160,7 @@ public class Configurator {
 
             if (!gcsSnapshotPublishResults.getFailedMessages().isEmpty()) {
                 logger.logWarnWithTracker(
+                        request.isDryRun(),
                         request.getTrackingId(),
                         request.getTargetTable(),
                         String.format("Failed to publish GCS Snapshot request %s", gcsSnapshotPublishResults.getFailedMessages().toString())
@@ -193,6 +182,7 @@ public class Configurator {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
+                request.isDryRun(),
                 backupPolicy,
                 refTs,
                 isBackupTime,
@@ -345,6 +335,7 @@ public class Configurator {
                     request.getTargetTable(),
                     request.getRunId(),
                     request.getTrackingId(),
+                    request.isDryRun(),
                     backupPolicy
             );
         }
@@ -354,6 +345,7 @@ public class Configurator {
                     request.getTargetTable(),
                     request.getRunId(),
                     request.getTrackingId(),
+                    request.isDryRun(),
                     backupPolicy
             );
         }

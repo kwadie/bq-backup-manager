@@ -83,9 +83,17 @@ public class DispatcherController {
 
             DispatcherRequest dispatcherRequest = gson.fromJson(requestJsonString, DispatcherRequest.class);
 
-            runId = dispatcherRequest.isForceRun()? TrackingHelper.generateForcedRunId(): TrackingHelper.generateHeartBeatRunId();
+            if(dispatcherRequest.isDryRun()){
+                runId = TrackingHelper.generateDryRunId();
+            }else{
+                if(dispatcherRequest.isForceRun()){
+                    runId = TrackingHelper.generateForcedRunId();
+                }else{
+                    runId = TrackingHelper.generateHeartBeatRunId();
+                }
+            }
 
-            logger.logInfoWithTracker(runId, null, String.format("Parsed dispatcher request %s ", dispatcherRequest.toString()));
+            logger.logInfoWithTracker(dispatcherRequest.isDryRun(), runId, null, String.format("Parsed dispatcher request %s ", dispatcherRequest.toString()));
 
             Dispatcher dispatcher = new Dispatcher(
                     environment.toConfig(),
@@ -103,7 +111,7 @@ public class DispatcherController {
                     results.getSuccessMessages().size(),
                     results.getFailedMessages().size());
 
-            logger.logInfoWithTracker(runId, null, state);
+            logger.logInfoWithTracker(dispatcherRequest.isDryRun(), runId, null, state);
 
         } catch (Exception e) {
             logger.logNonRetryableExceptions(runId, null, e);

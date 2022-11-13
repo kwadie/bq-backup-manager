@@ -351,10 +351,11 @@ public class ConfiguratorTest {
 
         return configurator.execute(
                 new ConfiguratorRequest(
-                        false,
                         targetTable,
                         runId,
-                        trackingId
+                        trackingId,
+                        false,
+                        false
                 ),
                 "pubsubmessageid"
         );
@@ -403,6 +404,7 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
+                false,
                 backupPolicy
         );
 
@@ -451,6 +453,7 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
+                false,
                 backupPolicy
         );
 
@@ -495,6 +498,7 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
+                false,
                 backupPolicy
         );
 
@@ -511,6 +515,7 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
+                false,
                 backupPolicy
         );
 

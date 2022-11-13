@@ -7,19 +7,23 @@ public class DispatcherRequest extends JsonMessage {
 
     // take table backup in this run regardless of the cron check
     private boolean isForceRun;
+
+    // no backup or tagging operations, only logging
+    private boolean isDryRun;
     private BigQueryScope bigQueryScope;
 
-    public DispatcherRequest() {
-        isForceRun = false;
-    }
-
-    public DispatcherRequest(boolean isForceRun, BigQueryScope bigQueryScope) {
+    public DispatcherRequest(BigQueryScope bigQueryScope, boolean isForceRun, boolean isDryRun) {
         this.isForceRun = isForceRun;
+        this.isDryRun = isDryRun;
         this.bigQueryScope = bigQueryScope;
     }
 
     public boolean isForceRun() {
         return isForceRun;
+    }
+
+    public boolean isDryRun() {
+        return isDryRun;
     }
 
     public BigQueryScope getBigQueryScope() {
@@ -30,6 +34,7 @@ public class DispatcherRequest extends JsonMessage {
     public String toString() {
         return "DispatcherRequest{" +
                 "isForceRun=" + isForceRun +
+                "isDryRun=" + isDryRun +
                 ", bigQueryScope=" + bigQueryScope +
                 '}';
     }

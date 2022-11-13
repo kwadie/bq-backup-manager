@@ -124,7 +124,9 @@ public class BigQuerySnapshoter {
         );
 
         Timestamp timeTravelTs = Timestamp.ofTimeSecondsAndNanos(sourceTableWithTimeTravelTuple.y()/1000, 0);
-        logger.logInfoWithTracker(request.getTrackingId(),
+        logger.logInfoWithTracker(
+                request.isDryRun(),
+                request.getTrackingId(),
                 request.getTargetTable(),
                 String.format("Will take a BQ Snapshot for '%s' to '%s' with time travel timestamp '%s' (%s days) expiring on '%s'",
                         request.getTargetTable().toSqlString(),
@@ -135,16 +137,20 @@ public class BigQuerySnapshoter {
                 )
         );
 
-        // API Call
-        bqService.createSnapshot(
-                sourceTableWithTimeTravelTuple.x(),
-                snapshotTable,
-                expiryTs,
-                request.getTrackingId()
-        );
 
-        // TODO: use a designated logger to track backup operations (audit log)
-        logger.logInfoWithTracker(request.getTrackingId(),
+        if(!request.isDryRun()){
+            // API Call
+            bqService.createSnapshot(
+                    sourceTableWithTimeTravelTuple.x(),
+                    snapshotTable,
+                    expiryTs,
+                    request.getTrackingId()
+            );
+        }
+
+        logger.logInfoWithTracker(
+                request.isDryRun(),
+                request.getTrackingId(),
                 request.getTargetTable(),
                 String.format("BigQuery snapshot completed for table %s to %s",
                         request.getTargetTable().toSqlString(),
@@ -157,6 +163,7 @@ public class BigQuerySnapshoter {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
+                request.isDryRun(),
                 request.getBackupPolicy(),
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 snapshotTable,
@@ -173,12 +180,12 @@ public class BigQuerySnapshoter {
 
         for (FailedPubSubMessage msg : publishResults.getFailedMessages()) {
             String logMsg = String.format("Failed to publish this message %s", msg.toString());
-            logger.logWarnWithTracker(request.getTrackingId(), request.getTargetTable(), logMsg);
+            logger.logWarnWithTracker(request.isDryRun(),request.getTrackingId(), request.getTargetTable(), logMsg);
         }
 
         for (SuccessPubSubMessage msg : publishResults.getSuccessMessages()) {
             String logMsg = String.format("Published this message %s", msg.toString());
-            logger.logInfoWithTracker(request.getTrackingId(), request.getTargetTable(), logMsg);
+            logger.logInfoWithTracker(request.isDryRun(),request.getTrackingId(), request.getTargetTable(), logMsg);
         }
 
         // run common service end logging and adding pubsub message to processed list
@@ -194,6 +201,7 @@ public class BigQuerySnapshoter {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
+                request.isDryRun(),
                 operationTs,
                 sourceTableWithTimeTravelTuple.x(),
                 snapshotTable,

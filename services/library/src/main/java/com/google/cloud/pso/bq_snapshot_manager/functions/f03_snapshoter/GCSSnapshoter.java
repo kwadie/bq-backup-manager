@@ -110,7 +110,9 @@ public class GCSSnapshoter {
 
 
         Timestamp timeTravelTs = Timestamp.ofTimeSecondsAndNanos(sourceTableWithTimeTravelTuple.y() / 1000, 0);
-        logger.logInfoWithTracker(request.getTrackingId(),
+        logger.logInfoWithTracker(
+                request.isDryRun(),
+                request.getTrackingId(),
                 request.getTargetTable(),
                 String.format("Will take a GCS Snapshot for '%s' to '%s' with time travel timestamp '%s' (%s days)",
                         request.getTargetTable().toSqlString(),
@@ -120,18 +122,23 @@ public class GCSSnapshoter {
                 )
         );
 
-        // API Call
-        bqService.exportToGCS(
-                sourceTableWithTimeTravelTuple.x(),
-                gcsDestinationUri,
-                request.getBackupPolicy().getGcsExportFormat(),
-                null,
-                null,
-                null,
-                request.getTrackingId()
-        );
+        if(!request.isDryRun()){
+            // API Call
+            bqService.exportToGCS(
+                    sourceTableWithTimeTravelTuple.x(),
+                    gcsDestinationUri,
+                    request.getBackupPolicy().getGcsExportFormat(),
+                    null,
+                    null,
+                    null,
+                    request.getTrackingId()
+            );
+        }
 
-        logger.logInfoWithTracker(request.getTrackingId(),
+
+        logger.logInfoWithTracker(
+                request.isDryRun(),
+                request.getTrackingId(),
                 request.getTargetTable(),
                 String.format("BigQuery GCS export completed for table %s to %s",
                         request.getTargetTable().toSqlString(),
@@ -144,6 +151,7 @@ public class GCSSnapshoter {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
+                request.isDryRun(),
                 request.getBackupPolicy(),
                 BackupMethod.GCS_SNAPSHOT,
                 null,
@@ -160,12 +168,12 @@ public class GCSSnapshoter {
 
         for (FailedPubSubMessage msg : publishResults.getFailedMessages()) {
             String logMsg = String.format("Failed to publish this message %s", msg.toString());
-            logger.logWarnWithTracker(request.getTrackingId(), request.getTargetTable(), logMsg);
+            logger.logWarnWithTracker(request.isDryRun(),request.getTrackingId(), request.getTargetTable(), logMsg);
         }
 
         for (SuccessPubSubMessage msg : publishResults.getSuccessMessages()) {
             String logMsg = String.format("Published this message %s", msg.toString());
-            logger.logInfoWithTracker(request.getTrackingId(), request.getTargetTable(), logMsg);
+            logger.logInfoWithTracker(request.isDryRun(),request.getTrackingId(), request.getTargetTable(), logMsg);
         }
 
         // run common service end logging and adding pubsub message to processed list
@@ -181,6 +189,7 @@ public class GCSSnapshoter {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
+                request.isDryRun(),
                 operationTs,
                 sourceTableWithTimeTravelTuple.x(),
                 taggerRequest,
