@@ -16,14 +16,19 @@
 package com.google.cloud.pso.bq_snapshot_manager.snapshoter_gcs;
 
 
+import com.google.cloud.Timestamp;
+import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerResponse;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.GCSSnapshoter;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.GCSSnapshoterResponse;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
@@ -40,7 +45,7 @@ public class GCSSnapshoterController {
 
     private final LoggingHelper logger;
 
-    private static final Integer functionNumber = 2;
+    private static final Integer functionNumber = -3;
 
     private Gson gson;
     Environment environment;
@@ -60,13 +65,13 @@ public class GCSSnapshoterController {
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
         String trackingId = TrackingHelper.MIN_RUN_ID;
-        BigQuerySnapshoterRequest operation = null;
+
         // These values will be updated based on the execution flow and logged at the end
         ResponseEntity responseEntity;
-        TaggerRequest taggerRequest = null;
-        TaggerResponse taggerResponse = null;
+        SnapshoterRequest snapshoterRequest = null;
+        GCSSnapshoterResponse snapshoterResponse = null;
         boolean isSuccess;
-        String error = "";
+        Exception error = null;
         boolean isRetryableError= false;
 
         try {
@@ -84,35 +89,55 @@ public class GCSSnapshoterController {
 
             logger.logInfoWithTracker(trackingId, null, String.format("Received payload: %s", requestJsonString));
 
-            operation = gson.fromJson(requestJsonString, BigQuerySnapshoterRequest.class);
+            snapshoterRequest = gson.fromJson(requestJsonString, SnapshoterRequest.class);
 
-            trackingId = operation.getTrackingId();
+            trackingId = snapshoterRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, operation.getTargetTable(), String.format("Parsed Request: %s", operation.toString()));
+            logger.logInfoWithTracker(trackingId, snapshoterRequest.getTargetTable(), String.format("Parsed Request: %s", snapshoterRequest.toString()));
 
-            //TODO: create snapshoter and execute
-//            Snapshoter snapshoter = new Snapshoter(
-//                    environment.toConfig(),
-//                    new BigQueryServiceImpl(),
-//                    new PubSubServiceImpl(),
-//                    new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
-//                    "snapshoter-gcs-flags",
-//                    functionNumber
-//            );
-//
-//            snapshoter.execute(operation, trackingId, requestBody.getMessage().getMessageId());
+            GCSSnapshoter snapshoter = new GCSSnapshoter(
+                    environment.toConfig(),
+                    new BigQueryServiceImpl(snapshoterRequest.getBackupPolicy().getBackupProject()),
+                    new PubSubServiceImpl(),
+                    new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
+                    "snapshoter-gcs-flags",
+                    functionNumber
+            );
 
-            return new ResponseEntity("Process completed successfully.", HttpStatus.OK);
+            snapshoterResponse = snapshoter.execute(
+                    snapshoterRequest,
+                    Timestamp.now(),
+                    requestBody.getMessage().getMessageId());
+
+            responseEntity = new ResponseEntity("Process completed successfully.", HttpStatus.OK);
+            isSuccess = true;
 
         } catch (Exception e) {
-            return ControllerExceptionHelper.handleException(
+            Tuple<ResponseEntity, Boolean> handlingResults  = ControllerExceptionHelper.handleException(
                     e,
                     logger,
                     trackingId,
-                    operation == null? null: operation.getTargetTable()
-            ).x();
-
+                    snapshoterRequest == null? null: snapshoterRequest.getTargetTable()
+            );
+            isSuccess = false;
+            responseEntity = handlingResults.x();
+            isRetryableError = handlingResults.y();
+            error = e;
         }
+
+        logger.logUnified(
+                functionNumber.toString(),
+                snapshoterRequest == null? null: snapshoterRequest.getRunId(),
+                snapshoterRequest == null? null: snapshoterRequest.getTrackingId(),
+                snapshoterRequest == null? null : snapshoterRequest.getTargetTable(),
+                snapshoterRequest,
+                snapshoterResponse,
+                isSuccess,
+                error,
+                isRetryableError
+        );
+
+        return responseEntity;
     }
 
     public static void main(String[] args) {

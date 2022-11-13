@@ -11,7 +11,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "config_source"
     display_name = "Configuration Source"
-    order = 12
+    order = 15
     type {
       enum_type {
         allowed_values {
@@ -28,7 +28,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_cron"
     display_name = "Cron expression for backup frequency"
-    order = 11
+    order = 14
     type {
       primitive_type = "STRING"
     }
@@ -38,7 +38,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_time_travel_offset_days"
     display_name = "Number of days in the past where the backup is taken relative to NOW"
-    order = 10
+    order = 13
     type {
       enum_type {
         allowed_values {
@@ -73,7 +73,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_method"
     display_name = "How to backup this table"
-    order = 9
+    order = 12
     type {
       enum_type {
         allowed_values {
@@ -91,19 +91,19 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   }
 
   fields {
-    field_id = "bq_snapshot_storage_project"
-    display_name = "BigQuery - Project where the snapshot is stored"
-    order = 8
+    field_id = "backup_project"
+    display_name = "Project to run snapshot and export operations and store their results"
+    order = 11
     type {
       primitive_type = "STRING"
     }
-    is_required = false
+    is_required = true
   }
 
   fields {
     field_id = "bq_snapshot_storage_dataset"
     display_name = "BigQuery - Dataset where the snapshot is stored"
-    order = 7
+    order = 10
     type {
       primitive_type = "STRING"
     }
@@ -113,7 +113,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "bq_snapshot_expiration_days"
     display_name = "BigQuery - Snapshot retention period in days"
-    order = 6
+    order = 9
     type {
       primitive_type = "DOUBLE"
     }
@@ -123,7 +123,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "gcs_snapshot_storage_location"
     display_name = "GCS - Parent path to store all table snapshots"
-    order = 5
+    order = 8
     type {
       primitive_type = "STRING"
     }
@@ -133,7 +133,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "gcs_snapshot_format"
     display_name = "GCS - Export format and compression"
-    order = 4
+    order = 7
     type {
       enum_type {
         allowed_values {
@@ -167,6 +167,36 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
           display_name = "PARQUET_GZIP"
         }
       }
+    }
+    is_required = false
+  }
+
+  fields {
+    field_id = "gcs_csv_delimiter"
+    display_name = "GCS - CSV field delimiter"
+    order = 6
+    type {
+      primitive_type = "STRING"
+    }
+    is_required = false
+  }
+
+  fields {
+    field_id = "gcs_csv_export_header"
+    display_name = "GCS - CSV export header row"
+    order = 5
+    type {
+      primitive_type = "BOOL"
+    }
+    is_required = false
+  }
+
+  fields {
+    field_id = "gcs_avro_use_logical_types"
+    display_name = "GCS - Use Avro logical types"
+    order = 4
+    type {
+      primitive_type = "BOOL"
     }
     is_required = false
   }

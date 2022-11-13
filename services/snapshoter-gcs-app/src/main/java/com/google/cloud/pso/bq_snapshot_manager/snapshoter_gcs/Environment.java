@@ -26,9 +26,6 @@ public class Environment {
 
         return new SnapshoterConfig(
                 getProjectId(),
-                getComputeRegionId(),
-                getDataRegionId(),
-                getSnapshotPolicyJson(),
                 getIsDryRun(),
                 getOutputTopic()
         );
@@ -47,9 +44,6 @@ public class Environment {
         return Utils.getConfigFromEnv("DATA_REGION_ID", true);
     }
 
-    public String getSnapshotPolicyJson(){
-        return Utils.getConfigFromEnv("SNAPSHOT_POLICY_JSON", true);
-    }
 
     public Boolean getIsDryRun(){
         return Boolean.valueOf(Utils.getConfigFromEnv("IS_DRY_RUN", true));

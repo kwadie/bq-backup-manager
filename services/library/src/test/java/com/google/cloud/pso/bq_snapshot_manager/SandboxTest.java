@@ -1,20 +1,13 @@
 package com.google.cloud.pso.bq_snapshot_manager;
 
 import com.google.cloud.Timestamp;
-import com.google.cloud.datacatalog.v1.Tag;
-import com.google.cloud.datacatalog.v1.TagField;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
-import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.junit.Test;
 
 import java.io.IOException;
-import java.util.Map;
 
 import static net.logstash.logback.argument.StructuredArguments.kv;
 
@@ -35,13 +28,37 @@ public class SandboxTest {
     }
 
     @Test
-    public void test2() throws IOException {
+    public void test2() throws IOException, InterruptedException {
 
-        try{
-            throw new Exception("yay");
-        }catch (Exception ex){
-            String str = ExceptionUtils.getStackTrace(ex);
-            System.out.println(str);
+        BigQueryServiceImpl bq = new BigQueryServiceImpl("bqsm-host");
+        GCSSnapshotFormat [] formats = {
+                GCSSnapshotFormat.CSV,
+                GCSSnapshotFormat.CSV_GZIP,
+                GCSSnapshotFormat.AVRO,
+                GCSSnapshotFormat.AVRO_DEFLATE,
+                GCSSnapshotFormat.AVRO_SNAPPY,
+                GCSSnapshotFormat.PARQUET,
+                GCSSnapshotFormat.PARQUET_SNAPPY,
+                GCSSnapshotFormat.PARQUET_GZIP,
+                GCSSnapshotFormat.JSON,
+                GCSSnapshotFormat.JSON_GZIP
+
+        };
+
+        for(int i=0; i< formats.length; i++){
+            GCSSnapshotFormat format = formats[i];
+            System.out.println("Backup "+ format+" ..");
+            bq.exportToGCS(
+                    new TableSpec("bqsm-data-1", "europe", "fake_data"),
+                    String.format("gs://bqsm-standard/test/%s/*", format),
+                    format,
+                    format.equals(GCSSnapshotFormat.CSV) || format.equals(GCSSnapshotFormat.CSV_GZIP)? "|" : null,
+                    true,
+                    null,
+                    "testTrackingg"+i
+            );
+
         }
+
     }
 }

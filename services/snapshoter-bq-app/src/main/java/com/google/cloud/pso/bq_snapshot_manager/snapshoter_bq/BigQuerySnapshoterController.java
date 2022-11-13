@@ -15,12 +15,12 @@
  */
 package com.google.cloud.pso.bq_snapshot_manager.snapshoter_bq;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
-import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoter;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterResponse;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
@@ -67,7 +67,7 @@ public class BigQuerySnapshoterController {
 
         // These values will be updated based on the execution flow and logged at the end
         ResponseEntity responseEntity;
-        BigQuerySnapshoterRequest snapshoterRequest = null;
+        SnapshoterRequest snapshoterRequest = null;
         BigQuerySnapshoterResponse snapshoterResponse = null;
         boolean isSuccess;
         Exception error = null;
@@ -88,7 +88,7 @@ public class BigQuerySnapshoterController {
 
             logger.logInfoWithTracker(trackingId, null, String.format("Received payload: %s", requestJsonString));
 
-            snapshoterRequest = gson.fromJson(requestJsonString, BigQuerySnapshoterRequest.class);
+            snapshoterRequest = gson.fromJson(requestJsonString, SnapshoterRequest.class);
 
             trackingId =  snapshoterRequest.getTrackingId();
 
@@ -97,13 +97,16 @@ public class BigQuerySnapshoterController {
             BigQuerySnapshoter snapshoter = new BigQuerySnapshoter(
                     environment.toConfig(),
                     // run BQ snapshot jobs on the backup project
-                    new BigQueryServiceImpl( snapshoterRequest.getBackupPolicy().getBigQuerySnapshotStorageProject()),
+                    new BigQueryServiceImpl( snapshoterRequest.getBackupPolicy().getBackupProject()),
                     new PubSubServiceImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
                     "snapshoter-bq-flags",
                     functionNumber);
 
-            snapshoterResponse = snapshoter.execute( snapshoterRequest, requestBody.getMessage().getMessageId());
+            snapshoterResponse = snapshoter.execute(
+                    snapshoterRequest,
+                    Timestamp.now(),
+                    requestBody.getMessage().getMessageId());
 
             responseEntity = new ResponseEntity("Process completed successfully.", HttpStatus.OK);
             isSuccess = true;

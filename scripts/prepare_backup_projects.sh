@@ -33,9 +33,15 @@ do
      --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
      --role="roles/bigquery.jobUser"
 
+      # GCS Snapshoter needs to create export jobs
+  gcloud projects add-iam-policy-binding "${project}" \
+       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
+       --role="roles/bigquery.jobUser"
 
-
-
+    # GCS Snapshoter needs to write to GCS
+    gcloud projects add-iam-policy-binding "${project}" \
+         --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
+         --role="roles/storage.objectAdmin"
 
   #TODO Add roles for Tagger
 
