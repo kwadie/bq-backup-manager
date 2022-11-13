@@ -15,8 +15,8 @@ public class TaggerRequest extends TableOperationRequestResponse {
     private final String gcsSnapshotUri;
     private final Timestamp lastBackUpAt;
 
-    public TaggerRequest(TableSpec targetTable, String runId, String trackingId, BackupPolicy backupPolicy, BackupMethod appliedBackupMethod, TableSpec bigQuerySnapshotTableSpec, String gcsSnapshotUri, Timestamp lastBackUpAt) {
-        super(targetTable, runId, trackingId);
+    public TaggerRequest(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy backupPolicy, BackupMethod appliedBackupMethod, TableSpec bigQuerySnapshotTableSpec, String gcsSnapshotUri, Timestamp lastBackUpAt) {
+        super(targetTable, runId, trackingId, isDryRun);
         this.backupPolicy = backupPolicy;
         this.appliedBackupMethod = appliedBackupMethod;
         this.bigQuerySnapshotTableSpec = bigQuerySnapshotTableSpec;
@@ -49,10 +49,10 @@ public class TaggerRequest extends TableOperationRequestResponse {
         return "TaggerRequest{" +
                 "backupPolicy=" + backupPolicy +
                 ", appliedBackupMethod=" + appliedBackupMethod +
-                ", bigQuerySnapshotTableSpec='" + bigQuerySnapshotTableSpec + '\'' +
+                ", bigQuerySnapshotTableSpec=" + bigQuerySnapshotTableSpec +
                 ", gcsSnapshotUri='" + gcsSnapshotUri + '\'' +
                 ", lastBackUpAt=" + lastBackUpAt +
-                '}';
+                "} " + super.toString();
     }
 
     @Override

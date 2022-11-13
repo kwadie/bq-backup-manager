@@ -108,10 +108,11 @@ public class Dispatcher {
         for (TableSpec tableSpec : tablesInScope) {
             pubSubMessagesToPublish.add(
                     new ConfiguratorRequest(
-                            dispatcherRequest.isForceRun(),
                             tableSpec,
                             runId,
-                            TrackingHelper.generateTrackingId(runId))
+                            TrackingHelper.generateTrackingId(runId),
+                            dispatcherRequest.isDryRun(),
+                            dispatcherRequest.isForceRun())
             );
         }
 

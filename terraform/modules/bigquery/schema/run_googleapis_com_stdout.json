@@ -128,6 +128,11 @@
       },
       {
         "mode": "NULLABLE",
+        "name": "global_is_dry_run",
+        "type": "STRING"
+      },
+      {
+        "mode": "NULLABLE",
         "name": "global_tablespec_project",
         "type": "STRING"
       },

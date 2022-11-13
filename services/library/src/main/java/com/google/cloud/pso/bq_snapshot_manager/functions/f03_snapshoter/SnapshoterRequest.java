@@ -10,8 +10,8 @@ public class SnapshoterRequest extends TableOperationRequestResponse {
 
     private final BackupPolicy backupPolicy;
 
-    public SnapshoterRequest(TableSpec targetTable, String runId, String trackingId, BackupPolicy backupPolicy) {
-        super(targetTable, runId, trackingId);
+    public SnapshoterRequest(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy backupPolicy) {
+        super(targetTable, runId, trackingId, isDryRun);
         this.backupPolicy = backupPolicy;
     }
 
@@ -19,6 +19,12 @@ public class SnapshoterRequest extends TableOperationRequestResponse {
         return backupPolicy;
     }
 
+    @Override
+    public String toString() {
+        return "SnapshoterRequest{" +
+                "backupPolicy=" + backupPolicy +
+                "} " + super.toString();
+    }
 
     @Override
     public boolean equals(Object o) {
@@ -32,12 +38,5 @@ public class SnapshoterRequest extends TableOperationRequestResponse {
     @Override
     public int hashCode() {
         return Objects.hashCode(super.hashCode(), backupPolicy);
-    }
-
-    @Override
-    public String toString() {
-        return "SnapshoterRequest{" +
-                "backupPolicy=" + backupPolicy +
-                "} " + super.toString();
     }
 }

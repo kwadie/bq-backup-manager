@@ -28,6 +28,8 @@ public class TrackingHelper {
     private static final String heartBeatRunSuffix = "-H";
 
     private static final String forcedRunSuffix = "-F";
+
+    private static final String dryRunSuffix = "-D";
     private static final Integer suffixLength = 2;
 
     public static String generateHeartBeatRunId(){
@@ -36,6 +38,10 @@ public class TrackingHelper {
 
     public static String generateForcedRunId(){
         return generateRunId(forcedRunSuffix);
+    }
+
+    public static String generateDryRunId(){
+        return generateRunId(dryRunSuffix);
     }
 
     private static String generateRunId(String suffix){

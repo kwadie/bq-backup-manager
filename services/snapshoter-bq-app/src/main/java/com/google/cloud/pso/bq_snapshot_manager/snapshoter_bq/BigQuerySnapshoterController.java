@@ -92,7 +92,7 @@ public class BigQuerySnapshoterController {
 
             trackingId =  snapshoterRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, snapshoterRequest.getTargetTable(), String.format("Parsed Request: %s",  snapshoterRequest.toString()));
+            logger.logInfoWithTracker(snapshoterRequest.isDryRun(), trackingId, snapshoterRequest.getTargetTable(), String.format("Parsed Request: %s",  snapshoterRequest.toString()));
 
             BigQuerySnapshoter snapshoter = new BigQuerySnapshoter(
                     environment.toConfig(),
@@ -125,6 +125,7 @@ public class BigQuerySnapshoterController {
         }
 
         logger.logUnified(
+                snapshoterRequest == null? null: snapshoterRequest.isDryRun(),
                 functionNumber.toString(),
                 snapshoterRequest == null? null: snapshoterRequest.getRunId(),
                 snapshoterRequest == null? null: snapshoterRequest.getTrackingId(),

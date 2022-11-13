@@ -331,12 +331,13 @@ variable "tagger_subscription_message_retention_duration" {
   default = "86400s" # 24h
 }
 
-variable "scheduler" {
-  type = object({
+variable "schedulers" {
+  type = list(object({
     name = string,
     cron = string,
     payload = object({
       is_force_run = bool,
+      is_dry_run = bool,
       folders_include_list = list(number),
       projects_include_list = list(string),
       projects_exclude_list = list(string),
@@ -345,7 +346,7 @@ variable "scheduler" {
       tables_include_list = list(string),
       tables_exclude_list = list(string),
     })
-  })
+  }))
 }
 
 variable "snapshot_policy" {

@@ -10,8 +10,8 @@ public class TaggerResponse extends TableOperationRequestResponse {
 
     private final BackupPolicy backupPolicy;
 
-    public TaggerResponse(TableSpec targetTable, String runId, String trackingId, BackupPolicy backupPolicy) {
-        super(targetTable, runId, trackingId);
+    public TaggerResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy backupPolicy) {
+        super(targetTable, runId, trackingId, isDryRun);
         this.backupPolicy = backupPolicy;
     }
 

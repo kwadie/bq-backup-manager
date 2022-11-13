@@ -17,8 +17,8 @@ public class ConfiguratorResponse extends TableOperationRequestResponse {
     private final PubSubPublishResults bigQueryBackupPublishingResults;
     private final PubSubPublishResults gcsBackupPublishingResults;
 
-    public ConfiguratorResponse(TableSpec targetTable, String runId, String trackingId, BackupPolicy backupPolicy, Timestamp refTs, boolean isBackupTime, SnapshoterRequest bqSnapshoterRequest, SnapshoterRequest gcsSnapshoterRequest, PubSubPublishResults bigQueryBackupPublishingResults, PubSubPublishResults gcsBackupPublishingResults) {
-        super(targetTable, runId, trackingId);
+    public ConfiguratorResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy backupPolicy, Timestamp refTs, boolean isBackupTime, SnapshoterRequest bqSnapshoterRequest, SnapshoterRequest gcsSnapshoterRequest, PubSubPublishResults bigQueryBackupPublishingResults, PubSubPublishResults gcsBackupPublishingResults) {
+        super(targetTable, runId, trackingId, isDryRun);
         this.backupPolicy = backupPolicy;
         this.refTs = refTs;
         this.isBackupTime = isBackupTime;

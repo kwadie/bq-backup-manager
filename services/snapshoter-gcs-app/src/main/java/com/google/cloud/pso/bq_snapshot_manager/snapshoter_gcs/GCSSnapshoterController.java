@@ -93,7 +93,7 @@ public class GCSSnapshoterController {
 
             trackingId = snapshoterRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, snapshoterRequest.getTargetTable(), String.format("Parsed Request: %s", snapshoterRequest.toString()));
+            logger.logInfoWithTracker(snapshoterRequest.isDryRun(), trackingId, snapshoterRequest.getTargetTable(), String.format("Parsed Request: %s", snapshoterRequest.toString()));
 
             GCSSnapshoter snapshoter = new GCSSnapshoter(
                     environment.toConfig(),
@@ -126,6 +126,7 @@ public class GCSSnapshoterController {
         }
 
         logger.logUnified(
+                snapshoterRequest == null? null: snapshoterRequest.isDryRun(),
                 functionNumber.toString(),
                 snapshoterRequest == null? null: snapshoterRequest.getRunId(),
                 snapshoterRequest == null? null: snapshoterRequest.getTrackingId(),

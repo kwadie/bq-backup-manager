@@ -90,7 +90,7 @@ public class TaggerController {
 
             trackingId = taggerRequest.getTrackingId();
 
-            logger.logInfoWithTracker(trackingId, taggerRequest.getTargetTable(), String.format("Parsed Request: %s", taggerRequest.toString()));
+            logger.logInfoWithTracker(taggerRequest.isDryRun(), trackingId, taggerRequest.getTargetTable(), String.format("Parsed Request: %s", taggerRequest.toString()));
 
             dataCatalogService = new DataCatalogServiceImpl();
             Tagger tagger = new Tagger(
@@ -127,6 +127,7 @@ public class TaggerController {
         }
 
         logger.logUnified(
+                taggerRequest == null? null: taggerRequest.isDryRun(),
                 functionNumber.toString(),
                 taggerRequest == null? null: taggerRequest.getRunId(),
                 taggerRequest == null? null: taggerRequest.getTrackingId(),
