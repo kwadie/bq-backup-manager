@@ -52,7 +52,7 @@ public class DataCatalogServiceImplTest {
                                 .build())
                         .build()
         );
-        tagMap.put("bq_snapshot_storage_project",
+        tagMap.put("backup_project",
                 TagField.newBuilder()
                         .setStringValue("test-project")
                         .build()
@@ -78,7 +78,7 @@ public class DataCatalogServiceImplTest {
         expected.put("backup_method","BigQuery Snapshot");
         expected.put("config_source","System");
         expected.put("backup_time_travel_offset_days","0");
-        expected.put("bq_snapshot_storage_project","test-project");
+        expected.put("backup_project","test-project");
         expected.put("bq_snapshot_storage_dataset","test-dataset");
         expected.put("bq_snapshot_expiration_days","0.0");
         expected.put("gcs_snapshot_storage_location","test-bucket");

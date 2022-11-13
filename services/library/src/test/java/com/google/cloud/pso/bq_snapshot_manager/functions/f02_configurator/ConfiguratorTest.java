@@ -7,8 +7,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapsh
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.GCSSnapshoterRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.PersistentSetTestImpl;
@@ -19,6 +18,7 @@ import org.junit.Test;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Map;
@@ -41,7 +41,7 @@ public class ConfiguratorTest {
             "    \"backup_method\": \"BigQuery Snapshot\",\n" +
             "    \"backup_time_travel_offset_days\": \"0\",\n" +
             "    \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "    \"bq_snapshot_storage_project\": \"project\",\n" +
+            "    \"backup_project\": \"project\",\n" +
             "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "    \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "  },\n" +
@@ -51,7 +51,7 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -60,7 +60,7 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
@@ -71,7 +71,7 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -80,7 +80,7 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
@@ -91,7 +91,7 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -100,7 +100,7 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
@@ -111,7 +111,7 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -120,27 +120,24 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"bq_snapshot_storage_project\": \"project\",\n" +
+            "      \"backup_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
             "  }\n" +
             "}";
 
-    BackupPolicy testPolicy = new BackupPolicy(
-            "*****",
+    BackupPolicy testPolicy = new BackupPolicy.BackupPolicyBuilder("*****",
             BackupMethod.BIGQUERY_SNAPSHOT,
             TimeTravelOffsetDays.DAYS_0,
-            15.0,
-            "project",
-            "dataset",
-            "gs://bla/",
-            GCSSnapshotFormat.AVRO,
             BackupConfigSource.SYSTEM,
-            Timestamp.MIN_VALUE,
-            "",
-            ""
-    );
+            "project")
+            .setBigQuerySnapshotExpirationDays(15.0)
+            .setBigQuerySnapshotStorageDataset("dataset")
+            .setGcsSnapshotStorageLocation("gs://bla")
+            .setGcsExportFormat(GCSSnapshotFormat.AVRO)
+            .setLastBackupAt(Timestamp.MIN_VALUE)
+            .build();
 
     FallbackBackupPolicy fallbackBackupPolicy = new FallbackBackupPolicy(
             testPolicy,
@@ -366,20 +363,17 @@ public class ConfiguratorTest {
     @Test
     public void testConfiguratorWithBqSnapshots() throws IOException, NonRetryableApplicationException, InterruptedException {
 
-        BackupPolicy backupPolicy = new BackupPolicy(
-                "* * * * * *",
+        BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("* * * * * *",
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_7,
-                15.0,
-                "snapshotProject",
-                "snapshotDataset",
-                "gs://bla/",
-                GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
-                Timestamp.MIN_VALUE,
-                "",
-                ""
-        );
+                "snapshotProject")
+                .setBigQuerySnapshotExpirationDays(15.0)
+                .setBigQuerySnapshotStorageDataset("snapshotDataset")
+                .setGcsSnapshotStorageLocation("gs://bla/")
+                .setGcsExportFormat(GCSSnapshotFormat.AVRO)
+                .setLastBackupAt(Timestamp.MIN_VALUE)
+                .build();
 
         TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
 
@@ -400,38 +394,35 @@ public class ConfiguratorTest {
         // there should be exactly one bigQuery Snapshot request sent to PubSub
         assertEquals(1, bigQueryPublishResults.getSuccessMessages().size());
 
-        BigQuerySnapshoterRequest actualBigQuerySnapshoterRequest = (BigQuerySnapshoterRequest) bigQueryPublishResults
+        SnapshoterRequest actualSnapshoterRequest = (SnapshoterRequest) bigQueryPublishResults
                 .getSuccessMessages()
                 .get(0)
                 .getMsg();
 
-        BigQuerySnapshoterRequest expectedBigQuerySnapshoterRequest = new BigQuerySnapshoterRequest(
+        SnapshoterRequest expectedSnapshoterRequest = new SnapshoterRequest(
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
                 backupPolicy
         );
 
-        assertEquals(expectedBigQuerySnapshoterRequest, actualBigQuerySnapshoterRequest);
+        assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
     }
 
     @Test
     public void testConfiguratorWithGCSSnapshots() throws IOException, NonRetryableApplicationException, InterruptedException {
 
-        BackupPolicy backupPolicy = new BackupPolicy(
-                "*****",
+        BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("*****",
                 BackupMethod.GCS_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
-                15.0,
-                "snapshotProject",
-                "snapshotDataset",
-                "gs://bucket/folder",
-                GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
-                null,
-                null,
-                null
-        );
+                "snapshotProject")
+                .setBigQuerySnapshotExpirationDays(15.0)
+                .setBigQuerySnapshotStorageDataset("snapshotDataset")
+                .setGcsSnapshotStorageLocation("gs://bucket/folder")
+                .setGcsExportFormat(GCSSnapshotFormat.AVRO)
+                .setGcsUseAvroLogicalTypes(true)
+                .build();
 
         TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
 
@@ -451,17 +442,16 @@ public class ConfiguratorTest {
 
         // there should be exactly one GCS Snapshot request sent to PubSub
         assertEquals(1, gcsPublishResults.getSuccessMessages().size());
-        GCSSnapshoterRequest actualGCSSnapshoterRequest = (GCSSnapshoterRequest) gcsPublishResults
+        SnapshoterRequest actualGCSSnapshoterRequest = (SnapshoterRequest) gcsPublishResults
                 .getSuccessMessages()
                 .get(0)
                 .getMsg();
 
-        GCSSnapshoterRequest expectedGCSSnapshoterRequest = new GCSSnapshoterRequest(
+        SnapshoterRequest expectedGCSSnapshoterRequest = new SnapshoterRequest(
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
-                "gs://bucket/folder",
-                GCSSnapshotFormat.AVRO
+                backupPolicy
         );
 
         assertEquals(expectedGCSSnapshoterRequest, actualGCSSnapshoterRequest);
@@ -470,20 +460,17 @@ public class ConfiguratorTest {
     @Test
     public void testConfiguratorWithBothSnapshots() throws IOException, NonRetryableApplicationException, InterruptedException {
 
-        BackupPolicy backupPolicy = new BackupPolicy(
-                "*****",
+        BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("*****",
                 BackupMethod.BOTH,
                 TimeTravelOffsetDays.DAYS_7,
-                15.0,
-                "snapshotProject",
-                "snapshotDataset",
-                "gs://bucket/folder",
-                GCSSnapshotFormat.AVRO,
                 BackupConfigSource.SYSTEM,
-                null,
-                null,
-                null
-        );
+                "snapshotProject")
+                .setBigQuerySnapshotExpirationDays(15.0)
+                .setBigQuerySnapshotStorageDataset("snapshotDataset")
+                .setGcsSnapshotStorageLocation("gs://bucket/folder")
+                .setGcsExportFormat(GCSSnapshotFormat.AVRO)
+                .setGcsUseAvroLogicalTypes(true)
+                .build();
 
         TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
 
@@ -499,36 +486,35 @@ public class ConfiguratorTest {
 
         // there should one GCS Snapshot request sent to PubSub
         assertEquals(1, gcsPublishResults.getSuccessMessages().size());
-        GCSSnapshoterRequest actualGCSSnapshoterRequest = (GCSSnapshoterRequest) gcsPublishResults
+        SnapshoterRequest actualGCSSnapshoterRequest = (SnapshoterRequest) gcsPublishResults
                 .getSuccessMessages()
                 .get(0)
                 .getMsg();
 
-        GCSSnapshoterRequest expectedGCSSnapshoterRequest = new GCSSnapshoterRequest(
-                targetTable,
-                "1665734583289-T",
-                "1665734583289-T-xyz",
-                "gs://bucket/folder",
-                GCSSnapshotFormat.AVRO
-        );
-
-        assertEquals(expectedGCSSnapshoterRequest, actualGCSSnapshoterRequest);
-
-        // there should be one bigQuery Snapshot request sent to PubSub
-        assertEquals(1, bigQueryPublishResults.getSuccessMessages().size());
-        BigQuerySnapshoterRequest actualBigQuerySnapshoterRequest = (BigQuerySnapshoterRequest) bigQueryPublishResults
-                .getSuccessMessages()
-                .get(0)
-                .getMsg();
-
-        BigQuerySnapshoterRequest expectedBigQuerySnapshoterRequest = new BigQuerySnapshoterRequest(
+        SnapshoterRequest expectedGCSSnapshoterRequest = new SnapshoterRequest(
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
                 backupPolicy
         );
 
-        assertEquals(expectedBigQuerySnapshoterRequest, actualBigQuerySnapshoterRequest);
+        assertEquals(expectedGCSSnapshoterRequest, actualGCSSnapshoterRequest);
+
+        // there should be one bigQuery Snapshot request sent to PubSub
+        assertEquals(1, bigQueryPublishResults.getSuccessMessages().size());
+        SnapshoterRequest actualSnapshoterRequest = (SnapshoterRequest) bigQueryPublishResults
+                .getSuccessMessages()
+                .get(0)
+                .getMsg();
+
+        SnapshoterRequest expectedSnapshoterRequest = new SnapshoterRequest(
+                targetTable,
+                "1665734583289-T",
+                "1665734583289-T-xyz",
+                backupPolicy
+        );
+
+        assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
     }
 
 

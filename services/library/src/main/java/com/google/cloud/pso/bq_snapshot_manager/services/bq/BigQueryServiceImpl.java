@@ -16,33 +16,22 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.services.bq;
 
-import com.google.api.client.http.javanet.NetHttpTransport;
-import com.google.api.client.json.jackson2.JacksonFactory;
-import com.google.api.services.bigquery.BigqueryScopes;
-import com.google.api.services.bigquery.model.TableFieldSchema;
-import com.google.api.services.bigquery.model.TableSchema;
-import com.google.auth.http.HttpCredentialsAdapter;
-import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.Timestamp;
+import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.*;
 import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
-import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
-import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
-import java.math.BigInteger;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
 
 public class BigQueryServiceImpl implements BigQueryService {
 
-    private BigQuery bqAPIWrapper;
+    private BigQuery bigQuery;
 
     public BigQueryServiceImpl(String projectId) throws IOException {
-        bqAPIWrapper = BigQueryOptions
+        bigQuery = BigQueryOptions
                 .newBuilder()
                 .setProjectId(projectId)
                 .build()
@@ -58,12 +47,56 @@ public class BigQueryServiceImpl implements BigQueryService {
                 .setDestinationExpirationTime(snapshotExpirationTs.toString())
                 .build();
 
-        Job job = bqAPIWrapper.create(JobInfo
+        Job job = bigQuery.create(JobInfo
                 .newBuilder(copyJobConfiguration)
-                .setJobId(JobId.of(String.format("%s_%s", Globals.APPLICATION_NAME, trackingId)))
+                .setJobId(JobId.of(String.format("%s_%s_%s", Globals.APPLICATION_NAME, "snapshot", trackingId)))
                 .build());
 
         // wait for the job to complete
+        job = job.waitFor();
+
+        // if job finished with errors
+        if (job.getStatus().getError() != null) {
+            throw new RuntimeException(job.getStatus().getError().toString());
+        }
+    }
+
+    public void exportToGCS(TableSpec sourceTable,
+                            String gcsDestinationUri,
+                            GCSSnapshotFormat exportFormat,
+                            @Nullable String csvFieldDelimiter,
+                            @Nullable Boolean csvPrintHeader,
+                            @Nullable Boolean useAvroLogicalTypes,
+                            String trackingId) throws InterruptedException {
+
+        Tuple<String, String> formatAndCompression = GCSSnapshotFormat.getFormatAndCompression(exportFormat);
+
+        ExtractJobConfiguration.Builder extractConfigurationBuilder = ExtractJobConfiguration
+                .newBuilder(sourceTable.toTableId(), gcsDestinationUri)
+                .setFormat(formatAndCompression.x());
+
+        // check if compression is required
+        if(formatAndCompression.y() != null){
+            extractConfigurationBuilder.setCompression(formatAndCompression.y());
+        }
+
+        // set optional fields
+        if(csvFieldDelimiter != null){
+            extractConfigurationBuilder.setFieldDelimiter(csvFieldDelimiter);
+        }
+        if(csvPrintHeader != null){
+            extractConfigurationBuilder.setPrintHeader(csvPrintHeader);
+        }
+        if(useAvroLogicalTypes != null){
+            extractConfigurationBuilder.setUseAvroLogicalTypes(useAvroLogicalTypes);
+        }
+
+        Job job = bigQuery.create(JobInfo
+                .newBuilder(extractConfigurationBuilder.build())
+                .setJobId(JobId.of(String.format("%s_%s_%s", Globals.APPLICATION_NAME, "export", trackingId)))
+                .build());
+
+        // Blocks until this job completes its execution, either failing or succeeding.
         job = job.waitFor();
 
         // if job finished with errors

@@ -22,8 +22,10 @@ import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 
+import javax.annotation.Nullable;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
@@ -33,4 +35,12 @@ public interface BigQueryService {
                         TableSpec destinationId,
                         Timestamp snapshotExpirationTs,
                         String trackingId) throws InterruptedException;
+
+     void exportToGCS(TableSpec sourceTable,
+                            String gcsDestinationUri,
+                            GCSSnapshotFormat exportFormat,
+                            @Nullable String csvFieldDelimiter,
+                            @Nullable Boolean csvPrintHeader,
+                            @Nullable Boolean useAvroLogicalTypes,
+                            String trackingId) throws InterruptedException;
 }

@@ -192,10 +192,6 @@ module "cloud-run-snapshoter-bq" {
     {
       name = "OUTPUT_TOPIC",
       value = module.pubsub-tagger.topic-name,
-    },
-    {
-      name = "SNAPSHOT_POLICY_JSON",
-      value = jsonencode(var.snapshot_policy)
     }
   ]
   )
@@ -216,10 +212,6 @@ module "cloud-run-snapshoter-gcs" {
     {
       name = "OUTPUT_TOPIC",
       value = module.pubsub-tagger.topic-name,
-    },
-    {
-      name = "SNAPSHOT_POLICY_JSON",
-      value = jsonencode(var.snapshot_policy)
     }
   ]
   )

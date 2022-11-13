@@ -69,24 +69,27 @@ public class Tagger {
         );
 
         // prepare the backup policy tag
-        BackupPolicy backupPolicy = request.getBackupPolicy();
+        BackupPolicy originalBackupPolicy = request.getBackupPolicy();
+        BackupPolicy.BackupPolicyBuilder updatedPolicyBuilder = BackupPolicy.BackupPolicyBuilder.from(originalBackupPolicy);
 
         // set the last_xyz fields
-        backupPolicy.setLastBackupAt(request.getLastBackUpAt());
+        updatedPolicyBuilder.setLastBackupAt(request.getLastBackUpAt());
 
         if(request.getAppliedBackupMethod().equals(BackupMethod.BIGQUERY_SNAPSHOT)){
-            backupPolicy.setLastBqSnapshotStorageUri(request.getBigQuerySnapshotTableSpec().toResourceUrl());
+            updatedPolicyBuilder.setLastBqSnapshotStorageUri(request.getBigQuerySnapshotTableSpec().toResourceUrl());
         }
 
         if(request.getAppliedBackupMethod().equals(BackupMethod.GCS_SNAPSHOT)){
-            backupPolicy.setLastGcsSnapshotStorageUri(request.getGcsSnapshotUri());
+            updatedPolicyBuilder.setLastGcsSnapshotStorageUri(request.getGcsSnapshotUri());
         }
+
+        BackupPolicy upDatedBackupPolicy = updatedPolicyBuilder.build();
 
         // update the tag
         // API Calls
         dataCatalogService.createOrUpdateBackupPolicyTag(
                 request.getTargetTable(),
-                backupPolicy,
+                upDatedBackupPolicy,
                 config.getTagTemplateId()
         );
 
@@ -103,7 +106,7 @@ public class Tagger {
                 request.getTargetTable(),
                 request.getRunId(),
                 request.getTrackingId(),
-                backupPolicy
+                upDatedBackupPolicy
         );
     }
 }

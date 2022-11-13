@@ -19,35 +19,17 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 public class SnapshoterConfig {
 
     private String projectId;
-    private String computeRegionId;
-    private String dataRegionId;
-    private String snapshotPolicyJson;
     private Boolean isDryRun;
     private String outputTopic;
 
-    public SnapshoterConfig(String projectId, String computeRegionId, String dataRegionId, String snapshotPolicyJson, Boolean isDryRun, String outputTopic) {
+    public SnapshoterConfig(String projectId, Boolean isDryRun, String outputTopic) {
         this.projectId = projectId;
-        this.computeRegionId = computeRegionId;
-        this.dataRegionId = dataRegionId;
-        this.snapshotPolicyJson = snapshotPolicyJson;
         this.isDryRun = isDryRun;
         this.outputTopic = outputTopic;
     }
 
     public String getProjectId() {
         return projectId;
-    }
-
-    public String getComputeRegionId() {
-        return computeRegionId;
-    }
-
-    public String getDataRegionId() {
-        return dataRegionId;
-    }
-
-    public String getSnapshotPolicyJson() {
-        return snapshotPolicyJson;
     }
 
     public Boolean getDryRun() {
@@ -62,9 +44,6 @@ public class SnapshoterConfig {
     public String toString() {
         return "SnapshoterConfig{" +
                 "projectId='" + projectId + '\'' +
-                ", computeRegionId='" + computeRegionId + '\'' +
-                ", dataRegionId='" + dataRegionId + '\'' +
-                ", snapshotPolicyJson='" + snapshotPolicyJson + '\'' +
                 ", isDryRun=" + isDryRun +
                 ", outputTopic='" + outputTopic + '\'' +
                 '}';

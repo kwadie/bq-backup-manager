@@ -11,7 +11,7 @@ SELECT
   -- runs that are not success but failed for retryable errors
   SUM(CASE WHEN r.is_successful_run IS FALSE AND r.run_has_retryable_error IS TRUE THEN 1 ELSE 0 END) AS retryable_failure_count,
   SUM(CASE WHEN r.is_successful_run IS NULL THEN 1 ELSE 0 END) AS incomplete_count,
-FROM `${project}.${dataset}.${v_unified_logging}`, UNNEST(runs) r
+FROM `${project}.${dataset}.${v_unified_logging}` r
 GROUP BY 1,2
 )
 

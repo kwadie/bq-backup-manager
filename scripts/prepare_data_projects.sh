@@ -45,6 +45,15 @@ do
      --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
      --role="roles/bigquery.dataViewer"
 
+    # GCS Snapshoter needs to create snapshot jobs and read table data
+    gcloud projects add-iam-policy-binding "${project}" \
+       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
+       --role="roles/bigquery.jobUser"
+
+    gcloud projects add-iam-policy-binding "${project}" \
+       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
+       --role="roles/bigquery.dataViewer"
+
   # Tagger roles
 
   # Provides access to modify tags on Google Cloud assets for BigQuery

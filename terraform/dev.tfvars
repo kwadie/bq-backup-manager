@@ -27,7 +27,7 @@ scheduler = {
       folders_include_list = [456209084685]
       projects_include_list = []
       projects_exclude_list = ["bqsm-host"]
-      datasets_include_list = ["bqsc-dwh-v1.stress_testing_3000"]
+      datasets_include_list = []
       datasets_exclude_list = []
       tables_include_list = []
       tables_exclude_list = []
@@ -41,7 +41,7 @@ snapshot_policy = {
     "backup_method": "BigQuery Snapshot",
     "backup_time_travel_offset_days": "7",
     "bq_snapshot_expiration_days": "15",
-    "bq_snapshot_storage_project": "project",
+    "backup_project": "project",
     "bq_snapshot_storage_dataset": "dataset",
     "gcs_snapshot_storage_location": "gs://bla/"
   },
@@ -51,7 +51,7 @@ snapshot_policy = {
       "backup_method": "BigQuery Snapshot",
       "backup_time_travel_offset_days": "0",
       "bq_snapshot_expiration_days": "15",
-      "bq_snapshot_storage_project": "project",
+      "backup_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/"
     },
@@ -59,19 +59,23 @@ snapshot_policy = {
   "project_overrides": {
     "bqsm-data-1": {
       "backup_cron": "0 0 0 1 * *",
-      "backup_method": "BigQuery Snapshot",
+      "backup_method": "Both",
       "backup_time_travel_offset_days": "3",
-      "bq_snapshot_expiration_days": "15",
-      "bq_snapshot_storage_project": "bqsm-data-1",
+      "backup_project": "bqsm-data-1"
+      #GCS Settings
+      "gcs_snapshot_storage_location": "gs://bqsm-data-1-backups"
+      "gcs_snapshot_format": "AVRO_SNAPPY"
+      "gcs_avro_use_logical_types": true
+      #BQ settings
       "bq_snapshot_storage_dataset": "london_backups",
-      "gcs_snapshot_storage_location": ""
+      "bq_snapshot_expiration_days": "15",
     },
     "bqsm-data-2": {
       "backup_cron": "0 0 0 1 * *",
       "backup_method": "BigQuery Snapshot",
       "backup_time_travel_offset_days": "0",
       "bq_snapshot_expiration_days": "15",
-      "bq_snapshot_storage_project": "bqsm-data-2",
+      "backup_project": "bqsm-data-2",
       "bq_snapshot_storage_dataset": "europe_backups",
       "gcs_snapshot_storage_location": ""
     },
@@ -80,7 +84,7 @@ snapshot_policy = {
       "backup_method": "BigQuery Snapshot",
       "backup_time_travel_offset_days": "0",
       "bq_snapshot_expiration_days": "1",
-      "bq_snapshot_storage_project": "bqsc-dwh-v1",
+      "backup_project": "bqsc-dwh-v1",
       "bq_snapshot_storage_dataset": "stress_testing_backups",
     }
   },
@@ -90,7 +94,7 @@ snapshot_policy = {
       "backup_method": "BigQuery Snapshot",
       "backup_time_travel_offset_days": "0",
       "bq_snapshot_expiration_days": "15",
-      "bq_snapshot_storage_project": "project",
+      "backup_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/"
     }
@@ -101,7 +105,7 @@ snapshot_policy = {
       "backup_method": "BigQuery Snapshot",
       "backup_time_travel_offset_days": "0",
       "bq_snapshot_expiration_days": "15",
-      "bq_snapshot_storage_project": "project",
+      "backup_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/"
     },
@@ -110,7 +114,7 @@ snapshot_policy = {
       "backup_method": "BigQuery Snapshot",
       "backup_time_travel_offset_days": "0",
       "bq_snapshot_expiration_days": "15",
-      "bq_snapshot_storage_project": "project",
+      "backup_project": "project",
       "bq_snapshot_storage_dataset": "dataset",
       "gcs_snapshot_storage_location": "gs://bla/"
     }

@@ -9,28 +9,21 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMet
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.FallbackBackupPolicy;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoterRequest;
-import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.GCSSnapshoterRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
-import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMessage;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
-import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.SuccessPubSubMessage;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
-import jdk.jshell.execution.Util;
 import org.springframework.scheduling.support.CronExpression;
 
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneOffset;
 import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.stream.Stream;
 
 public class Configurator {
 
@@ -104,12 +97,12 @@ public class Configurator {
         );
 
         // 3. Prepare and send the backup request(s) if required
-        BigQuerySnapshoterRequest bqSnapshotRequest = null;
-        GCSSnapshoterRequest gcsSnapshotRequest = null;
+        SnapshoterRequest bqSnapshotRequest = null;
+        SnapshoterRequest gcsSnapshotRequest = null;
         PubSubPublishResults bqSnapshotPublishResults = null;
         PubSubPublishResults gcsSnapshotPublishResults = null;
         if (isBackupTime) {
-            Tuple<BigQuerySnapshoterRequest, GCSSnapshoterRequest> snapshotRequestsTuple = prepareSnapshotRequests(
+            Tuple<SnapshoterRequest, SnapshoterRequest> snapshotRequestsTuple = prepareSnapshotRequests(
                     backupPolicy,
                     request
             );
@@ -218,7 +211,9 @@ public class Configurator {
                 config.getBackupTagTemplateId()
         );
 
-        if (backupPolicy != null) {
+        // if there is manually attached backup policy (e.g. by the table designer) then use it.
+        // we ignore SYSTEM attached policies from last run(s) (i.e. computed from fallback policies) to make sure we always use the latest admin-defined fallback policies
+        if (backupPolicy != null && backupPolicy.getConfigSource().equals(BackupConfigSource.MANUAL)) {
             // use table backup policy
             logger.logInfoWithTracker(request.getTrackingId(),
                     request.getTargetTable(),
@@ -227,7 +222,7 @@ public class Configurator {
                     )
             );
         } else {
-            // If no attached policy, find a default backup policy
+            // If no attached policy, or if it's a system generated one, find the latest fallback backup policy
 
             // find the most granular fallback policy table > dataset > project
             Tuple<String, BackupPolicy> fallbackTuple = findFallbackBackupPolicy(fallbackBackupPolicy,
@@ -340,13 +335,13 @@ public class Configurator {
         );
     }
 
-    public Tuple<BigQuerySnapshoterRequest, GCSSnapshoterRequest> prepareSnapshotRequests(BackupPolicy backupPolicy, ConfiguratorRequest request) {
+    public Tuple<SnapshoterRequest, SnapshoterRequest> prepareSnapshotRequests(BackupPolicy backupPolicy, ConfiguratorRequest request) {
 
-        BigQuerySnapshoterRequest bqSnapshotRequest = null;
-        GCSSnapshoterRequest gcsSnapshotRequest = null;
+        SnapshoterRequest bqSnapshotRequest = null;
+        SnapshoterRequest gcsSnapshotRequest = null;
 
         if (backupPolicy.getMethod().equals(BackupMethod.BIGQUERY_SNAPSHOT) || backupPolicy.getMethod().equals(BackupMethod.BOTH)) {
-            bqSnapshotRequest = new BigQuerySnapshoterRequest(
+            bqSnapshotRequest = new SnapshoterRequest(
                     request.getTargetTable(),
                     request.getRunId(),
                     request.getTrackingId(),
@@ -355,12 +350,11 @@ public class Configurator {
         }
 
         if (backupPolicy.getMethod().equals(BackupMethod.GCS_SNAPSHOT) || backupPolicy.getMethod().equals(BackupMethod.BOTH)) {
-            gcsSnapshotRequest = new GCSSnapshoterRequest(
+            gcsSnapshotRequest = new SnapshoterRequest(
                     request.getTargetTable(),
                     request.getRunId(),
                     request.getTrackingId(),
-                    backupPolicy.getGcsSnapshotStorageLocation(),
-                    backupPolicy.getGcsExportFormat()
+                    backupPolicy
             );
         }
 

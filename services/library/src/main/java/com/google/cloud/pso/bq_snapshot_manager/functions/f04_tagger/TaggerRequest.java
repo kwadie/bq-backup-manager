@@ -5,8 +5,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequestRe
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
-
-import java.util.Objects;
+import com.google.common.base.Objects;
 
 public class TaggerRequest extends TableOperationRequestResponse {
 
@@ -59,18 +58,14 @@ public class TaggerRequest extends TableOperationRequestResponse {
     @Override
     public boolean equals(Object o) {
         if (this == o) return true;
-        if (!(o instanceof TaggerRequest)) return false;
+        if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         TaggerRequest that = (TaggerRequest) o;
-        return getBackupPolicy().equals(that.getBackupPolicy()) &&
-                getAppliedBackupMethod() == that.getAppliedBackupMethod() &&
-                getBigQuerySnapshotTableSpec().equals(that.getBigQuerySnapshotTableSpec()) &&
-                getGcsSnapshotUri().equals(that.getGcsSnapshotUri()) &&
-                getLastBackUpAt().equals(that.getLastBackUpAt());
+        return Objects.equal(backupPolicy, that.backupPolicy) && appliedBackupMethod == that.appliedBackupMethod && Objects.equal(bigQuerySnapshotTableSpec, that.bigQuerySnapshotTableSpec) && Objects.equal(gcsSnapshotUri, that.gcsSnapshotUri) && Objects.equal(lastBackUpAt, that.lastBackUpAt);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), getBackupPolicy(), getAppliedBackupMethod(), getBigQuerySnapshotTableSpec(), getGcsSnapshotUri(), getLastBackUpAt());
+        return Objects.hashCode(super.hashCode(), backupPolicy, appliedBackupMethod, bigQuerySnapshotTableSpec, gcsSnapshotUri, lastBackUpAt);
     }
 }

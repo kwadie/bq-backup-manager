@@ -16,9 +16,14 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
+import com.google.cloud.Timestamp;
+import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableOperationRequestResponse;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
+import org.apache.commons.lang3.StringUtils;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -119,5 +124,43 @@ public class Utils {
         persistentSet.add(flagFileName);
 
         logger.logFunctionEnd(request.getTrackingId(), request.getTargetTable());
+    }
+
+    /**
+     * return a Tuple (X, Y) where X is a TableSpec containing a table decorator with time travel applied and Y is the calculated
+     * timestamp in milliseconds since epoch used for the decorator
+     * @param table
+     * @param timeTravelOffsetDays
+     * @param referencePoint
+     * @return
+     */
+    public static Tuple<TableSpec, Long> getTableSpecWithTimeTravel(TableSpec table, TimeTravelOffsetDays timeTravelOffsetDays, Timestamp referencePoint) {
+        Long timeTravelMs;
+        Long refPointMs = referencePoint.getSeconds()*1000;
+
+        if (timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_0)) {
+            // always use time travel for consistency and traceability
+            timeTravelMs = refPointMs;
+        }else{
+            // use a buffer (milliseconds) to count for the operation time
+            Long bufferMs = timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_7) ? 5000L : 0L;
+            // milli seconds per day * number of days
+            Long timeTravelOffsetMs = (86400000L * Long.parseLong(timeTravelOffsetDays.getText()));
+            timeTravelMs = refPointMs - timeTravelOffsetMs - bufferMs;
+        }
+
+        return Tuple.of(new TableSpec(
+                        table.getProject(),
+                        table.getDataset(),
+                        String.format("%s@%s", table.getTable(), timeTravelMs)),
+                timeTravelMs
+        );
+    }
+
+    public static String trimSlashes(String str){
+        return StringUtils.removeStart(
+                StringUtils.removeEnd(str, "/"),
+                "/"
+        );
     }
 }
