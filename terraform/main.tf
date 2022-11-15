@@ -154,6 +154,7 @@ module "cloud-run-configurator" {
   service_account_email = module.iam.sa_configurator_email
   invoker_service_account_email = module.iam.sa_configurator_tasks_email
   timeout_seconds = var.configurator_service_timeout_seconds
+  max_cpu = 2
 
   # Use the common variables in addition to specific variables for this service
   environment_variables = concat(local.common_cloud_run_variables, [
@@ -186,6 +187,7 @@ module "cloud-run-snapshoter-bq" {
   service_account_email = module.iam.sa_snapshoter_bq_email
   invoker_service_account_email = module.iam.sa_snapshoter_bq_tasks_email
   timeout_seconds = var.snapshoter_bq_service_timeout_seconds
+  max_cpu = 2
 
   # Use the common variables in addition to specific variables for this service
   environment_variables = concat(local.common_cloud_run_variables, [
@@ -206,6 +208,7 @@ module "cloud-run-snapshoter-gcs" {
   service_account_email = module.iam.sa_snapshoter_gcs_email
   invoker_service_account_email = module.iam.sa_snapshoter_gcs_tasks_email
   timeout_seconds = var.snapshoter_gcs_service_timeout_seconds
+  max_cpu = 2
 
   # Use the common variables in addition to specific variables for this service
   environment_variables = concat(local.common_cloud_run_variables, [
