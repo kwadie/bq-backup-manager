@@ -237,6 +237,7 @@ variable "dispatcher_subscription_message_retention_duration" {
 variable "configurator_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
   type = number
+  // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
   default = 300 # 5m
 }
 
@@ -244,6 +245,7 @@ variable "configurator_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
   type = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
+  // range [10,600] seconds
   default = 420 # 7m
 }
 
@@ -261,6 +263,7 @@ variable "configurator_subscription_message_retention_duration" {
 variable "snapshoter_bq_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
   type = number
+  // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
   default = 300 # 5m
 }
 
@@ -268,6 +271,7 @@ variable "snapshoter_bq_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
   type = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
+  // range [10,600] seconds
   default = 420 # 7m
 }
 
@@ -285,14 +289,17 @@ variable "snapshoter_bq_subscription_message_retention_duration" {
 variable "snapshoter_gcs_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
   type = number
-  default = 300 # 5m
+  // GCS snapshoter might take relatively long time for export jobs
+  // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
+  default = 540 # 9m
 }
 
 variable "snapshoter_gcs_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
   type = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
-  default = 420 # 7m
+  // range [10,600] seconds
+  default = 600 # 10m
 }
 
 variable "snapshoter_gcs_subscription_message_retention_duration" {
@@ -309,7 +316,7 @@ variable "snapshoter_gcs_subscription_message_retention_duration" {
 variable "tagger_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
   type = number
-  # Tagger is using BQ batch jobs that might need time to start running and thus a relatively longer timeout
+  // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
   default = 540 # 9m
 }
 
@@ -317,7 +324,7 @@ variable "tagger_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
   type = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
-  // range is 10 to 600
+  // range [10,600] seconds
   default = 600 # 10m
 }
 

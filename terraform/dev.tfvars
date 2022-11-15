@@ -51,15 +51,15 @@ schedulers = [
   },
   {
     name    = "dry_run"
-    cron    = "0 0 * * *"
+    cron    = "0 0 1 1 *" # once a year on 1/1/* at 00:00
     payload = {
       is_force_run = true
       is_dry_run   = true
 
-      folders_include_list  = [456209084685]
+      folders_include_list  = []
       projects_include_list = []
-      projects_exclude_list = ["bqsm-host"]
-      datasets_include_list = []
+      projects_exclude_list = []
+      datasets_include_list = ["bqsc-dwh-v1.stress_testing_20000"]
       datasets_exclude_list = []
       tables_include_list   = []
       tables_exclude_list   = []
