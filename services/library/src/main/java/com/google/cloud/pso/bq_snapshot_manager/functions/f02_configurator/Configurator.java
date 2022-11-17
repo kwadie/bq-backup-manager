@@ -196,37 +196,31 @@ public class Configurator {
     public BackupPolicy getBackupPolicy(ConfiguratorRequest request) throws IOException {
 
         // Check if the table has a back policy attached to it in data catalog
-        BackupPolicy backupPolicy = dataCatalogService.getBackupPolicyTag(
+        BackupPolicy attachedBackupPolicy = dataCatalogService.getBackupPolicyTag(
                 request.getTargetTable(),
                 config.getBackupTagTemplateId()
         );
 
         // if there is manually attached backup policy (e.g. by the table designer) then use it.
-        // we ignore SYSTEM attached policies from last run(s) (i.e. computed from fallback policies) to make sure we always use the latest admin-defined fallback policies
-        if (backupPolicy != null && backupPolicy.getConfigSource().equals(BackupConfigSource.MANUAL)) {
-            // use table backup policy
-            logger.logInfoWithTracker(request.getTrackingId(),
-                    request.getTargetTable(),
-                    String.format("Will use attached tag template backup policy for table '%s'",
-                            request.getTargetTable().toSqlString()
-                    )
-            );
-        } else {
-            // If no attached policy, or if it's a system generated one, find the latest fallback backup policy
+        if (attachedBackupPolicy != null && attachedBackupPolicy.getConfigSource().equals(BackupConfigSource.MANUAL)) {
+            return attachedBackupPolicy;
+        }else{
 
             // find the most granular fallback policy table > dataset > project
-            Tuple<String, BackupPolicy> fallbackTuple = findFallbackBackupPolicy(fallbackBackupPolicy,
-                    request.getTargetTable());
+            BackupPolicy fallbackPolicy = findFallbackBackupPolicy(fallbackBackupPolicy,
+                    request.getTargetTable()).y();
 
-            //TODO: log this into another logger for reporting on table backup configurations
-            logger.logInfoWithTracker(request.getTrackingId(),
-                    request.getTargetTable(),
-                    String.format("Will use %s-level fallback backup policy for table %s",
-                            fallbackTuple.x(), request.getTargetTable()));
-
-            backupPolicy = fallbackTuple.y();
+            // if there is a system attached policy, then only use the last_backup_time from it and use the latest fallback policy
+            if (attachedBackupPolicy != null && attachedBackupPolicy.getConfigSource().equals(BackupConfigSource.SYSTEM)) {
+                return BackupPolicy.BackupPolicyBuilder
+                        .from(fallbackPolicy)
+                        .setLastBackupAt(attachedBackupPolicy.getLastBackupAt())
+                        .build();
+            }else{
+                // if there is no attached policy, use fallback one
+                return fallbackPolicy;
+            }
         }
-        return backupPolicy;
     }
 
     public static boolean isBackupTime(
@@ -247,13 +241,13 @@ public class Configurator {
                 && lastBackupAt == null)) {
             // this means the table has not been backed up before
             // CASE 1: It's a force run --> take backup
-            // CASE 2: It's a fallback configuration (SYSTEM) running for the first time (MIN_VALUE) --> take backup
+            // CASE 2: It's a fallback configuration (SYSTEM) running for the first time --> take backup
             takeBackup = true;
         } else {
 
             if (lastBackupAt == null) {
                 // this means the table has not been backed up before
-                // CASE 3: It's a MANUAL config but running for the first time (MIN_VALUE)
+                // CASE 3: It's a MANUAL config but running for the first time
                 takeBackup = true;
             } else {
 

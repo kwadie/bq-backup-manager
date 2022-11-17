@@ -219,4 +219,7 @@ PS:
 * Use the same projects list as set in the Terraform variable `schedulers`
 
 
-[IGNORE ME] testing PR with GitHub issues  
+### Limits
+* Each project can run up to 50,000 table snapshot jobs per day.
+* Each project can run 100,000 export jobs per day (e.g. to GCS). Could be extended by slot reservation.
+* Each project can export 50 TB per day for free using the shared slots pool (e.g. to GCS). Could be extended by slot reservation.

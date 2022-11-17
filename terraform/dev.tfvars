@@ -19,15 +19,15 @@ tagger_service_image         = "europe-west3-docker.pkg.dev/bqsm-host/docker-rep
 schedulers = [
   {
     name    = "heart_beat"
-    cron    = "0 0 1 1 *" # once a year on 1/1/* at 00:00
+    cron    = "0 * * * *" # hourly
     payload = {
       is_force_run = false
       is_dry_run   = false
 
-      folders_include_list  = [456209084685]
+      folders_include_list  = []
       projects_include_list = []
-      projects_exclude_list = ["bqsm-host"]
-      datasets_include_list = []
+      projects_exclude_list = []
+      datasets_include_list = ["bqsc-dwh-v1.stress_testing_3000"]
       datasets_exclude_list = []
       tables_include_list   = []
       tables_exclude_list   = []
@@ -115,19 +115,28 @@ snapshot_policy = {
   },
   "dataset_overrides" : {
     "bqsc-dwh-v1.stress_testing_20000" : {
-      "backup_cron" : "0 0 0 1 * *",
-      "backup_method" : "BigQuery Snapshot",
-      "backup_time_travel_offset_days" : "0",
-      "bq_snapshot_expiration_days" : "1",
-      "backup_project" : "bqsc-dwh-v1",
-      "bq_snapshot_storage_dataset" : "stress_testing_backups",
-    },
-    "bqsc-dwh-v1.stress_testing_3000" : {
-      "backup_cron" : "0 0 0 1 * *",
+      "backup_cron" : "0 0 */4 * * *", # every 4 hours each day
       "backup_method" : "GCS Snapshot",
       "backup_time_travel_offset_days" : "0",
-      "backup_project" : "bqsc-dwh-v1"
-      "gcs_snapshot_storage_location" : "gs://bqsc-dwh-v1-backups/stress-20221115-1200/"
+      "backup_project" : "bqsc-dwh-v1",
+      # bq settings
+#      "bq_snapshot_expiration_days" : "1",
+#      "bq_snapshot_storage_dataset" : "stress_testing_backups",
+      # gcs settings
+      "gcs_snapshot_storage_location" : "gs://bqsc-dwh-v1-backups/stress-tests/"
+      "gcs_snapshot_format" : "AVRO_SNAPPY"
+      "gcs_avro_use_logical_types" : true
+    },
+    "bqsc-dwh-v1.stress_testing_3000" : {
+      "backup_cron" : "0 0 */4 * * *", # every 4 hours each day
+      "backup_method" : "Both",
+      "backup_time_travel_offset_days" : "0",
+      "backup_project" : "bqsc-dwh-v1",
+      # bq settings
+      "bq_snapshot_expiration_days" : "1",
+      "bq_snapshot_storage_dataset" : "stress_testing_backups",
+      # gcs settings
+      "gcs_snapshot_storage_location" : "gs://bqsc-dwh-v1-backups/stress-tests/"
       "gcs_snapshot_format" : "AVRO_SNAPPY"
       "gcs_avro_use_logical_types" : true
     }

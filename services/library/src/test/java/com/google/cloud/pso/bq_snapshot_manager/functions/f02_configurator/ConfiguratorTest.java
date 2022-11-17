@@ -37,13 +37,12 @@ public class ConfiguratorTest {
 
     String jsonPolicyStr = "{\n" +
             "  \"default_policy\": {\n" +
-            "    \"backup_cron\": \"*****\",\n" +
+            "    \"backup_cron\": \"* * * * * *\",\n" +
             "    \"backup_method\": \"BigQuery Snapshot\",\n" +
             "    \"backup_time_travel_offset_days\": \"0\",\n" +
             "    \"bq_snapshot_expiration_days\": \"15\",\n" +
             "    \"backup_project\": \"project\",\n" +
-            "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "    \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
+            "    \"bq_snapshot_storage_dataset\": \"dataset\"\n" +
             "  },\n" +
             "  \"folder_overrides\": {\n" +
             "    \"folder1\": {\n" +
@@ -367,7 +366,7 @@ public class ConfiguratorTest {
         BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("* * * * * *",
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_7,
-                BackupConfigSource.SYSTEM,
+                BackupConfigSource.MANUAL,
                 "snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
@@ -417,10 +416,8 @@ public class ConfiguratorTest {
         BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("*****",
                 BackupMethod.GCS_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
-                BackupConfigSource.SYSTEM,
+                BackupConfigSource.MANUAL,
                 "snapshotProject")
-                .setBigQuerySnapshotExpirationDays(15.0)
-                .setBigQuerySnapshotStorageDataset("snapshotDataset")
                 .setGcsSnapshotStorageLocation("gs://bucket/folder")
                 .setGcsExportFormat(GCSSnapshotFormat.AVRO)
                 .setGcsUseAvroLogicalTypes(true)
@@ -466,7 +463,7 @@ public class ConfiguratorTest {
         BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("*****",
                 BackupMethod.BOTH,
                 TimeTravelOffsetDays.DAYS_7,
-                BackupConfigSource.SYSTEM,
+                BackupConfigSource.MANUAL,
                 "snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
@@ -521,6 +518,69 @@ public class ConfiguratorTest {
 
         assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
     }
+
+    @Test
+    public void testConfiguratorWithSystemBqSnapshots() throws IOException, NonRetryableApplicationException, InterruptedException {
+
+        // This SYSTEM attached policy will be ignored except for the last_backup_at. The fallback policy
+        // will be used instead to ensure that we're using latest fallbacks
+        BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("* * * * * *",
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_7,
+                BackupConfigSource.SYSTEM,
+                "snapshotProject")
+                .setBigQuerySnapshotExpirationDays(15.0)
+                .setBigQuerySnapshotStorageDataset("snapshotDataset")
+                .setLastBackupAt(Timestamp.MIN_VALUE)
+                .build();
+
+        TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
+
+        ConfiguratorResponse configuratorResponse = executeConfigurator(
+                targetTable,
+                "1665734583289-T",
+                "1665734583289-T-xyz",
+                backupPolicy);
+
+        // this run returns the fallback policy with Timestamp.MIN_VALUE from the system generated policy. Assert expectations based on it
+        PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
+        PubSubPublishResults gcsQueryPublishResults = configuratorResponse.getGcsBackupPublishingResults();
+
+        // there shouldn't be any GCS snapshot requests sent to PubSub
+        assertEquals(0, gcsQueryPublishResults.getSuccessMessages().size());
+        assertEquals(0, gcsQueryPublishResults.getFailedMessages().size());
+
+        // there should be exactly one bigQuery Snapshot request sent to PubSub
+        assertEquals(1, bigQueryPublishResults.getSuccessMessages().size());
+
+        SnapshoterRequest actualSnapshoterRequest = (SnapshoterRequest) bigQueryPublishResults
+                .getSuccessMessages()
+                .get(0)
+                .getMsg();
+
+        SnapshoterRequest expectedSnapshoterRequest = new SnapshoterRequest(
+                targetTable,
+                "1665734583289-T",
+                "1665734583289-T-xyz",
+                false,
+                new BackupPolicy.BackupPolicyBuilder(
+                        "* * * * * *",
+                        BackupMethod.BIGQUERY_SNAPSHOT,
+                        TimeTravelOffsetDays.DAYS_0,
+                        BackupConfigSource.SYSTEM,
+                        "project"
+                )
+                        .setBigQuerySnapshotExpirationDays(15.0)
+                        .setBigQuerySnapshotStorageDataset("dataset")
+                        .setLastBackupAt(Timestamp.MIN_VALUE)
+                        .build()
+        );
+
+
+
+                assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
+    }
+
 
 
 }

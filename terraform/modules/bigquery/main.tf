@@ -143,6 +143,7 @@ resource "google_bigquery_table" "view_run_summary_counts" {
       project = var.project
       dataset = var.dataset
       v_run_summary = google_bigquery_table.view_run_summary.table_id
+      v_run_duration = google_bigquery_table.view_run_duration.table_id
     }
     )
   }
@@ -198,6 +199,24 @@ resource "google_bigquery_table" "view_tracking_id_map" {
       dataset = var.dataset
       logging_table = google_bigquery_table.logging_table.table_id
     }
+    )
+  }
+}
+
+resource "google_bigquery_table" "view_run_duration" {
+  dataset_id = google_bigquery_dataset.results_dataset.dataset_id
+  table_id = "v_run_duration"
+
+  deletion_protection = false
+
+  view {
+    use_legacy_sql = false
+    query = templatefile("modules/bigquery/views/v_run_duration.tpl",
+      {
+        project = var.project
+        dataset = var.dataset
+        logging_table = google_bigquery_table.logging_table.table_id
+      }
     )
   }
 }

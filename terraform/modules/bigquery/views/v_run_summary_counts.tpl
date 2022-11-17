@@ -12,23 +12,26 @@ WITH counts AS (
 )
 
 SELECT
-run_id,
-timestamp,
-total_count,
+c.run_id,
+c.timestamp AS run_id_timestamp,
+c.total_count,
+d.run_duration_mins,
 STRUCT(
-  success_count + failed_count AS complete_count,
-  retrying_count + in_progress_count AS incomplete_count,
-  CASE WHEN total_count > 0 THEN (success_count + failed_count) / total_count ELSE null END AS completion_coverage
+  c.success_count + c.failed_count AS complete_count,
+  c.retrying_count + c.in_progress_count AS incomplete_count,
+  CASE WHEN c.total_count > 0 THEN (c.success_count + c.failed_count) / c.total_count ELSE null END AS completion_coverage
 ) AS progress,
 STRUCT(
-  success_count,
-  failed_count,
-  retrying_count,
-  in_progress_count
+  c.success_count,
+  c.failed_count,
+  c.retrying_count,
+  c.in_progress_count
 ) AS details,
 STRUCT(
-  (success_count + failed_count + retrying_count + in_progress_count) AS total_count,
-  (success_count + failed_count + retrying_count + in_progress_count) - total_count AS variance
-) AS cross_checkes
-FROM counts
+  (c.success_count + c.failed_count + c.retrying_count + c.in_progress_count) AS total_count,
+  (c.success_count + c.failed_count + c.retrying_count + c.in_progress_count) - c.total_count AS variance
+) AS cross_checks
+FROM counts c
+LEFT JOIN `${project}.${dataset}.${v_run_duration}` d
+ON c.run_id = d.run_id
 ORDER BY run_id DESC
