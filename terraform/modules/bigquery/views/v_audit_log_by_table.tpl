@@ -90,6 +90,8 @@ c.backup_method,
 c.is_dry_run,
 
 CASE
+-- if configurator fails the whole run fails
+WHEN  (NOT c.configurator_is_successful) THEN FALSE
 -- if configurator finish successfully but it's not a backup time and no snapshoters should run
 WHEN  (c.configurator_is_successful AND NOT c.is_backup_time) THEN TRUE
 -- if It's BQ snapshot config then we expect the configurator, bq snasphoter and tagger (called by bq snapshoter) to run
@@ -117,6 +119,7 @@ STRUCT(c.configurator_is_retryable_error,bs.bq_snapshoter_is_retryable_error,gs.
 
 FROM dispatched_tables d
 -- no tracking_id at this point, use the tablespec to get all runs for that tablespec
+-- configurator is the first table-wise operation so we need to join on a successful run of it
 LEFT JOIN configurator c ON d.tablespec = c.tablespec
 -- then join using tracking_id
 LEFT JOIN bq_snapshoter bs ON c.tracking_id = bs.tracking_id
