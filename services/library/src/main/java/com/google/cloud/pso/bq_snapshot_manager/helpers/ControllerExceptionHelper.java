@@ -21,6 +21,7 @@ import com.google.api.gax.rpc.ResourceExhaustedException;
 import com.google.cloud.BaseServiceException;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQueryException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.RetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.common.collect.Sets;
 import io.grpc.Status;
@@ -35,6 +36,7 @@ public class ControllerExceptionHelper {
 
     // add more Retryable Exceptions Here
     private static final Set<Class> RETRYABLE_EXCEPTIONS = Sets.newHashSet(
+            RetryableApplicationException.class,
             ResourceExhaustedException.class,
             javax.net.ssl.SSLException.class,
             java.net.SocketException.class

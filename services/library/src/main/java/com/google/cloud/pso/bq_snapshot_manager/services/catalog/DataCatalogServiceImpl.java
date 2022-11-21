@@ -126,13 +126,13 @@ public class DataCatalogServiceImpl implements DataCatalogService {
                 strValue = String.valueOf(entry.getValue().getBoolValue());
             }
             if(entry.getValue().hasStringValue()){
-                strValue = String.valueOf(entry.getValue().getStringValue());
+                strValue = entry.getValue().getStringValue();
             }
             if(entry.getValue().hasDoubleValue()){
                 strValue = String.valueOf(entry.getValue().getDoubleValue());
             }
             if(entry.getValue().hasEnumValue()){
-                strValue = String.valueOf(entry.getValue().getEnumValue().getDisplayName());
+                strValue = entry.getValue().getEnumValue().getDisplayName();
             }
             if(entry.getValue().hasTimestampValue()){
                 strValue = Timestamp.ofTimeSecondsAndNanos(
@@ -141,7 +141,7 @@ public class DataCatalogServiceImpl implements DataCatalogService {
                 ).toString();
             }
             if(entry.getValue().hasRichtextValue()){
-                strValue = String.valueOf(entry.getValue().getRichtextValue());
+                strValue = entry.getValue().getRichtextValue();
             }
             strMap.put(entry.getKey(), strValue);
         }

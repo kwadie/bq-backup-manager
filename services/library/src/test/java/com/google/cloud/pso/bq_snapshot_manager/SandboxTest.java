@@ -1,10 +1,19 @@
 package com.google.cloud.pso.bq_snapshot_manager;
 
 import com.google.cloud.Timestamp;
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.RetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.Tagger;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerConfig;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerResponse;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import org.junit.Test;
 
 import java.io.IOException;
@@ -13,18 +22,51 @@ import static net.logstash.logback.argument.StructuredArguments.kv;
 
 public class SandboxTest {
     @Test
-    public void test() throws IOException, InterruptedException {
+    public void test() throws IOException, InterruptedException, RetryableApplicationException, NonRetryableApplicationException {
 
-        String trackingID = TrackingHelper.generateHeartBeatRunId();
-        System.out.println(trackingID);
+        TableSpec tableSpec = new TableSpec("bqsc-dwh-v1", "stress_testing_3000", "stress_test_2707");
 
-        BigQueryServiceImpl bq = new BigQueryServiceImpl("bqsm-data-1");
-        bq.createSnapshot(
-                new TableSpec("bqsm-data-1", "london", "fake_data"),
-                new TableSpec("bqsm-data-1", "london", "fake_data_backup_" + trackingID),
-                Timestamp.parseTimestamp("2023-10-06T12:00:00Z"),
-                trackingID
+        TableSpec snapshot = new TableSpec("bqsc-dwh-v1", "test_backups", "stress_test_2707_snapshot");
+
+        BackupMethod method = BackupMethod.GCS_SNAPSHOT;
+
+        BackupPolicy policy = new BackupPolicy.BackupPolicyBuilder(
+                "0 0 */4 * * *",
+                method,
+                TimeTravelOffsetDays.DAYS_0,
+                BackupConfigSource.SYSTEM,
+                "bqsc-dwh-v1"
+        ).setBigQuerySnapshotStorageDataset("stress_testing_backups")
+                .setBigQuerySnapshotExpirationDays(1.0)
+                .setGcsSnapshotStorageLocation("gs://bqsc-dwh-v1-backups/stress-tests/")
+                .setGcsExportFormat(GCSSnapshotFormat.AVRO_SNAPPY)
+                .setGcsUseAvroLogicalTypes(true)
+                .build();
+
+        Tagger tagger = new Tagger(
+                new LoggingHelper("test",4, "bqsm-host"),
+                new TaggerConfig("bqsm-host","projects/bqsm-host/locations/eu/tagTemplates/bq_backup_manager_template", false),
+                new DataCatalogServiceImpl(),
+                new GCSPersistentSetImpl("bqsm-host-bq-snapshot-mgr-flags"),
+                "unittest/tagger/"
         );
+
+        TaggerResponse response = tagger.execute(
+                new TaggerRequest(
+                        tableSpec,
+                        TrackingHelper.generateForcedRunId(),
+                        TrackingHelper.generateForcedRunId()+"-ffe905dc-23e7-4f83-b444-5c172df509a0",
+                        false,
+                        policy,
+                        method,
+                        snapshot,
+                        "gs://testbackuploc",
+                        Timestamp.now()
+                        ),
+                "testpubsubmessageid"+ Math.random()
+        );
+
+        System.out.println(response);
     }
 
     @Test

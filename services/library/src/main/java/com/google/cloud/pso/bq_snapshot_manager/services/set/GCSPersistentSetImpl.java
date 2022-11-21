@@ -20,6 +20,11 @@ public class GCSPersistentSetImpl implements PersistentSet {
         storage.create(blobInfo);
     }
 
+    public void remove(String key) {
+        BlobId blobId = BlobId.of(bucketName, key);
+        storage.delete(blobId);
+    }
+
     @Override
     public boolean contains(String key) {
         BlobId blobId = BlobId.of(bucketName, key);

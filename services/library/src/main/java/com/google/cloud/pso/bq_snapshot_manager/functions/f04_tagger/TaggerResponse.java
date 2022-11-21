@@ -8,15 +8,23 @@ import java.util.Objects;
 
 public class TaggerResponse extends TableOperationRequestResponse {
 
-    private final BackupPolicy backupPolicy;
+    private final BackupPolicy updatedBackupPolicy;
+    private final BackupPolicy originalBackupPolicy;
 
-    public TaggerResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy backupPolicy) {
+    public TaggerResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy updatedBackupPolicy) {
         super(targetTable, runId, trackingId, isDryRun);
-        this.backupPolicy = backupPolicy;
+        this.updatedBackupPolicy = updatedBackupPolicy;
+        this.originalBackupPolicy = null;
     }
 
-    public BackupPolicy getBackupPolicy() {
-        return backupPolicy;
+    public TaggerResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy updatedBackupPolicy, BackupPolicy originalBackupPolicy) {
+        super(targetTable, runId, trackingId, isDryRun);
+        this.updatedBackupPolicy = updatedBackupPolicy;
+        this.originalBackupPolicy = originalBackupPolicy;
+    }
+
+    public BackupPolicy getUpdatedBackupPolicy() {
+        return updatedBackupPolicy;
     }
 
     @Override
@@ -25,18 +33,19 @@ public class TaggerResponse extends TableOperationRequestResponse {
         if (o == null || getClass() != o.getClass()) return false;
         if (!super.equals(o)) return false;
         TaggerResponse that = (TaggerResponse) o;
-        return backupPolicy.equals(that.backupPolicy);
+        return updatedBackupPolicy.equals(that.updatedBackupPolicy);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(super.hashCode(), backupPolicy);
+        return Objects.hash(super.hashCode(), updatedBackupPolicy);
     }
 
     @Override
     public String toString() {
         return "TaggerResponse{" +
-                "backupPolicy=" + backupPolicy +
+                "originalBackupPolicy=" + updatedBackupPolicy + ","+
+                "updatedBackupPolicy=" + updatedBackupPolicy +
                 "} " + super.toString();
     }
 }

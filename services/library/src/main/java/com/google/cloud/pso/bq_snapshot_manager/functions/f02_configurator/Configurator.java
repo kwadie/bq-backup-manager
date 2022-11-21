@@ -210,11 +210,15 @@ public class Configurator {
             BackupPolicy fallbackPolicy = findFallbackBackupPolicy(fallbackBackupPolicy,
                     request.getTargetTable()).y();
 
-            // if there is a system attached policy, then only use the last_backup_time from it and use the latest fallback policy
+            // if there is a system attached policy, then only use the last_xyz fields from it and use the latest fallback policy
+            // the last_backup_at needs to be checked to determine if we should take a backup in this run
+            // the last_xyz_uri fields need to be propagated to the Tagger service so that they are not lost on each run
             if (attachedBackupPolicy != null && attachedBackupPolicy.getConfigSource().equals(BackupConfigSource.SYSTEM)) {
                 return BackupPolicy.BackupPolicyBuilder
                         .from(fallbackPolicy)
                         .setLastBackupAt(attachedBackupPolicy.getLastBackupAt())
+                        .setLastGcsSnapshotStorageUri(attachedBackupPolicy.getLastGcsSnapshotStorageUri())
+                        .setLastBqSnapshotStorageUri(attachedBackupPolicy.getLastBqSnapshotStorageUri())
                         .build();
             }else{
                 // if there is no attached policy, use fallback one

@@ -19,6 +19,9 @@ public class PersistentSetTestImpl implements PersistentSet {
     }
 
     @Override
+    public void remove(String key) {set.remove(key);}
+
+    @Override
     public boolean contains(String key) {
         return set.contains(key);
     }
