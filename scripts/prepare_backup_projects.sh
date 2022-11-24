@@ -43,6 +43,4 @@ do
          --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
          --role="roles/storage.objectAdmin"
 
-  #TODO Add roles for Tagger
-
 done

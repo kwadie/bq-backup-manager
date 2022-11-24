@@ -26,7 +26,7 @@ variable "data_region" {
 
 variable "bigquery_dataset_name" {
   type = string
-  default = "bq_snapshot_manager"
+  default = "bq_backup_manager"
 }
 
 
@@ -201,13 +201,6 @@ variable "terraform_service_account" {
   description = "service account used by terraform to deploy to GCP"
 }
 
-variable "is_dry_run" {
-  type = bool
-  default = false
-  description = "Taking snapshots and tagging tables (False) or just logging actions (True)"
-}
-
-
 # Dispatcher settings.
 variable "dispatcher_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
@@ -356,7 +349,7 @@ variable "schedulers" {
   }))
 }
 
-variable "snapshot_policy" {
+variable "fallback_policy" {
   type = object({
     default_policy = map(string),
     folder_overrides = map(map(string)),

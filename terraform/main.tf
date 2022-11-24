@@ -64,10 +64,6 @@ locals {
     {
       name = "GCS_FLAGS_BUCKET",
       value = module.gcs.create_gcs_flags_bucket_name
-    },
-    {
-      name = "IS_DRY_RUN",
-      value = tostring(var.is_dry_run)
     }
   ]
 }
