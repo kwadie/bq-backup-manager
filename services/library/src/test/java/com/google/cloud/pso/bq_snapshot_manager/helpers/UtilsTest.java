@@ -25,6 +25,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMet
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
+import jdk.jshell.execution.Util;
 import org.junit.Test;
 import org.springframework.scheduling.support.CronExpression;
 
@@ -73,7 +74,7 @@ public class UtilsTest {
                 refPoint
         );
 
-        Long expectedMs7Days = 1665665921000L - (7 * 86400000) - 5000;
+        Long expectedMs7Days = (1665665921000L - (7 * 86400000)) + 60000;
         assertEquals(TableSpec.fromSqlString("p.d.t@"+expectedMs7Days.toString()), actualWith7.x());
         assertEquals(expectedMs7Days, actualWith7.y());
 

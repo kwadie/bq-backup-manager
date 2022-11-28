@@ -146,7 +146,7 @@ public class Utils {
             Long bufferMs = timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_7) ? 60000L : 0L;
             // milli seconds per day * number of days
             Long timeTravelOffsetMs = (86400000L * Long.parseLong(timeTravelOffsetDays.getText()));
-            timeTravelMs = refPointMs - timeTravelOffsetMs - bufferMs;
+            timeTravelMs = (refPointMs - timeTravelOffsetMs) + bufferMs;
         }
 
         return Tuple.of(new TableSpec(

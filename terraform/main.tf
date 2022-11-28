@@ -164,7 +164,7 @@ module "cloud-run-configurator" {
     },
     {
       name = "BACKUP_POLICY_JSON",
-      value = jsonencode(var.snapshot_policy)
+      value = jsonencode(var.fallback_policy)
     },
     {
       name = "BACKUP_TAG_TEMPLATE_ID",

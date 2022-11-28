@@ -19,21 +19,15 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 public class SnapshoterConfig {
 
     private String projectId;
-    private Boolean isDryRun;
     private String outputTopic;
 
-    public SnapshoterConfig(String projectId, Boolean isDryRun, String outputTopic) {
+    public SnapshoterConfig(String projectId, String outputTopic) {
         this.projectId = projectId;
-        this.isDryRun = isDryRun;
         this.outputTopic = outputTopic;
     }
 
     public String getProjectId() {
         return projectId;
-    }
-
-    public Boolean getDryRun() {
-        return isDryRun;
     }
 
     public String getOutputTopic() {
@@ -44,7 +38,6 @@ public class SnapshoterConfig {
     public String toString() {
         return "SnapshoterConfig{" +
                 "projectId='" + projectId + '\'' +
-                ", isDryRun=" + isDryRun +
                 ", outputTopic='" + outputTopic + '\'' +
                 '}';
     }

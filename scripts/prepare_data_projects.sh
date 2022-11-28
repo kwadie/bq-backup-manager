@@ -15,17 +15,21 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -e
 
 for project in "$@"
 do
 
   echo "Preparing data project ${project} .."
 
+  echo "Preparing Dispatcher SA permissions on data project ${project} .."
   # Dispatcher permissions
   # Dispatcher needs to list datasets and tables in a project and know the location of datasets
   gcloud projects add-iam-policy-binding "${project}" \
       --member="serviceAccount:${SA_DISPATCHER_EMAIL}" \
      --role="roles/bigquery.metadataViewer"
+
+  echo "Preparing Configurator SA permissions on data project ${project} .."
 
   # Configurator permissions
   gcloud projects add-iam-policy-binding "${project}" \
@@ -35,6 +39,8 @@ do
   gcloud projects add-iam-policy-binding "${project}" \
     --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
     --role="roles/datacatalog.viewer"
+
+  echo "Preparing BQ Snapshoter SA permissions on data project ${project} .."
 
   # BigQuery Snapshoter needs to create snapshot jobs and read table data
   gcloud projects add-iam-policy-binding "${project}" \
@@ -55,6 +61,8 @@ do
        --role="roles/bigquery.dataViewer"
 
   # Tagger roles
+
+  echo "Preparing Tagger SA permissions on data project ${project} .."
 
   # Provides access to modify tags on Google Cloud assets for BigQuery
   gcloud projects add-iam-policy-binding "${project}" \

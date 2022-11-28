@@ -1,6 +1,6 @@
 project        = "<host project name>"
 compute_region = "<gcp region>"
-data_region    = "<gcp region including multi-regions eu|us"
+data_region    = "<gcp region including multi-regions eu|us>"
 
 cloud_scheduler_account = "service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
 
@@ -46,21 +46,30 @@ fallback_policy = {
     "gcs_snapshot_format" : "AVRO_SNAPPY"
     "gcs_avro_use_logical_types" : true
   },
+
+  # if no folder overrides exists set "folder_overrides : {}"
   "folder_overrides" : {
+
     "<folder number>" : {
       # policy attributes
     },
   },
+
+  # if no project overrides exists set "project_overrides : {}"
   "project_overrides" : {
     "<project name>" : {
       # policy attributes
     }
   },
+
+  # if no dataset overrides exists set "dataset_overrides : {}"
   "dataset_overrides" : {
     "<project name>.<dataset name>" : {
       # policy attributes
     }
   },
+
+  # if no table overrides exists set "table_overrides : {}"
   "table_overrides" : {
     "<project name>.<dataset name>.<table name>" : {
       # policy attributes

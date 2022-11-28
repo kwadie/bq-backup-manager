@@ -1,11 +1,62 @@
 # BigQuery Backup Manager
 
+## Table Of Contents
+<!-- TOC -->
+* [BigQuery Backup Manager](#bigquery-backup-manager)
+  * [Table Of Contents](#table-of-contents)
+  * [Overview](#overview)
+  * [Architecture](#architecture)
+    * [Backup Policies](#backup-policies)
+    * [Components](#components)
+      * [Scheduler](#scheduler)
+      * [Dispatcher](#dispatcher)
+      * [Configurator](#configurator)
+      * [BigQuery Snapshoter](#bigquery-snapshoter)
+      * [GCS Snapshoter](#gcs-snapshoter)
+      * [Tagger](#tagger)
+    * [Assumptions](#assumptions)
+  * [Deployment](#deployment)
+    * [Install Maven](#install-maven)
+    * [Setup Environment Variables](#setup-environment-variables)
+    * [One-time Environment Setup](#one-time-environment-setup)
+      * [Enable GCP APIs](#enable-gcp-apis)
+      * [Prepare Terraform State Bucket](#prepare-terraform-state-bucket)
+      * [Prepare Terraform Service Account](#prepare-terraform-service-account)
+      * [Prepare a Docker Repo](#prepare-a-docker-repo)
+    * [Solution Deployment](#solution-deployment)
+      * [gcloud](#gcloud)
+      * [Build Cloud Run Services Images](#build-cloud-run-services-images)
+      * [Terraform Variables Configuration](#terraform-variables-configuration)
+        * [Create a Terraform .tfvars file](#create-a-terraform-tfvars-file)
+        * [Configure Project Variables](#configure-project-variables)
+        * [Configure Cloud Scheduler Service Account](#configure-cloud-scheduler-service-account)
+        * [Configure Terraform Service Account](#configure-terraform-service-account)
+        * [Configure Cloud Run Service Images](#configure-cloud-run-service-images)
+        * [Configure Scheduler(s)](#configure-scheduler--s-)
+        * [Fallback Policies](#fallback-policies)
+        * [Fallback Policy Structure](#fallback-policy-structure)
+        * [Required Policy Fields](#required-policy-fields)
+        * [BigQuery Snapshot Policy Fields](#bigquery-snapshot-policy-fields)
+        * [GCS Snapshot Policy Fields](#gcs-snapshot-policy-fields)
+      * [Terraform Deployment](#terraform-deployment)
+      * [Setup Access to Sources and Destinations](#setup-access-to-sources-and-destinations)
+        * [Set Environment Variables](#set-environment-variables)
+        * [Prepare Source Folders](#prepare-source-folders)
+        * [Prepare Source and Destination Projects](#prepare-source-and-destination-projects)
+        * [Target tables with policy tags](#target-tables-with-policy-tags)
+    * [Setting table-level backup policies](#setting-table-level-backup-policies)
+      * [From Terminal](#from-terminal)
+      * [From UI](#from-ui)
+    * [Limits](#limits)
+<!-- TOC -->
+
+
 ## Overview
 
 BigQuery Backup Manager is an open-source solution that enables BigQuery customers defining
-a flexible backup strategy to all of their BigQuery projects, datasets and tables
+a flexible backup strategy to all of their BigQuery folders, projects, datasets and tables
 while automating the recurrent backup operations at scale. The solution offers
-two methods of backups; [BigQuery snapshots](https://cloud.google.com/bigquery/docs/table-snapshots-intro)
+two backup methods for each table: [BigQuery snapshots](https://cloud.google.com/bigquery/docs/table-snapshots-intro)
 and [BigQuery exports to Cloud Storage](https://cloud.google.com/bigquery/docs/exporting-data)
 
 ## Architecture
@@ -13,38 +64,37 @@ and [BigQuery exports to Cloud Storage](https://cloud.google.com/bigquery/docs/e
 ![alt text](diagrams/architecture.png)
 
 ### Backup Policies
-There are two places for backup configuration:
+There are two ways to define backup policies for tables, and they can be used together:
 * Data Owner Configuration (decentralized). Referred to as "Manual" backup policies
-  * Defined on table level by the data owner as a data catalog tag template
+  * Defined on table level by the data owner via a Cloud Data Catalog tag template attached to the table.
 * Organization Default Configuration (centralized). Referred to as "Fallback" backup policies
   * Centrally defined JSON as part of the solution (i.e. in Terraform)
-  * it offers default backup strategies on folder, project, dataset and table levels
-    Only used when there are no “Data Owner Backup Configuration” attached to a table by the owning team
-    The JSON config is passed to the application via Cloud Run env variables (for now). Assess if we need to create it in a file on GCS or Firestore
+  * It offers default backup strategies on folder, project, dataset and table levels
+  * Only used when there are no “Data Owner Backup Configuration” attached to a table by the owning team
 
 ### Components
 
 #### Scheduler
-A cloud scheduler is used to send the “Scan Scope” to the dispatcher service every x hours. Note that at each run all tables in scope will be checked if they should be backed up or not at this point based on their CRON configuration
+A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher service every x hours. Note that at each run all tables in scope will be checked if they should be backed up or not at this point based on their backup policy's CRON configuration
 
 #### Dispatcher
 * Generates a unique run-id for this run including a timestamp
-* Uses the BigQuery API to list down all table in-scope based on the inclusion and exclusion lists passed
+* Uses the BigQuery API to list down all table in-scope based on the inclusion and exclusion lists passed to it
 * Creates a unique tracking_id per table in the form of run_id + “_” + UUID
-* Creates and publishes one request per table to the next service via PubSub. The request includes (run_id, target_table_spec)
+* Creates and publishes one request per table to the next service via PubSub. 
 
 #### Configurator
 * Fetch configuration
   * Checks if the target table has a “Backup Policy” tag template with config_source = ‘manual’ attached to it or not
     * If TRUE
-    Retrieves the cron_expression, last_backup_at fields and backup configurations (GCS and/or BQ Snapshot)
+      * Retrieves the cron_expression, last_backup_at fields and backup configurations (GCS and/or BQ Snapshot)
     * If FALSE
-    Retrieves the cron_expression and backup configurations from the solution default according to most granular default (Table > dataset > project > folder)
-    Check if the table has a “Backup Policy” tag template with config_source = ‘system’ attached. If so, retrieves the last_backup_at fields or null (first time backup)
+      * Retrieves the cron_expression and backup configurations from the most granular Fallback Policy (Table > dataset > project > folder)
+      * Check if the table has a “Backup Policy” tag template with config_source = ‘system’ attached. If so, retrieves the last_backup_at fields or null (first time backup)
 
 * Filter
   * If the last_backup_at == null
-  This means the table has not been backed up before and a back is due. Proceed with a backup request. Note that the first backup will not be at the cron time because of technical/design limitations. However, subsequent backups will follow the cron.
+    * This means the table has not been backed up before and a back is due. Proceed with a backup request. Note that the first backup will not be at the cron time because of technical/design limitations. However, subsequent backups will follow the cron.
   * Else, compares the current run time (inferred from the run_id) to the next date based on the cron_expression and the last_backup_at fields
     ```
     CronExpression cron = CronExpression.parse( ..cron.. ); 
@@ -72,7 +122,7 @@ A cloud scheduler is used to send the “Scan Scope” to the dispatcher service
 * If the table has a “Backup Policy” it updates the `last_backup_at`, `last_bq_snapshot_storage_uri` and `last_gcs_snapshot_storage_uri`
 * If the table doesn't have a "Backup Policy" it creates a new one with config_source = ‘SYSTEM’ and sets all the backup policy fields based on the fallback policy used
 
-#### Assumptions
+### Assumptions
 * Infrastructure resources such as backup projects, datasets and buckets are created outside the solution. This should be owned by the data teams and included in proper IaaC modules with CICD with the required access permissions and configuration (e.g. expiration, object lifecycle, etc).
 
 
@@ -191,9 +241,9 @@ One can use the defaults or overwrite them in the newly created .tfvars.
 Both ways, one must set the below variables:
 
 ```
-project = "<GCP project ID to deploy solution to>"
-compute_region = "<GCP region to deploy compute resources e.g. cloud run, iam, etc>"
-data_region = "<GCP region to deploy data resources (buckets, datasets, tag templates, etc">
+project = "<GCP project ID to deploy solution to (equals to $PROJECT_ID) >"
+compute_region = "<GCP region to deploy compute resources e.g. cloud run, iam, etc (equals to $COMPUTE_REGION)>"
+data_region = "<GCP region to deploy data resources (buckets, datasets, tag templates, etc> (equals to $DATA_REGION)"
 ```
 
 ##### Configure Cloud Scheduler Service Account
@@ -315,6 +365,8 @@ fallback_policy = {
   }
 ```
 
+PS: If no overrides are set on a certain level, set that level to an empty map (e.g. `project_overrides : {}`  ).  
+
 There are different sets of policy fields depending on the backup method:
 
 ##### Required Policy Fields
@@ -372,44 +424,69 @@ terraform apply -var-file=$VARS -auto-approve
 
 ```
 
-#### Setup Access to Data Projects
 
-The application is deployed under a host project as set in the `PROJECT_ID` variable.
-To enable the application to take snapshots of tables in data projects (i.e. source projects) one must grant a number of
-permissions on each data project. To do, run the following script:
+#### Setup Access to Sources and Destinations
 
+##### Set Environment Variables
+
+Set the following variables for the service accounts used by the solution:
 ```
 export SA_DISPATCHER_EMAIL=dispatcher@${PROJECT_ID}.iam.gserviceaccount.com
+export SA_CONFIGURATOR_EMAIL=configurator@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_SNAPSHOTER_BQ_EMAIL=snapshoter-bq@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_SNAPSHOTER_GCS_EMAIL=snapshoter-gcs@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_TAGGER_EMAIL=tagger@${PROJECT_ID}.iam.gserviceaccount.com
+```  
+##### Prepare Source Folders
 
+If one would like to set the BigQuery scan scope to include certain folders via the `folders_include_list`, one must grant
+certain permissions on the folder level.
+
+To do so, run the following script from the project root folder:
+```
+./scripts/prepare_data_folders.sh <folder1> <folder2> <etc>
+
+```
+
+##### Prepare Source and Destination Projects
+
+To enable the application to take backup of tables in "data projects" (i.e. source projects) and store them
+under "backup projects" (i.e. destination projects) one must grant a number of permissions on each of these project.  
+
+To do so, run the following script from the project root folder:
+
+```
 ./scripts/prepare_data_projects.sh <project1> <project2> <etc>
+
+./scripts/prepare_backup_projects.sh <project1> <project2> <etc>
 ```
 
 PS: 
 * Update the SA emails if the default names have been changed in Terraform  
 * If you have tables to be backed-up in the host project, run the above script and include the host project in the list
-* Use the same projects listed in all the `include lists` in the Terraform variable `schedulers`
+* For data projects, use the same projects listed in all the `include lists` in the Terraform variable `schedulers`
+* For backup projects, use the same projects listed in all the `backup_project` fields in the Terraform variable `fallback_policy` and in the manually attached templates.
+* If a project is used both as the source and destination, include the project in both scripts     
 
-#### Setup Access to Backup Projects
+##### Target tables with policy tags
 
-We need to grant certain permissions to the service accounts used by the application
-on the backup projects (i.e. destination projects)
+For tables that use column-level access control, one must grant access to the solution's service accounts
+to be able to read the table data in order to create a backup.  
 
+To do so, identify the Dataplex policy tag taxonomies used and run the following script for each of them:
 ```
-export SA_DISPATCHER_EMAIL=dispatcher@${PROJECT_ID}.iam.gserviceaccount.com
-export SA_SNAPSHOTER_BQ_EMAIL=snapshoter-bq@${PROJECT_ID}.iam.gserviceaccount.com
-export SA_SNAPSHOTER_GCS_EMAIL=snapshoter-gcs@${PROJECT_ID}.iam.gserviceaccount.com
-export SA_TAGGER_EMAIL=tagger@${PROJECT_ID}.iam.gserviceaccount.com
+TAXONOMY="projects/<taxonomy project>/locations/<taxonomy location>/taxonomies/<taxonomy id>"
 
-./scripts/prepare_backup_projects.sh <project1> <project2> <etc>
+gcloud data-catalog taxonomies add-iam-policy-binding \
+$TAXONOMY \
+--member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
+--role='roles/datacatalog.categoryFineGrainedReader'
+
+gcloud data-catalog taxonomies add-iam-policy-binding \
+$TAXONOMY \
+--member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
+--role='roles/datacatalog.categoryFineGrainedReader'
 ```
-
-PS:
-* Update the SA emails if the default names have been changed in Terraform
-* Use the same projects listed in all the `backup_project` in the Terraform variable `fallback_policy` and in the manually attached templates.
-
 
 ### Setting table-level backup policies
 
