@@ -44,10 +44,13 @@
         * [Prepare Source Folders](#prepare-source-folders)
         * [Prepare Source and Destination Projects](#prepare-source-and-destination-projects)
         * [Target tables with policy tags](#target-tables-with-policy-tags)
+  * [Running the Solution](#running-the-solution)
     * [Setting table-level backup policies](#setting-table-level-backup-policies)
       * [From Terminal](#from-terminal)
       * [From UI](#from-ui)
-    * [Limits](#limits)
+    * [Triggering backup operations](#triggering-backup-operations)
+    * [Monitoring and Reporting](#monitoring-and-reporting)
+  * [Limits](#limits)
 <!-- TOC -->
 
 
@@ -131,14 +134,14 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 ### Install Maven
 * Download [Maven](https://maven.apache.org/download.cgi)
 * Add Maven to PATH
-```
+```shell
 export PATH=/DOWNLOADED_MAVEN_DIR/bin:$PATH
 ```
 ### Setup Environment Variables
 
 In a terminal shell, set and export the following variables.
 
-```
+```shell
 export PROJECT_ID=<host project id>
 export TF_SA=bq-backup-mgr-terraform
 export COMPUTE_REGION=<region to deploy compute resources>
@@ -165,13 +168,13 @@ One can skip this section when re-deploying the solution (e.g. after new commits
 
 #### Enable GCP APIs
 
-```
+```shell
 ./scripts/enable_gcp_apis.sh
 ```
 
 #### Prepare Terraform State Bucket
 
-```
+```shell
 gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on $BUCKET
 ```
 
@@ -179,7 +182,7 @@ gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on $BUCKET
 
 Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.  
 
-```
+```shell
 ./scripts/prepare_terraform_service_account.sh
 ```
 
@@ -187,7 +190,7 @@ Terraform needs to run with a service account to deploy DLP resources. User acco
 
 We need a Docker Repository to publish images that are used by this solution
 
-```
+```shell
 gcloud artifacts repositories create $DOCKER_REPO_NAME --repository-format=docker \
 --location=$COMPUTE_REGION --description="Docker repository for BQ Backup Manager"
 ```
@@ -199,7 +202,7 @@ then follow the below steps to (re)deploy the latest codebase to the GCP environ
 
 #### gcloud
 Activate the desired gcloud configuration and authenticate
-```
+```shell
 gcloud config configurations activate $CONFIG
 
 gcloud auth login
@@ -209,7 +212,7 @@ gcloud auth application-default login
 
 We need to build and deploy docker images to be used by the Cloud Run service.
 
-```
+```shell
 export DISPATCHER_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-dispatcher-service:latest
 export CONFIGURATOR_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-configurator-service:latest
 export SNAPSHOTER_BQ_IMAGE=${COMPUTE_REGION}-docker.pkg.dev/${PROJECT_ID}/${DOCKER_REPO_NAME}/bqsm-snapshoter-bq-service:latest
@@ -229,7 +232,7 @@ on the Terraform side.
 Create a new .tfvars file and override the variables in the below sections. You can use the example
 tfavrs files as a base [example-variables](terraform/example-variables.tfvars). 
 
-```
+```shell
 export VARS=my-variables.tfvars
 ```
 
@@ -240,7 +243,7 @@ One can use the defaults or overwrite them in the newly created .tfvars.
 
 Both ways, one must set the below variables:
 
-```
+```yaml
 project = "<GCP project ID to deploy solution to (equals to $PROJECT_ID) >"
 compute_region = "<GCP region to deploy compute resources e.g. cloud run, iam, etc (equals to $COMPUTE_REGION)>"
 data_region = "<GCP region to deploy data resources (buckets, datasets, tag templates, etc> (equals to $DATA_REGION)"
@@ -250,7 +253,7 @@ data_region = "<GCP region to deploy data resources (buckets, datasets, tag temp
 
 We will need to grant the Cloud Scheduler account permissions to use parts of the solution 
 
-```
+```yaml
 cloud_scheduler_account = "service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
 ```
 
@@ -265,7 +268,7 @@ Terraform needs to run with a service account to deploy DLP resources. User acco
 This service account name is defined in the "Setup Environment Variables" step and created 
 in the "Prepare Terraform Service Account" step. 
 Use the full email of the created account.
-```
+```yaml
 terraform_service_account = "bq-backup-mgr-terraform@<host project>.iam.gserviceaccount.com"
 ```
 
@@ -278,7 +281,7 @@ that Terraform will create.
 PS: Terraform will just "link" a Cloud Run to an existing image. It will not build the images from the code base (this 
 is already done in a previous step)
 
-```
+```yaml
 dispatcher_service_image     = "< value of env variable DISPATCHER_IMAGE >"
 configurator_service_image   = "< value of env variable CONFIGURATOR_IMAGE >"
 snapshoter_bq_service_image  = "< value of env variable DISPATCHER_IMAGE >"
@@ -291,7 +294,7 @@ tagger_service_image         = "< value of env variable TAGGER_IMAGE>"
 Define at least one scheduler under the `schedulers` variable.  
 There must be at least one scheduler acting as a heart-beat of the solution that 
 periodically lists tables and check if a backup is due for each of them based on their table-level backup CRON.  
-```
+```yaml
   {
     name    = "heart_beat"
     cron    = "0 * * * *" # hourly
@@ -340,7 +343,7 @@ This provides granular flexibility without creating an entry for each single tab
 
 ##### Fallback Policy Structure 
 
-```
+```yaml
 fallback_policy = {
   "default_policy" : {..Policy Fields..},
   "folder_overrides" : {
@@ -410,7 +413,7 @@ BigQuery Types to Avro Logical Types mapping:
 
 #### Terraform Deployment
 
-```
+```shell
 cd terraform
 
 terraform init \
@@ -430,7 +433,7 @@ terraform apply -var-file=$VARS -auto-approve
 ##### Set Environment Variables
 
 Set the following variables for the service accounts used by the solution:
-```
+```shell
 export SA_DISPATCHER_EMAIL=dispatcher@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_CONFIGURATOR_EMAIL=configurator@${PROJECT_ID}.iam.gserviceaccount.com
 export SA_SNAPSHOTER_BQ_EMAIL=snapshoter-bq@${PROJECT_ID}.iam.gserviceaccount.com
@@ -443,7 +446,7 @@ If one would like to set the BigQuery scan scope to include certain folders via 
 certain permissions on the folder level.
 
 To do so, run the following script from the project root folder:
-```
+```shell
 ./scripts/prepare_data_folders.sh <folder1> <folder2> <etc>
 
 ```
@@ -455,7 +458,7 @@ under "backup projects" (i.e. destination projects) one must grant a number of p
 
 To do so, run the following script from the project root folder:
 
-```
+```shell
 ./scripts/prepare_data_projects.sh <project1> <project2> <etc>
 
 ./scripts/prepare_backup_projects.sh <project1> <project2> <etc>
@@ -474,7 +477,7 @@ For tables that use column-level access control, one must grant access to the so
 to be able to read the table data in order to create a backup.  
 
 To do so, identify the Dataplex policy tag taxonomies used and run the following script for each of them:
-```
+```shell
 TAXONOMY="projects/<taxonomy project>/locations/<taxonomy location>/taxonomies/<taxonomy id>"
 
 gcloud data-catalog taxonomies add-iam-policy-binding \
@@ -488,11 +491,13 @@ $TAXONOMY \
 --role='roles/datacatalog.categoryFineGrainedReader'
 ```
 
+## Running the Solution
+
 ### Setting table-level backup policies
 
 #### From Terminal
 
-```
+```shell
 # Example tag template. Config Source must be 'MANUAL'.
 export TAG="{
 'config_source' : "MANUAL",
@@ -533,8 +538,58 @@ gcloud data-catalog tags create \
   * ignore all the fields marked as "Read-Only" 
   * Click "Save"
 
+### Triggering backup operations
+The entry point of the solution is any of the Cloud Schedulers configured earlier. Cloud Schedulers will
+automatically execute based on their CRON expression, nevertheless, one could force-run them from
+GCP Console >> Cloud Scheduler >> Actions >> Force a Job Run
 
-### Limits
+### Monitoring and Reporting
+
+
+To get progress stats of each run (including in-progress one)
+```roomsql
+SELECT * FROM `bq_backup_manager.v_run_summary_counts`
+```
+
+To get all fatal (non retryable errors) for a single run
+```roomsql
+SELECT * FROM `bq_backup_manager.v_errors_non_retryable`
+WHERE run_id = '<run id>'
+```
+
+To get all runs on a table and their execution information
+```roomsql
+SELECT * FROM `bq_backup_manager.v_errors_non_retryable`
+WHERE tablespec = 'project.dataset.table'
+```
+or the `grouped` version for a better UI experience
+```roomsql
+SELECT * FROM `bq_backup_manager.v_audit_log_by_table_grouped`, UNNEST(runs) r
+WHERE r.run_has_retryable_error = FALSE
+```
+
+To get detailed request and response for each service invocation (i.e. for debugging)
+```roomsql
+SELECT
+jsonPayload.unified_target_table AS tablespec,
+jsonPayload.unified_run_id AS run_id,
+jsonPayload.unified_tracking_id AS tracking_id,
+CAST(jsonPayload.unified_is_successful AS BOOL) AS configurator_is_successful,
+jsonPayload.unified_error AS configurator_error,
+CAST(jsonPayload.unified_is_retryable_error AS BOOL) AS configurator_is_retryable_error,
+CAST(JSON_VALUE(jsonPayload.unified_input_json, '$.isForceRun') AS BOOL) AS is_force_run,
+CAST(JSON_VALUE(jsonPayload.unified_output_json, '$.isBackupTime') AS BOOL) AS is_backup_time,
+JSON_VALUE(jsonPayload.unified_output_json, '$.backupPolicy.method') AS backup_method,
+CAST(JSON_VALUE(jsonPayload.unified_input_json, '$.isDryRun') AS BOOL) AS is_dry_run,
+jsonPayload.unified_input_json AS request_json,
+jsonPayload.unified_output_json AS response_json
+FROM `bq_backup_manager.run_googleapis_com_stdout`
+WHERE jsonPayload.global_app_log = 'UNIFIED_LOG'
+-- 1= dispatcher, 2= configurator, 3=bq snapshoter, -3=gcs snapshoter and 4=tagger
+AND jsonPayload.unified_component = "2"
+```
+
+## Limits
 * Each `backup_project` can run up to 50,000 table snapshot jobs per day.
 * Each `backup_project` can run 100,000 export jobs per day (e.g. to GCS). Could be extended by slot reservation.
 * Each `backup_project` can export 50 TB per day for free using the shared slots pool (e.g. to GCS). Could be extended by slot reservation.
