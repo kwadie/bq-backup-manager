@@ -15,6 +15,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -e
 
 gcloud iam service-accounts create "${TF_SA}" \
     --description="Used by Terraform to deploy GCP resources" \

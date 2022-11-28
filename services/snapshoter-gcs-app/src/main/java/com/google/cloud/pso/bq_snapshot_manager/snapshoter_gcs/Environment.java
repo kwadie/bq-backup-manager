@@ -26,7 +26,6 @@ public class Environment {
 
         return new SnapshoterConfig(
                 getProjectId(),
-                getIsDryRun(),
                 getOutputTopic()
         );
     }
@@ -34,19 +33,6 @@ public class Environment {
 
     public String getProjectId(){
         return Utils.getConfigFromEnv("PROJECT_ID", true);
-    }
-
-    public String getComputeRegionId(){
-        return Utils.getConfigFromEnv("COMPUTE_REGION_ID", true);
-    }
-
-    public String getDataRegionId(){
-        return Utils.getConfigFromEnv("DATA_REGION_ID", true);
-    }
-
-
-    public Boolean getIsDryRun(){
-        return Boolean.valueOf(Utils.getConfigFromEnv("IS_DRY_RUN", true));
     }
 
     public String getOutputTopic() { return Utils.getConfigFromEnv("OUTPUT_TOPIC", true); }

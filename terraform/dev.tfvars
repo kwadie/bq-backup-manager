@@ -67,8 +67,7 @@ schedulers = [
   }
 ]
 
-# Fallback policies
-snapshot_policy = {
+fallback_policy = {
   "default_policy" : {
     "backup_cron" : "0 0 0 1 * *",
     "backup_method" : "BigQuery Snapshot",

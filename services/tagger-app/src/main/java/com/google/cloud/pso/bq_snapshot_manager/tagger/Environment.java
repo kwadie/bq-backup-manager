@@ -23,17 +23,12 @@ public class Environment {
     public TaggerConfig toConfig (){
         return new TaggerConfig(
                 getProjectId(),
-                getTagTemplateId(),
-                getIsDryRun()
+                getTagTemplateId()
         );
     }
 
     public String getProjectId(){
         return Utils.getConfigFromEnv("PROJECT_ID", true);
-    }
-
-    public Boolean getIsDryRun(){
-        return Boolean.valueOf(Utils.getConfigFromEnv("IS_DRY_RUN", true));
     }
 
     public String getTagTemplateId(){

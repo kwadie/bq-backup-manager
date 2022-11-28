@@ -142,7 +142,7 @@ public class BigQueryScopeLister {
 
                         logger.logWarnWithTracker(runId, null, msg);
                     } else {
-                        logger.logInfoWithTracker(runId, null, String.format("Tables found in dataset %s : %s", dataset, datasetTables));
+                        logger.logInfoWithTracker(runId, null, String.format("Found %s tables under dataset %s",datasetTables.size(), dataset));
                     }
                 } else {
                     logger.logInfoWithTracker(runId, null, String.format("Dataset %s is excluded", dataset));
@@ -228,7 +228,7 @@ public class BigQueryScopeLister {
                     logger.logWarnWithTracker(runId, null, msg);
                 } else {
 
-                    logger.logInfoWithTracker(runId,null, String.format("Projects found in folder %s : %s", folder, folderProjects));
+                    logger.logInfoWithTracker(runId,null, String.format("Found %s projects under folder %s", folderProjects.size(), folder));
                 }
 
             } catch (Exception exception) {

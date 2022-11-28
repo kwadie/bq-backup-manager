@@ -20,18 +20,11 @@ public class TaggerConfig {
 
     private String projectId;
     private String tagTemplateId;
-    private Boolean isDryRun;
 
     public TaggerConfig(String projectId,
-                        String tagTemplateId,
-                        Boolean isDryRun) {
+                        String tagTemplateId) {
         this.projectId = projectId;
         this.tagTemplateId = tagTemplateId;
-        this.isDryRun = isDryRun;
-    }
-
-    public Boolean getDryRun() {
-        return isDryRun;
     }
 
     public String getProjectId() {
@@ -47,7 +40,6 @@ public class TaggerConfig {
         return "TaggerConfig{" +
                 "projectId='" + projectId + '\'' +
                 ", tagTemplateId='" + tagTemplateId + '\'' +
-                ", isDryRun=" + isDryRun +
                 '}';
     }
 }

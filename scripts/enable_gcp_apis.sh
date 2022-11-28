@@ -15,15 +15,37 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 #
+set -e
 
+echo "enabling cloudresourcemanager .."
 gcloud services enable cloudresourcemanager.googleapis.com
+
+echo "enabling iam .."
 gcloud services enable iam.googleapis.com
+
+echo "enabling datacatalog .."
 gcloud services enable datacatalog.googleapis.com
+
+echo "enabling artifactregistry .."
 gcloud services enable artifactregistry.googleapis.com
+
+echo "enabling bigquery .."
 gcloud services enable bigquery.googleapis.com
+
+echo "enabling pubsub .."
 gcloud services enable pubsub.googleapis.com
+
+echo "enabling storage .."
 gcloud services enable storage.googleapis.com
+
+echo "enabling run .."
 gcloud services enable run.googleapis.com
+
+echo "enabling cloudbuild .."
 gcloud services enable cloudbuild.googleapis.com
+
+echo "enabling serviceusage .."
 gcloud services enable serviceusage.googleapis.com
+
+echo "enabling appengine .."
 gcloud services enable appengine.googleapis.com

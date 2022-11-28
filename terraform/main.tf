@@ -64,10 +64,6 @@ locals {
     {
       name = "GCS_FLAGS_BUCKET",
       value = module.gcs.create_gcs_flags_bucket_name
-    },
-    {
-      name = "IS_DRY_RUN",
-      value = tostring(var.is_dry_run)
     }
   ]
 }
@@ -168,7 +164,7 @@ module "cloud-run-configurator" {
     },
     {
       name = "BACKUP_POLICY_JSON",
-      value = jsonencode(var.snapshot_policy)
+      value = jsonencode(var.fallback_policy)
     },
     {
       name = "BACKUP_TAG_TEMPLATE_ID",

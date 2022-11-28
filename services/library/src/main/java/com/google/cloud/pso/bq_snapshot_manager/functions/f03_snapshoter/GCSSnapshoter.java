@@ -46,7 +46,7 @@ public class GCSSnapshoter {
         this.persistentSetObjectPrefix = persistentSetObjectPrefix;
 
         logger = new LoggingHelper(
-                BigQuerySnapshoter.class.getSimpleName(),
+                GCSSnapshoter.class.getSimpleName(),
                 functionNumber,
                 config.getProjectId()
         );

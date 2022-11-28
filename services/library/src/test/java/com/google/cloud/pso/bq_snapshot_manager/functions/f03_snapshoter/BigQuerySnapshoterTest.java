@@ -40,7 +40,7 @@ public class BigQuerySnapshoterTest {
     public void testExecute() throws NonRetryableApplicationException, IOException, InterruptedException {
 
         BigQuerySnapshoter snapshoter = new BigQuerySnapshoter(
-                new SnapshoterConfig("host-project", false, "data-region"),
+                new SnapshoterConfig("host-project",  "data-region"),
                 new BigQueryService() {
                     @Override
                     public void createSnapshot(TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
