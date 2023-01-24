@@ -29,7 +29,7 @@ do
   # BigQuery Snapshoter needs to create snapshot tables and manipulate them
   gcloud projects add-iam-policy-binding "${project}" \
      --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
-     --role="roles/bigquery.dataEditor"
+     --role="roles/bigquery.dataOwner"
 
   # BigQuery Snapshoter needs to create snapshot jobs
   gcloud projects add-iam-policy-binding "${project}" \

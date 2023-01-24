@@ -500,8 +500,8 @@ $TAXONOMY \
 ```shell
 # Example tag template. Config Source must be 'MANUAL'.
 export TAG="{
-'config_source' : "MANUAL",
-'backup_cron' : '0 0 0 1 * *',
+'config_source' : 'MANUAL',
+'backup_cron' : '0 0 0 1 1 1',
 'backup_method' : 'Both',
 'backup_time_travel_offset_days' : '3',
 'backup_project' : 'backup_project_name',
