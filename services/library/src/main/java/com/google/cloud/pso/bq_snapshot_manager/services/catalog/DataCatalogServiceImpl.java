@@ -8,6 +8,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -33,8 +34,10 @@ public class DataCatalogServiceImpl implements DataCatalogService {
         // API CALL
         DataCatalogClient.ListTagsPagedResponse response = dataCatalogClient.listTags(parent);
 
-        // TODO: handle multiple pages
-        List<Tag> allTags = response.getPage().getResponse().getTagsList();
+        List<Tag> allTags = new ArrayList<>();
+        for (DataCatalogClient.ListTagsPage l: response.iteratePages()){
+            allTags.addAll(l.getResponse().getTagsList());
+        }
 
         Tag tag = findTag(
                 allTags,
