@@ -116,10 +116,11 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 #### BigQuery Snapshoter
 * Calls the BigQuery API to execute a snapshot operation given the snapshot config passed from the previous service
 * Waits for the operation to report results, if the return status is success it sends a tagging request to the Tagger service
+* Snapshot jobs finishes almost instantaneously regardless of table size, so there are no benefits in async calls.
 
 #### GCS Snapshoter
 * Calls the BigQuery API to execute a full table export to GCS given the snapshot config passed from the previous service
-* Submits the export job asynchronously 
+* Export jobs could take few minutes depending on the table size. Thus, the export job is submitted asynchronously
 * Stage a tagging request to a persistent storage (i.e. Cloud Storage) and terminate the HTTP call
 * When the export job completes, BigQuery will log an event to Cloud Logging that is captured by a Log Sink and sent to the Tagger service
 
