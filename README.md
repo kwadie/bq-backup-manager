@@ -119,9 +119,13 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 
 #### GCS Snapshoter
 * Calls the BigQuery API to execute a full table export to GCS given the snapshot config passed from the previous service
-* Waits for the operation to report results, if the return status is success it sends a tagging request to the Tagger service
+* Submits the export job asynchronously 
+* Stage a tagging request to a persistent storage (i.e. Cloud Storage) and terminate the HTTP call
+* When the export job completes, BigQuery will log an event to Cloud Logging that is captured by a Log Sink and sent to the Tagger service
 
 #### Tagger
+* If the request originates from the BigQuery Snapshoter, the tagger request is parsed from the PubSub message itslef.
+* If the request originates from the GCS Snapshoter, the tagger request is parsed from the staging persistent storage.
 * If the table has a “Backup Policy” it updates the `last_backup_at`, `last_bq_snapshot_storage_uri` and `last_gcs_snapshot_storage_uri`
 * If the table doesn't have a "Backup Policy" it creates a new one with config_source = ‘SYSTEM’ and sets all the backup policy fields based on the fallback policy used
 
