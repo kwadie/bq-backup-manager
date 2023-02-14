@@ -77,4 +77,9 @@ public class TrackingHelper {
     public static String parseTrackingIdFromBQExportJobId(String bqExportJobId){
         return Utils.tokenize(bqExportJobId,"_", true).get(0);
     }
+
+    public static String generateBQSnapshotJobId(String trackingId){
+        return String.format("%s_%s_%s",trackingId, "snapshot", Globals.APPLICATION_NAME, trackingId);
+    }
+
 }

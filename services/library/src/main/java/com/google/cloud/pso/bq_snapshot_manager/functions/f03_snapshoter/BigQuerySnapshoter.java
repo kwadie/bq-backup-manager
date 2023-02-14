@@ -25,6 +25,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMessage;
@@ -141,7 +142,7 @@ public class BigQuerySnapshoter {
 
         if(!request.isDryRun()){
             // API Call
-            String jobId = String.format("%s_%s_%s", Globals.APPLICATION_NAME, "snapshot", request.getTrackingId());
+            String jobId = TrackingHelper.generateBQSnapshotJobId(request.getTrackingId());
 
             bqService.createSnapshot(
                     jobId,
