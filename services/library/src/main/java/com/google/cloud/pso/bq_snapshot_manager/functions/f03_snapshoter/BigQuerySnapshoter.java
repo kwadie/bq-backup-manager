@@ -19,6 +19,7 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
@@ -140,7 +141,10 @@ public class BigQuerySnapshoter {
 
         if(!request.isDryRun()){
             // API Call
+            String jobId = String.format("%s_%s_%s", Globals.APPLICATION_NAME, "snapshot", request.getTrackingId());
+
             bqService.createSnapshot(
+                    jobId,
                     sourceTableWithTimeTravelTuple.x(),
                     snapshotTable,
                     expiryTs,

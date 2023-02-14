@@ -16,4 +16,15 @@ public class TrackingHelperTest {
 
         assertEquals(1641034800, fromRunId.getSeconds());
     }
+
+    @Test
+    public void parseTrackingIdFromJobId(){
+        String trackingId = TrackingHelper.generateTrackingId(TrackingHelper.MIN_RUN_ID);
+        String parsedTrackingId = TrackingHelper.parseTrackingIdFromBQExportJobId(
+                TrackingHelper.generateBQExportJobId(trackingId)
+        );
+
+        assertEquals(trackingId, parsedTrackingId);
+
+    }
 }

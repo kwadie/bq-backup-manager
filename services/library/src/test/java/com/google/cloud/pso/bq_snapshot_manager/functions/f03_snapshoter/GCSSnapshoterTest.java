@@ -5,6 +5,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplication
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
+import com.google.cloud.pso.bq_snapshot_manager.services.PersistentMapTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.PersistentSetTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.PubSubServiceTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
@@ -16,6 +17,7 @@ import javax.annotation.Nullable;
 
 import java.io.IOException;
 import java.util.Arrays;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
@@ -42,16 +44,18 @@ public class GCSSnapshoterTest {
                 new SnapshoterConfig("host-project", "data-region"),
                 new BigQueryService() {
                     @Override
-                    public void createSnapshot(TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
+                    public void createSnapshot(String jobId, TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
                     }
 
                     @Override
-                    public void exportToGCS(TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId) throws InterruptedException {
+                    public void exportToGCS(String jobId, TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId, Map<String, String> jobLabels) throws InterruptedException {
                     }
                 },
                 new PubSubServiceTestImpl(),
                 new PersistentSetTestImpl(),
-                "test-prefix",
+                "test-set-prefix",
+                new PersistentMapTestImpl(),
+                "test-map-prefix",
                 -3
         );
 
@@ -94,7 +98,6 @@ public class GCSSnapshoterTest {
                 operationTime
         );
 
-        assertEquals(expectedTaggerRequest, actualResponse.getOutputTaggerRequest());
         assertEquals(expectedSourceTable, actualResponse.getComputedSourceTable());
         assertEquals(operationTime, actualResponse.getOperationTs());
 

@@ -2,24 +2,22 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
-import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
-import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
-import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.FailedPubSubMessage;
-import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
+import com.google.cloud.pso.bq_snapshot_manager.services.map.PersistentMap;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
-import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.SuccessPubSubMessage;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
-import org.apache.commons.lang3.StringUtils;
 
 import java.io.IOException;
-import java.util.Arrays;
+import java.util.HashMap;
+import java.util.Map;
 
 public class GCSSnapshoter {
 
@@ -31,12 +29,17 @@ public class GCSSnapshoter {
     private final PersistentSet persistentSet;
     private final String persistentSetObjectPrefix;
 
+    private final PersistentMap persistentMap;
+
+    private final String persistentMapObjectPrefix;
 
     public GCSSnapshoter(SnapshoterConfig config,
                          BigQueryService bqService,
                          PubSubService pubSubService,
                          PersistentSet persistentSet,
                          String persistentSetObjectPrefix,
+                         PersistentMap persistentMap,
+                         String persistentMapObjectPrefix,
                          Integer functionNumber
     ) {
         this.config = config;
@@ -44,6 +47,8 @@ public class GCSSnapshoter {
         this.pubSubService = pubSubService;
         this.persistentSet = persistentSet;
         this.persistentSetObjectPrefix = persistentSetObjectPrefix;
+        this.persistentMap = persistentMap;
+        this.persistentMapObjectPrefix = persistentMapObjectPrefix;
 
         logger = new LoggingHelper(
                 GCSSnapshoter.class.getSimpleName(),
@@ -123,58 +128,55 @@ public class GCSSnapshoter {
         );
 
         if(!request.isDryRun()){
+            // create an async bq export job
+
+            String jobId = TrackingHelper.generateBQExportJobId(request.getTrackingId());
+
+            // We create the tagging request and added it to a persistent storage
+            // The Tagger service will receive notifications of export job completion via log sinks and pick up the tagger request from the persistent storage
+            // Make sure the file is stored first before running the export job. In case of non-fatal error of file creation and retry, we don't re-run the export job
+            TaggerRequest taggerRequest = new TaggerRequest(
+                    request.getTargetTable(),
+                    request.getRunId(),
+                    request.getTrackingId(),
+                    request.isDryRun(),
+                    request.getBackupPolicy(),
+                    BackupMethod.GCS_SNAPSHOT,
+                    null,
+                    gcsDestinationUri,
+                    operationTs
+            );
+
+            String taggerRequestFile = String.format("%s/%s", persistentMapObjectPrefix, jobId);
+            persistentMap.put(taggerRequestFile, taggerRequest.toJsonString());
+
+            Map<String, String> jobLabels = new HashMap<>();
+            // labels has to be max 63 chars, contain only lowercase letters, numeric characters, underscores, and dashes. All characters must use UTF-8 encoding, and international characters are allowed.
+            jobLabels.put("app", Globals.APPLICATION_NAME);
+
             // API Call
             bqService.exportToGCS(
+                    jobId,
                     sourceTableWithTimeTravelTuple.x(),
                     gcsDestinationUri,
                     request.getBackupPolicy().getGcsExportFormat(),
-                    null,
-                    null,
-                    null,
-                    request.getTrackingId()
+                    request.getBackupPolicy().getGcsCsvDelimiter(),
+                    request.getBackupPolicy().getGcsCsvExportHeader(),
+                    request.getBackupPolicy().getGcsUseAvroLogicalTypes(),
+                    request.getTrackingId(),
+                    jobLabels
             );
         }
-
 
         logger.logInfoWithTracker(
                 request.isDryRun(),
                 request.getTrackingId(),
                 request.getTargetTable(),
-                String.format("BigQuery GCS export completed for table %s to %s",
+                String.format("BigQuery GCS export submitted for table %s to %s",
                         request.getTargetTable().toSqlString(),
                         gcsDestinationUri
                 )
         );
-
-        // Create a Tagger request and send it to the Tagger PubSub topic
-        TaggerRequest taggerRequest = new TaggerRequest(
-                request.getTargetTable(),
-                request.getRunId(),
-                request.getTrackingId(),
-                request.isDryRun(),
-                request.getBackupPolicy(),
-                BackupMethod.GCS_SNAPSHOT,
-                null,
-                gcsDestinationUri,
-                operationTs
-        );
-
-        // Publish the list of tagging requests to PubSub
-        PubSubPublishResults publishResults = pubSubService.publishTableOperationRequests(
-                config.getProjectId(),
-                config.getOutputTopic(),
-                Arrays.asList(taggerRequest)
-        );
-
-        for (FailedPubSubMessage msg : publishResults.getFailedMessages()) {
-            String logMsg = String.format("Failed to publish this message %s", msg.toString());
-            logger.logWarnWithTracker(request.isDryRun(),request.getTrackingId(), request.getTargetTable(), logMsg);
-        }
-
-        for (SuccessPubSubMessage msg : publishResults.getSuccessMessages()) {
-            String logMsg = String.format("Published this message %s", msg.toString());
-            logger.logInfoWithTracker(request.isDryRun(),request.getTrackingId(), request.getTargetTable(), logMsg);
-        }
 
         // run common service end logging and adding pubsub message to processed list
         Utils.runServiceEndRoutines(
@@ -191,9 +193,7 @@ public class GCSSnapshoter {
                 request.getTrackingId(),
                 request.isDryRun(),
                 operationTs,
-                sourceTableWithTimeTravelTuple.x(),
-                taggerRequest,
-                publishResults
+                sourceTableWithTimeTravelTuple.x()
         );
     }
 

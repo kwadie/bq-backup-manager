@@ -11,7 +11,6 @@ resource "google_cloud_run_service" "service" {
 
   template {
     spec {
-
       timeout_seconds = var.timeout_seconds
       service_account_name = var.service_account_email
 
@@ -47,17 +46,12 @@ resource "google_cloud_run_service" "service" {
     metadata {
       annotations = {
         "autoscaling.knative.dev/maxScale"  = var.max_containers
+        "run.googleapis.com/ingress" : "internal"
       }
+      labels = var.common_labels
     }
 
   }
-
-  metadata {
-    annotations = {
-      "run.googleapis.com/ingress" : "internal"
-    }
-  }
-
 
   traffic {
     percent = 100

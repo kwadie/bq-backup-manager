@@ -25,6 +25,8 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapsh
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.HashMap;
+import java.util.Map;
 
 public class BigQueryServiceImpl implements BigQueryService {
 
@@ -39,7 +41,7 @@ public class BigQueryServiceImpl implements BigQueryService {
     }
 
 
-    public void createSnapshot(TableSpec sourceTable, TableSpec destinationTable, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
+    public void createSnapshot(String jobId, TableSpec sourceTable, TableSpec destinationTable, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
         CopyJobConfiguration copyJobConfiguration = CopyJobConfiguration
                 .newBuilder(destinationTable.toTableId(), sourceTable.toTableId())
                 .setWriteDisposition(JobInfo.WriteDisposition.WRITE_EMPTY)
@@ -49,7 +51,7 @@ public class BigQueryServiceImpl implements BigQueryService {
 
         Job job = bigQuery.create(JobInfo
                 .newBuilder(copyJobConfiguration)
-                .setJobId(JobId.of(String.format("%s_%s_%s", Globals.APPLICATION_NAME, "snapshot", trackingId)))
+                .setJobId(JobId.of(jobId))
                 .build());
 
         // wait for the job to complete
@@ -61,47 +63,45 @@ public class BigQueryServiceImpl implements BigQueryService {
         }
     }
 
-    public void exportToGCS(TableSpec sourceTable,
-                            String gcsDestinationUri,
-                            GCSSnapshotFormat exportFormat,
-                            @Nullable String csvFieldDelimiter,
-                            @Nullable Boolean csvPrintHeader,
-                            @Nullable Boolean useAvroLogicalTypes,
-                            String trackingId) throws InterruptedException {
+    public void exportToGCS(
+            String jobId,
+            TableSpec sourceTable,
+            String gcsDestinationUri,
+            GCSSnapshotFormat exportFormat,
+            @Nullable String csvFieldDelimiter,
+            @Nullable Boolean csvPrintHeader,
+            @Nullable Boolean useAvroLogicalTypes,
+            String trackingId,
+            Map<String, String> jobLabels
+    ) throws InterruptedException {
 
         Tuple<String, String> formatAndCompression = GCSSnapshotFormat.getFormatAndCompression(exportFormat);
 
         ExtractJobConfiguration.Builder extractConfigurationBuilder = ExtractJobConfiguration
                 .newBuilder(sourceTable.toTableId(), gcsDestinationUri)
+                .setLabels(jobLabels)
                 .setFormat(formatAndCompression.x());
 
         // check if compression is required
-        if(formatAndCompression.y() != null){
+        if (formatAndCompression.y() != null) {
             extractConfigurationBuilder.setCompression(formatAndCompression.y());
         }
 
         // set optional fields
-        if(csvFieldDelimiter != null){
+        if (csvFieldDelimiter != null) {
             extractConfigurationBuilder.setFieldDelimiter(csvFieldDelimiter);
         }
-        if(csvPrintHeader != null){
+        if (csvPrintHeader != null) {
             extractConfigurationBuilder.setPrintHeader(csvPrintHeader);
         }
-        if(useAvroLogicalTypes != null){
+        if (useAvroLogicalTypes != null) {
             extractConfigurationBuilder.setUseAvroLogicalTypes(useAvroLogicalTypes);
         }
 
-        Job job = bigQuery.create(JobInfo
+        // async call to create an export job
+        bigQuery.create(JobInfo
                 .newBuilder(extractConfigurationBuilder.build())
-                .setJobId(JobId.of(String.format("%s_%s_%s", Globals.APPLICATION_NAME, "export", trackingId)))
+                .setJobId(JobId.of(jobId))
                 .build());
-
-        // Blocks until this job completes its execution, either failing or succeeding.
-        job = job.waitFor();
-
-        // if job finished with errors
-        if (job.getStatus().getError() != null) {
-            throw new RuntimeException(job.getStatus().getError().toString());
-        }
     }
 }

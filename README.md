@@ -410,6 +410,20 @@ BigQuery Types to Avro Logical Types mapping:
 | `TIME`     | `timestamp-micro` (annotates Avro `LONG`)       | 
 | `DATETIME` | `STRING` (custom named logical type `datetime`) | 
 
+##### Configure Additional Backup Projects
+
+Terraform needs to deploy resources to the backup projects where the backup operations will run. For example, log
+sinks that send notifications to the Tagger once a backup operation has completed.
+
+By default, all projects listed in the `backup_project` field in the fallback policy will be automatically included.
+However, for additional backup projects such as the ones defined in external configuration (i.e. table backup policy tags),
+one must add them to the below list.
+
+```
+additional_backup_projects = ["project1", "project2", ..]
+```
+
+If you're only using the fallback backup policy and without table-level external policies, you can set this variable to an empty list `[]`
 
 #### Terraform Deployment
 
