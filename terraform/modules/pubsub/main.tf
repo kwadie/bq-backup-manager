@@ -4,6 +4,7 @@
 resource "google_pubsub_topic" "topic" {
   project = var.project
   name = var.topic
+  labels = var.common_labels
 }
 
 # https://registry.terraform.io/providers/hashicorp/google/latest/docs/resources/pubsub_subscription
@@ -48,6 +49,7 @@ resource "google_pubsub_subscription" "subscription" {
       service_account_email = var.subscription_service_account
     }
   }
+  labels = var.common_labels
 }
 
 # Allow an SA to publish to this topic

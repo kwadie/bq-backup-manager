@@ -14,6 +14,10 @@ variable "logging_sink_sa" {
   type = string
 }
 
+variable "common_labels" {
+  type = map(string)
+}
+
 
 
 

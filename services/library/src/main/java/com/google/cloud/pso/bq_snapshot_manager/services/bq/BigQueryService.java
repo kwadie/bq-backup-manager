@@ -29,18 +29,25 @@ import javax.annotation.Nullable;
 import java.io.IOException;
 import java.math.BigInteger;
 import java.util.List;
+import java.util.Map;
 
 public interface BigQueryService {
-    void createSnapshot(TableSpec sourceTable,
-                        TableSpec destinationId,
-                        Timestamp snapshotExpirationTs,
-                        String trackingId) throws InterruptedException;
+    void createSnapshot(
+            String jobId,
+            TableSpec sourceTable,
+            TableSpec destinationId,
+            Timestamp snapshotExpirationTs,
+            String trackingId) throws InterruptedException;
 
-     void exportToGCS(TableSpec sourceTable,
-                            String gcsDestinationUri,
-                            GCSSnapshotFormat exportFormat,
-                            @Nullable String csvFieldDelimiter,
-                            @Nullable Boolean csvPrintHeader,
-                            @Nullable Boolean useAvroLogicalTypes,
-                            String trackingId) throws InterruptedException;
+    void exportToGCS(
+            String jobId,
+            TableSpec sourceTable,
+            String gcsDestinationUri,
+            GCSSnapshotFormat exportFormat,
+            @Nullable String csvFieldDelimiter,
+            @Nullable Boolean csvPrintHeader,
+            @Nullable Boolean useAvroLogicalTypes,
+            String trackingId,
+            Map<String, String> jobLabels
+    ) throws InterruptedException;
 }

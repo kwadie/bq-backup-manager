@@ -15,13 +15,14 @@ import org.junit.Test;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
 public class BigQuerySnapshoterTest {
 
     @Test
-    public void testGetSnapshotTableSpec(){
+    public void testGetSnapshotTableSpec() {
 
         TableSpec actual = BigQuerySnapshoter.getSnapshotTableSpec(
                 TableSpec.fromSqlString("p.d.t"),
@@ -40,14 +41,14 @@ public class BigQuerySnapshoterTest {
     public void testExecute() throws NonRetryableApplicationException, IOException, InterruptedException {
 
         BigQuerySnapshoter snapshoter = new BigQuerySnapshoter(
-                new SnapshoterConfig("host-project",  "data-region"),
+                new SnapshoterConfig("host-project", "data-region"),
                 new BigQueryService() {
                     @Override
-                    public void createSnapshot(TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
+                    public void createSnapshot(String jobId, TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
                     }
 
                     @Override
-                    public void exportToGCS(TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId) throws InterruptedException {
+                    public void exportToGCS(String jobId, TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId, Map<String, String> jobLabels) throws InterruptedException {
                     }
                 },
                 new PubSubServiceTestImpl(),
@@ -68,9 +69,9 @@ public class BigQuerySnapshoterTest {
 
         TableSpec sourceTable = TableSpec.fromSqlString("project.dataset.table");
         Timestamp operationTime = Timestamp.ofTimeSecondsAndNanos(1667478075L, 0);
-        Long timeTravelMilis = (operationTime.getSeconds() - (3* 86400))*1000;
-        TableSpec expectedSourceTable = TableSpec.fromSqlString("project.dataset.table@"+timeTravelMilis);
-        TableSpec expectedSnapshotTable = TableSpec.fromSqlString("backup-p.backup-d.project_dataset_table_runId_"+timeTravelMilis);
+        Long timeTravelMilis = (operationTime.getSeconds() - (3 * 86400)) * 1000;
+        TableSpec expectedSourceTable = TableSpec.fromSqlString("project.dataset.table@" + timeTravelMilis);
+        TableSpec expectedSnapshotTable = TableSpec.fromSqlString("backup-p.backup-d.project_dataset_table_runId_" + timeTravelMilis);
 
         BigQuerySnapshoterResponse actualResponse = snapshoter.execute(
                 new SnapshoterRequest(

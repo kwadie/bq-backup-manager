@@ -9,3 +9,6 @@ variable "topic_publishers_sa_emails" {
 }
 variable "subscription_message_retention_duration" {type = string}
 variable "subscription_ack_deadline_seconds" {type = number}
+variable "common_labels" {
+  type = map(string)
+}

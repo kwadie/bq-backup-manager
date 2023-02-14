@@ -17,6 +17,7 @@
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
 import com.google.cloud.Timestamp;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 
 import java.util.UUID;
 
@@ -68,4 +69,17 @@ public class TrackingHelper {
     public static String generateTrackingId (String runId){
         return String.format("%s-%s", runId, UUID.randomUUID().toString());
     }
+
+    public static String generateBQExportJobId(String trackingId){
+        return String.format("%s_%s_%s",trackingId, "export", Globals.APPLICATION_NAME, trackingId);
+    }
+
+    public static String parseTrackingIdFromBQExportJobId(String bqExportJobId){
+        return Utils.tokenize(bqExportJobId,"_", true).get(0);
+    }
+
+    public static String generateBQSnapshotJobId(String trackingId){
+        return String.format("%s_%s_%s",trackingId, "snapshot", Globals.APPLICATION_NAME, trackingId);
+    }
+
 }

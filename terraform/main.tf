@@ -48,6 +48,11 @@ provider "google-beta" {
 }
 
 locals {
+  common_labels = {
+    "app" = var.application_name
+    "provisioned_by" =  "terraform"
+  }
+
   common_cloud_run_variables = [
     {
       name = "PROJECT_ID",
@@ -64,8 +69,27 @@ locals {
     {
       name = "GCS_FLAGS_BUCKET",
       value = module.gcs.create_gcs_flags_bucket_name
+    },
+    {
+      name = "APPLICATION_NAME",
+      value = var.application_name
     }
   ]
+
+  fallback_policy_default_level_backup_project = lookup(lookup(var.fallback_policy, "default_policy") , "backup_project")
+  fallback_policy_folder_level_backup_projects = [for k, v in lookup(var.fallback_policy, "folder_overrides"): lookup(v,"backup_project")]
+  fallback_policy_project_level_backup_projects = [for k, v in lookup(var.fallback_policy, "project_overrides"): lookup(v,"backup_project")]
+  fallback_policy_dataset_level_backup_projects = [for k, v in lookup(var.fallback_policy, "dataset_overrides"): lookup(v,"backup_project")]
+  fallback_policy_table_level_backup_projects = [for k, v in lookup(var.fallback_policy, "table_overrides"): lookup(v,"backup_project")]
+  fallback_policy_backup_projects = distinct(concat(
+    [local.fallback_policy_default_level_backup_project],
+    local.fallback_policy_folder_level_backup_projects,
+    local.fallback_policy_project_level_backup_projects,
+    local.fallback_policy_dataset_level_backup_projects,
+    local.fallback_policy_table_level_backup_projects
+  ))
+  all_backup_projects = distinct(concat(var.additional_backup_projects, local.fallback_policy_backup_projects))
+
 }
 
 module "iam" {
@@ -97,6 +121,7 @@ module "gcs" {
     "serviceAccount:${module.iam.sa_snapshoter_gcs_email}",
     "serviceAccount:${module.iam.sa_tagger_email}",
   ]
+  common_labels = local.common_labels
 }
 
 module "bigquery" {
@@ -105,6 +130,7 @@ module "bigquery" {
   region = var.data_region
   dataset = var.bigquery_dataset_name
   logging_sink_sa = module.cloud_logging.service_account
+  common_labels = local.common_labels
 }
 
 module "cloud_logging" {
@@ -112,6 +138,7 @@ module "cloud_logging" {
   dataset = module.bigquery.results_dataset
   project = var.project
   log_sink_name = var.log_sink_name
+  application_name = var.application_name
 }
 
 
@@ -139,6 +166,7 @@ module "cloud-run-dispatcher" {
     },
   ]
   )
+  common_labels = local.common_labels
 }
 
 module "cloud-run-configurator" {
@@ -172,6 +200,8 @@ module "cloud-run-configurator" {
     }
   ]
   )
+
+  common_labels = local.common_labels
 }
 
 module "cloud-run-snapshoter-bq" {
@@ -193,6 +223,8 @@ module "cloud-run-snapshoter-bq" {
     }
   ]
   )
+
+  common_labels = local.common_labels
 }
 
 module "cloud-run-snapshoter-gcs" {
@@ -214,6 +246,8 @@ module "cloud-run-snapshoter-gcs" {
     }
   ]
   )
+
+  common_labels = local.common_labels
 }
 
 module "cloud-run-tagger" {
@@ -234,6 +268,8 @@ module "cloud-run-tagger" {
     },
   ]
   )
+
+  common_labels = local.common_labels
 }
 
 
@@ -253,6 +289,8 @@ module "pubsub-dispatcher" {
   # avoid resending dispatcher messages if things went wrong and the msg was NAK (e.g. timeout expired, app error, etc)
   # min value must be at equal to the ack_deadline_seconds
   subscription_message_retention_duration = var.dispatcher_subscription_message_retention_duration
+
+  common_labels = local.common_labels
 }
 
 module "pubsub-configurator" {
@@ -268,6 +306,8 @@ module "pubsub-configurator" {
   # How long to retain unacknowledged messages in the subscription's backlog, from the moment a message is published.
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions
   subscription_message_retention_duration = var.configurator_subscription_message_retention_duration
+
+  common_labels = local.common_labels
 }
 
 module "pubsub-snapshoter-bq" {
@@ -283,6 +323,8 @@ module "pubsub-snapshoter-bq" {
   # How long to retain unacknowledged messages in the subscription's backlog, from the moment a message is published.
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions
   subscription_message_retention_duration = var.snapshoter_bq_subscription_message_retention_duration
+
+  common_labels = local.common_labels
 }
 
 module "pubsub-snapshoter-gcs" {
@@ -298,6 +340,8 @@ module "pubsub-snapshoter-gcs" {
   # How long to retain unacknowledged messages in the subscription's backlog, from the moment a message is published.
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions
   subscription_message_retention_duration = var.snapshoter_gcs_subscription_message_retention_duration
+
+  common_labels = local.common_labels
 }
 
 module "pubsub-tagger" {
@@ -316,6 +360,8 @@ module "pubsub-tagger" {
   # How long to retain unacknowledged messages in the subscription's backlog, from the moment a message is published.
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions
   subscription_message_retention_duration = var.tagger_subscription_message_retention_duration
+
+  common_labels = local.common_labels
 }
 
 module "cloud-scheduler" {
@@ -336,3 +382,14 @@ module "data-catalog" {
   tagTemplateUsers = [module.iam.sa_tagger_email]
 }
 
+module "async-gcs-snapshoter" {
+
+  count = length(local.all_backup_projects)
+  source = "./modules/async-gcs-snapshoter"
+
+  application_name  = var.application_name
+  log_project    = local.all_backup_projects[count.index]
+  host_project      = var.project
+  log_sink_name     = "bq_backup_manager_gcs_export_pubsub_sink"
+  pubsub_topic_name = module.pubsub-tagger.topic-name
+}

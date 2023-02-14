@@ -27,6 +27,7 @@ import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelpe
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.map.GcsPersistentMapImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
@@ -101,6 +102,8 @@ public class GCSSnapshoterController {
                     new PubSubServiceImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
                     "snapshoter-gcs-flags",
+                    new GcsPersistentMapImpl(environment.getGcsFlagsBucket()),
+                    "snapshoter-gcs-tagger-requests",
                     functionNumber
             );
 

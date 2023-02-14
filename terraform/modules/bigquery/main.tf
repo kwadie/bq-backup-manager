@@ -9,6 +9,7 @@ resource "google_bigquery_dataset" "results_dataset" {
   location = var.region
   dataset_id = var.dataset
   description = "To store DLP results from BQ Security Classifier app"
+  labels = var.common_labels
 }
 
 # Logging BQ sink must be able to write data to logging table in the dataset
@@ -35,6 +36,8 @@ resource "google_bigquery_table" "logging_table" {
   schema = file("modules/bigquery/schema/run_googleapis_com_stdout.json")
 
   deletion_protection = true
+
+  labels = var.common_labels
 }
 
 
@@ -56,6 +59,8 @@ resource "google_bigquery_table" "view_audit_log_by_table" {
       }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_audit_log_by_table_grouped" {
@@ -74,6 +79,8 @@ resource "google_bigquery_table" "view_audit_log_by_table_grouped" {
       }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "logging_view_steps" {
@@ -92,6 +99,8 @@ resource "google_bigquery_table" "logging_view_steps" {
     }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_service_calls" {
@@ -110,6 +119,8 @@ resource "google_bigquery_table" "view_service_calls" {
     }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_run_summary" {
@@ -128,6 +139,8 @@ resource "google_bigquery_table" "view_run_summary" {
     }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_run_summary_counts" {
@@ -147,6 +160,8 @@ resource "google_bigquery_table" "view_run_summary_counts" {
     }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_errors_non_retryable" {
@@ -165,6 +180,8 @@ resource "google_bigquery_table" "view_errors_non_retryable" {
     }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_errors_retryable" {
@@ -183,6 +200,8 @@ resource "google_bigquery_table" "view_errors_retryable" {
     }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_tracking_id_map" {
@@ -201,6 +220,8 @@ resource "google_bigquery_table" "view_tracking_id_map" {
     }
     )
   }
+
+  labels = var.common_labels
 }
 
 resource "google_bigquery_table" "view_run_duration" {
@@ -219,6 +240,8 @@ resource "google_bigquery_table" "view_run_duration" {
       }
     )
   }
+
+  labels = var.common_labels
 }
 
 

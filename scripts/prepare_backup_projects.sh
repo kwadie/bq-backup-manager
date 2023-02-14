@@ -43,9 +43,15 @@ do
        --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
        --role="roles/bigquery.jobUser"
 
-    # GCS Snapshoter needs to write to GCS
-    gcloud projects add-iam-policy-binding "${project}" \
-         --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
-         --role="roles/storage.objectAdmin"
+  # GCS Snapshoter needs to write to GCS
+  gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
+      --role="roles/storage.objectAdmin"
+
+   # Terraform needs to create log sinks to capture GCS export operation completion
+  gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com" \
+      --role="roles/logging.configWriter"
+
 
 done

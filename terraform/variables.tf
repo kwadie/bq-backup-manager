@@ -12,6 +12,11 @@
 #   See the License for the specific language governing permissions and
 #   limitations under the License.
 
+variable "application_name" {
+  type = string
+  default = "bq_backup_manager"
+}
+
 variable "project" {
   type = string
 }
@@ -357,6 +362,12 @@ variable "fallback_policy" {
     dataset_overrides = map(map(string)),
     table_overrides = map(map(string)),
   })
+}
+
+// make sure that you include all projects in this list while calling /scripts/prepare_backup_projects.sh to grant terraform SA permissions to deploy resources there
+variable "additional_backup_projects" {
+  type = list(string)
+  description = "Projects were backup operations will run but not defined in the fallback policy (e.g. in Tag policies). Used to deploy required resources on these projects."
 }
 
 
