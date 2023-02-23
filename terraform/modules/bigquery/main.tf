@@ -37,7 +37,8 @@ resource "google_bigquery_table" "logging_table" {
 
   deletion_protection = true
 
-  labels = var.common_labels
+  # TODO: labels causes Terraform to force replace the table at each deployment for some reason which we don't want to do for the log table containing history logs
+  # labels = var.common_labels
 }
 
 

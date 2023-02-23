@@ -42,15 +42,19 @@ resource "google_cloud_run_service" "service" {
         }
       }
     }
-
     metadata {
       annotations = {
         "autoscaling.knative.dev/maxScale"  = var.max_containers
-        "run.googleapis.com/ingress" : "internal"
+        #"run.googleapis.com/ingress" : "internal"
       }
-      labels = var.common_labels
     }
+  }
 
+  metadata {
+    annotations = {
+      "run.googleapis.com/ingress" : "internal"
+    }
+    labels = var.common_labels
   }
 
   traffic {
