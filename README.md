@@ -415,7 +415,9 @@ BigQuery Types to Avro Logical Types mapping:
 | `TIME`     | `timestamp-micro` (annotates Avro `LONG`)       | 
 | `DATETIME` | `STRING` (custom named logical type `datetime`) | 
 
-##### Configure Additional Backup Projects
+##### Configure Backup Projects
+
+###### Additional Backup Projects
 
 Terraform needs to deploy resources to the backup projects where the backup operations will run. For example, log
 sinks that send notifications to the Tagger once a backup operation has completed.
@@ -429,6 +431,18 @@ additional_backup_projects = ["project1", "project2", ..]
 ```
 
 If you're only using the fallback backup policy and without table-level external policies, you can set this variable to an empty list `[]`
+
+###### Configure Terraform SA permissions on Backup Projects
+
+In order for Terraform to deploy resources on the backup projects (configured in the previous step), the service account
+used by Terraform must have the required permissions on these projects. To do so, run the following command:
+
+```shell
+./scripts/prepare_backup_projects_for_terraform.sh <project1> <project2> <etc>
+```
+
+The list of projects must include all projects you're planning to store backups in. This includes all projects listed under the `backup_project` 
+field in the fallback policy, plus the ones included in the `additional_backup_projects` Terraform variable. 
 
 #### Terraform Deployment
 
@@ -445,7 +459,6 @@ terraform plan -var-file=$VARS
 terraform apply -var-file=$VARS -auto-approve
 
 ```
-
 
 #### Setup Access to Sources and Destinations
 
