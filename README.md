@@ -529,6 +529,17 @@ $TAXONOMY \
 
 #### From Terminal
 
+Required Permissions:  
+* Make sure that the `gcloud` tool is set to use the host project (i.e. `$PROJECT_ID`) via checking `gcloud config  get project`
+ and that you are authenticated to it via `gcloud auth application-default login`
+* The user running the below commands (i.e `$ACCOUNT`) should have the following permissions:
+  * On the host project (i.e. `$PROJECT_ID`) 
+    * "Service Usage Consumer" (`roles/serviceusage.serviceUsageConsumer`). This is to use the Data Catalog API. (PS: Data Catalog API doesn't have to be enabled on the data project)
+    * "Data Catalog TagTemplate User" (`roles/datacatalog.tagTemplateUser`). This is to use tag templates to tag tables
+  * On the data project (i.e. containing the table to be tagged)
+    * "BigQuery Metadata reader" (`roles/bigquery.metadataViewer`). This is to be able to lookup the table entry ID
+    * "bigquery.tables.updateTag" permission (e.g. included in `roles/bigquery.dataEditor`). This is to attach the tag template entry to the table
+
 ```shell
 # Example tag template. Config Source must be 'MANUAL'.
 export TAG="{
