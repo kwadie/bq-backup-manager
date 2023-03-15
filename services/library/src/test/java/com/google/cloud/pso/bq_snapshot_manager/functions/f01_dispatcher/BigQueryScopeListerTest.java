@@ -10,6 +10,10 @@ import org.junit.Test;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.regex.Matcher;
+import java.util.regex.Pattern;
+
+import static org.junit.Assert.assertEquals;
 
 
 public class BigQueryScopeListerTest {
@@ -38,6 +42,8 @@ public class BigQueryScopeListerTest {
                 TableSpec.fromSqlString("p1.d1.t1"),
                 TableSpec.fromSqlString("p1.d1.t2"));
 
+        assertEquals(expected, actual);
+
     }
 
     @Test
@@ -49,7 +55,7 @@ public class BigQueryScopeListerTest {
                 new ArrayList<>(), // projects exclude
                 Arrays.asList("p1.d2", "p2.d2"), // datasets include - should be the only include list affecting the scope
                 new ArrayList<>(), // datasets exclude
-                Arrays.asList("p1.d1.t1", "p1.d1.t2"), // tables include - should have no effect
+                Arrays.asList(),
                 Arrays.asList("p1.d2.t1") // tables exclude
         );
 
@@ -61,6 +67,7 @@ public class BigQueryScopeListerTest {
                 TableSpec.fromSqlString("p2.d2.t2")
         );
 
+        assertEquals(expected, actual);
     }
 
     @Test
@@ -70,9 +77,9 @@ public class BigQueryScopeListerTest {
                 new ArrayList<>(), // folders - should have no effect
                 Arrays.asList("p1", "p2"), // projects include - should be the only include list affecting the scope
                 new ArrayList<>(), // projects exclude
-                Arrays.asList("p1.d2", "p2.d2"), // datasets include - should have no effect
+                Arrays.asList(), // datasets include - should have no effect
                 Arrays.asList("p1.d1"), // datasets exclude
-                Arrays.asList("p1.d1.t1", "p1.d1.t2"), // tables include - should have no effect
+                Arrays.asList(),
                 Arrays.asList("p1.d2.t1") // tables exclude
         );
 
@@ -88,6 +95,8 @@ public class BigQueryScopeListerTest {
                 TableSpec.fromSqlString("p2.d2.t2")
         );
 
+        assertEquals(expected, actual);
+
     }
 
     @Test
@@ -95,11 +104,11 @@ public class BigQueryScopeListerTest {
 
         BigQueryScope bigQueryScope = new BigQueryScope(
                 Arrays.asList(1L, 2L), // folders - should be the only include list affecting the scope
-                Arrays.asList("p1", "p2"), // projects include - should have no effect
+                Arrays.asList(),
                 Arrays.asList("p4"), // projects exclude
-                Arrays.asList("p1.d2", "p2.d2"), // datasets include - should have no effect
+                Arrays.asList(), //
                 Arrays.asList("p1.d1"), // datasets exclude
-                Arrays.asList("p1.d1.t1", "p1.d1.t2"), // tables include - should have no effect
+                Arrays.asList(),
                 Arrays.asList("p1.d2.t1") // tables exclude
         );
 
@@ -117,5 +126,28 @@ public class BigQueryScopeListerTest {
                 TableSpec.fromSqlString("p3.d1.t1")
         );
 
+        assertEquals(expected, actual);
     }
+
+    @Test
+    public void testExcludeWithRegex() throws NonRetryableApplicationException {
+
+        BigQueryScope bigQueryScope = new BigQueryScope(
+                Arrays.asList(1L,2L), // folders - should be the only include list affecting the scope
+                Arrays.asList(), // projects include - should have no effect
+                Arrays.asList("p3", "regex:^p4$"), // projects exclude - p3 as literal and p4 as regex
+                Arrays.asList(), // datasets include - should have no effect
+                Arrays.asList("regex:.*\\.d1$", "P1.D2"), // datasets exclude: all datasets ending with d1 and p1.d2
+                Arrays.asList(), // tables include - should be the only scope
+                Arrays.asList("regex:.*\\.t2$") // regex to exclude tables ending with t2 suffix
+        );
+
+        List<TableSpec> actual = lister.listTablesInScope(bigQueryScope);
+        List<TableSpec> expected = Lists.newArrayList(
+                TableSpec.fromSqlString("p2.d2.t1"));
+
+        assertEquals(expected, actual);
+
+    }
+
 }
