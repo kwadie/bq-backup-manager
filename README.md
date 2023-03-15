@@ -318,7 +318,7 @@ periodically lists tables and check if a backup is due for each of them based on
   }
 ```
 
-Payload Fields:
+###### Payload Fields:
 
 | Field                   | Description                                                                                                                                                                                                                              |
 |-------------------------|------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
@@ -328,11 +328,18 @@ Payload Fields:
 | `is_dry_run`            | When set to `true` no actual backup operations will take place. Only log messages will be generated. This is useful for testing and debugging without incurring backup cost.                                                             | 
 | `folders_include_list`  | List of folder numbers e.g. `[1234, 456]` to backup BigQuery tables under them. Setting this will ignore `projects_include_list`, `datasets_include_list` and `tables_include_list`                                                      | 
 | `projects_include_list` | List of projects names e.g. `["porject1", "project2"]` to backup BigQuery tables under them. Setting this will ignore `datasets_include_list` and `tables_include_list`. This has no effect if `folders_include_list` is set.            | 
-| `projects_exclude_list` | List of projects names e.g. `["project1", "project2"]` to NOT take backups of their BigQuery tables. This field could be used in combination with `folders_include_list`                                                                 | 
+| `projects_exclude_list` | List of projects names or regex e.g. `["project1", "regex:^test_"]` to NOT take backups of their BigQuery tables. This field could be used in combination with `folders_include_list`                                                    | 
 | `datasets_include_list` | List of datasets e.g. `["porject1.dataset1", "project1.dataset2"]` to backup BigQuery tables under them. Setting this will ignore `tables_include_list`. This has no effect if `folders_include_list` or `projects_include_list` is set. | 
-| `datasets_exclude_list` | List of datasets e.g. `["porject1.dataset1", "project1.dataset2"]` to NOT take backups of their BigQuery tables. This field could be used in combination with `folders_include_list` or `projects_include_list`                          | 
+| `datasets_exclude_list` | List of datasets or regex e.g. `["porject1.dataset1", "regex:.*\\_landing$"]` to NOT take backups of their BigQuery tables. This field could be used in combination with `folders_include_list` or `projects_include_list`               | 
 | `tables_include_list`   | List of tables e.g. `["porject1.dataset1.table1", "project1.dataset2.table2"]` to backup. This has no effect if `folders_include_list`, `projects_include_list` or `datasets_include_list` is set.                                       | 
-| `tables_exclude_list`   | List of tables e.g. `["porject1.dataset1", "project1.dataset2"]` to NOT take backups for. This field could be used in combination with `folders_include_list`, `projects_include_list` or `datasets_include_list`                        | 
+| `tables_exclude_list`   | List of tables or regex e.g. `["porject1.dataset1.table1", "regex:.*\_test"]` to NOT take backups for. This field could be used in combination with `folders_include_list`, `projects_include_list` or `datasets_include_list`           | 
+
+###### Using regular expressions in exclusion lists:  
+All exclusion lists accept regular expressions in the form "regex:<regular expression>". 
+If the fully qualified entry name (e.g. project.dataset.table) matches any of the supplied regex, it will be excluded from the backup scope. 
+Some common use cases would be:
+* Excluding all "<xyz>_landing" datasets: `datasets_exclude_list = ["regex:.*\\_landing$"]`
+* Excluding all tables ending with _test, _tst, _bkp or _copy: `tables_exclude_list = ["regex:.*\_(test|tst|bkp|copy)"]`
 
 
 ##### Fallback Policies
