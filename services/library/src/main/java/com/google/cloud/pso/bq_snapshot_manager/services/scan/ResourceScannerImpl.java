@@ -79,7 +79,7 @@ public class ResourceScannerImpl implements ResourceScanner {
 
         return projects
                 .stream()
-                .map(Project::getDisplayName)
+                .map(Project::getProjectId)
                 .collect(Collectors.toCollection(ArrayList::new));
 
     }
