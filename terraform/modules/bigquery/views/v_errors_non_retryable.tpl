@@ -13,6 +13,8 @@ jsonPayload.global_tablespec_table AS table
 resource.labels.service_name AS service_name,
 jsonPayload.non_retryable_ex_name AS exception_name,
 jsonPayload.non_retryable_ex_msg AS exception_message,
+jsonPayload.non_retryable_ex_code AS exception_code,
+jsonPayload.non_retryable_ex_reason AS exception_reason,
 COUNT(1) AS count
 FROM
 `${project}.${dataset}.${logging_table}`
@@ -26,7 +28,9 @@ jsonPayload.global_tablespec_dataset,
 jsonPayload.global_tablespec_table,
 resource.labels.service_name,
 jsonPayload.non_retryable_ex_name,
-jsonPayload.non_retryable_ex_msg
+jsonPayload.non_retryable_ex_msg,
+jsonPayload.non_retryable_ex_code,
+jsonPayload.non_retryable_ex_reason
 )
 
 SELECT *  FROM nonretryable

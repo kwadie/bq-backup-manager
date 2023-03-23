@@ -133,6 +133,8 @@ public class LoggingHelper {
                 kv("non_retryable_ex_tracking_id", trackingId),
                 kv("non_retryable_ex_name", ex.getClass().getName()),
                 kv("non_retryable_ex_msg", ExceptionUtils.getStackTrace(ex)),
+                kv("non_retryable_ex_code", getExceptionCode(ex)),
+                kv("non_retryable_ex_reason", getExceptionReason(ex)),
         };
 
         logWithTracker(
@@ -156,7 +158,8 @@ public class LoggingHelper {
                 kv("retryable_ex_tracking_id", trackingId),
                 kv("retryable_ex_name", ex.getClass().getName()),
                 kv("retryable_ex_msg", ExceptionUtils.getStackTrace(ex)),
-                kv("retryable_ex_reason", reason),
+                kv("retryable_ex_code", getExceptionCode(ex)),
+                kv("retryable_ex_reason", getExceptionReason(ex)),
         };
 
         logWithTracker(
@@ -296,6 +299,20 @@ public class LoggingHelper {
                         Arrays.stream(extraAttributes)
                 ).toArray()
         );
+    }
+
+    public Integer getExceptionCode(Exception ex) {
+        if (BigQueryException.class.isAssignableFrom(ex.getClass())) {
+            return ((BigQueryException) ex).getCode();
+        }
+        return null;
+    }
+
+    public String getExceptionReason(Exception ex) {
+        if (BigQueryException.class.isAssignableFrom(ex.getClass())) {
+            return ((BigQueryException) ex).getReason();
+        }
+        return null;
     }
 
     public String generateExceptionSummary(Exception ex){
