@@ -2,6 +2,7 @@ WITH nonretryable AS
 (
 SELECT
 jsonPayload.global_run_id AS run_id,
+TIMESTAMP_MILLIS(CAST(SUBSTR(jsonPayload.global_run_id, 0, 13) AS INT64)) AS run_start_timestamp,
 jsonPayload.non_retryable_ex_tracking_id AS tracking_id,
 STRUCT(
 CONCAT(jsonPayload.global_tablespec_project,'.',jsonPayload.global_tablespec_dataset,'.',jsonPayload.global_tablespec_table) AS spec,

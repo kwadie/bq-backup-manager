@@ -50,4 +50,6 @@ public interface BigQueryService {
             String trackingId,
             Map<String, String> jobLabels
     ) throws InterruptedException;
+
+    Long getTableCreationTime(TableSpec table);
 }

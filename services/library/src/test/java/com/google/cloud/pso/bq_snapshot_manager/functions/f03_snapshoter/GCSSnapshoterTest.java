@@ -5,6 +5,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplication
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.PersistentMapTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.PersistentSetTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.PubSubServiceTestImpl;
@@ -50,6 +51,11 @@ public class GCSSnapshoterTest {
                     @Override
                     public void exportToGCS(String jobId, TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId, Map<String, String> jobLabels) throws InterruptedException {
                     }
+
+                    @Override
+                    public Long getTableCreationTime(TableSpec table) {
+                        return null;
+                    }
                 },
                 new PubSubServiceTestImpl(),
                 new PersistentSetTestImpl(),
@@ -71,7 +77,7 @@ public class GCSSnapshoterTest {
 
         TableSpec sourceTable = TableSpec.fromSqlString("project.dataset.table");
         Timestamp operationTime = Timestamp.ofTimeSecondsAndNanos(1667478075L, 0);
-        Long timeTravelMilis = (operationTime.getSeconds() - (3* 86400))*1000;
+        Long timeTravelMilis = (Utils.timestampToUnixTimeMillis(operationTime) - (3* 86400000));
         TableSpec expectedSourceTable = TableSpec.fromSqlString("project.dataset.table@"+timeTravelMilis);
 
         GCSSnapshoterResponse actualResponse = gcsSnapshoter.execute(
@@ -86,20 +92,7 @@ public class GCSSnapshoterTest {
                 "pubsub-message-id");
 
 
-        TaggerRequest expectedTaggerRequest = new TaggerRequest(
-                sourceTable,
-                "runId",
-                "trackingId",
-                false,
-                backupPolicy,
-                BackupMethod.GCS_SNAPSHOT,
-                null,
-                String.format("gs://backups/project/dataset/table/trackingId/%s/AVRO_SNAPPY/*", timeTravelMilis),
-                operationTime
-        );
-
         assertEquals(expectedSourceTable, actualResponse.getComputedSourceTable());
         assertEquals(operationTime, actualResponse.getOperationTs());
-
     }
 }

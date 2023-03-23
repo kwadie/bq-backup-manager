@@ -10,8 +10,10 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.*;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.PersistentSetTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.PubSubServiceTestImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import org.junit.Test;
@@ -26,6 +28,7 @@ import java.util.stream.Collectors;
 import java.util.stream.Stream;
 
 import static org.junit.Assert.assertEquals;
+import static org.junit.Assert.assertNull;
 
 public class ConfiguratorTest {
 
@@ -224,13 +227,12 @@ public class ConfiguratorTest {
     }
 
     @Test
-    public void testIsBackupTime_case1() {
+    public void testIsBackupCronTime_case1() {
 
-        boolean actual = Configurator.isBackupTime(
-                true,
+        boolean actual = Configurator.isBackupCronTime(
                 TableSpec.fromSqlString("p.d.t"),
-                "******",
-                TrackingHelper.parseRunIdAsTimestamp("1641034800000-T"),
+                "* * * * * *",
+                Timestamp.parseTimestamp("2022-10-06T14:00:00Z"),
                 BackupConfigSource.SYSTEM,
                 Timestamp.MIN_VALUE,
                 testLogger,
@@ -242,13 +244,12 @@ public class ConfiguratorTest {
     }
 
     @Test
-    public void testIsBackupTime_case2() {
+    public void testIsBackupCronTime_case2() {
 
-        boolean actual = Configurator.isBackupTime(
-                false,
+        boolean actual = Configurator.isBackupCronTime(
                 TableSpec.fromSqlString("p.d.t"),
-                "******",
-                TrackingHelper.parseRunIdAsTimestamp("1641034800000-T"),
+                "* * * * * *",
+                Timestamp.parseTimestamp("2022-10-06T14:00:00Z"),
                 BackupConfigSource.SYSTEM,
                 null,
                 testLogger,
@@ -260,13 +261,12 @@ public class ConfiguratorTest {
     }
 
     @Test
-    public void testIsBackupTime_case3() {
+    public void testIsBackupCronTime_case3() {
 
-        boolean actual = Configurator.isBackupTime(
-                false,
+        boolean actual = Configurator.isBackupCronTime(
                 TableSpec.fromSqlString("p.d.t"),
-                "******",
-                TrackingHelper.parseRunIdAsTimestamp("1641034800000-T"),
+                "* * * * * *",
+                Timestamp.parseTimestamp("2022-10-06T14:00:00Z"),
                 BackupConfigSource.MANUAL,
                 null,
                 testLogger,
@@ -278,13 +278,12 @@ public class ConfiguratorTest {
     }
 
     @Test
-    public void testIsBackupTime_case4_true() {
+    public void testIsBackupCronTime_case4_true() {
 
-        boolean actual = Configurator.isBackupTime(
-                false,
+        boolean actual = Configurator.isBackupCronTime(
                 TableSpec.fromSqlString("p.d.t"),
                 "0 0 13 * * *", // daily at 1 PM
-                TrackingHelper.parseRunIdAsTimestamp("1665064800000-T"), // 2022-10-06 14:00:00
+                Timestamp.parseTimestamp("2022-10-06T14:00:00Z"),
                 BackupConfigSource.MANUAL,
                 Timestamp.parseTimestamp("2022-10-06T12:00:00Z"),
                 testLogger,
@@ -296,10 +295,9 @@ public class ConfiguratorTest {
     }
 
     @Test
-    public void testIsBackupTime_case4_false() {
+    public void testIsBackupCronTime_case4_false() {
 
-        boolean actual = Configurator.isBackupTime(
-                false,
+        boolean actual = Configurator.isBackupCronTime(
                 TableSpec.fromSqlString("p.d.t"),
                 "0 0 13 * * *", // daily at 1 PM
                 TrackingHelper.parseRunIdAsTimestamp("1665064800000-T"), // 2022-10-06 14:00:00
@@ -317,7 +315,10 @@ public class ConfiguratorTest {
             TableSpec targetTable,
             String runId,
             String trackingId,
-            BackupPolicy testBackupPolicy) throws NonRetryableApplicationException, InterruptedException, IOException {
+            BackupPolicy testBackupPolicy,
+            Timestamp refTS,
+            Timestamp tableCreationTS
+            ) throws NonRetryableApplicationException, InterruptedException, IOException {
 
         ConfiguratorConfig config = new ConfiguratorConfig(
                 "test-project",
@@ -328,7 +329,23 @@ public class ConfiguratorTest {
 
         Configurator configurator = new Configurator(
                 config,
-                new DataCatalogService() {
+                new BigQueryService() {
+                    @Override
+                    public void createSnapshot(String jobId, TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public void exportToGCS(String jobId, TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId, Map<String, String> jobLabels) throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public Long getTableCreationTime(TableSpec table) {
+                        return Utils.timestampToUnixTimeMillis(tableCreationTS);
+                    }
+                },
+        new DataCatalogService() {
 
                     @Override
                     public Tag createOrUpdateBackupPolicyTag(TableSpec tableSpec, BackupPolicy backupPolicy, String backupPolicyTagTemplateId) {
@@ -354,7 +371,8 @@ public class ConfiguratorTest {
                         runId,
                         trackingId,
                         false,
-                        false
+                        false,
+                        refTS
                 ),
                 "pubsubmessageid"
         );
@@ -381,7 +399,10 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
-                backupPolicy);
+                backupPolicy,
+                Timestamp.now(),
+                Timestamp.MIN_VALUE
+                );
 
         // this run returns a static BackupPolicy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -429,7 +450,10 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
-                backupPolicy);
+                backupPolicy,
+                Timestamp.now(),
+                Timestamp.MIN_VALUE
+                );
 
         // this run returns a static BackupPolicy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -478,7 +502,9 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
-                backupPolicy);
+                backupPolicy,
+                Timestamp.now(),
+                Timestamp.MIN_VALUE);
 
         // this run returns a static BackupPolicy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -540,7 +566,10 @@ public class ConfiguratorTest {
                 targetTable,
                 "1665734583289-T",
                 "1665734583289-T-xyz",
-                backupPolicy);
+                backupPolicy,
+                Timestamp.now(),
+                Timestamp.MIN_VALUE
+                );
 
         // this run returns the fallback policy with Timestamp.MIN_VALUE from the system generated policy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -579,6 +608,47 @@ public class ConfiguratorTest {
 
 
                 assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
+    }
+
+    public void testConfiguratorWithNewlyCreatedTable() throws IOException, NonRetryableApplicationException, InterruptedException {
+
+        BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("* * * * * *",
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_3,
+                BackupConfigSource.MANUAL,
+                "snapshotProject")
+                .setBigQuerySnapshotExpirationDays(15.0)
+                .setBigQuerySnapshotStorageDataset("snapshotDataset")
+                .setGcsSnapshotStorageLocation("gs://bla/")
+                .setGcsExportFormat(GCSSnapshotFormat.AVRO)
+                .setLastBackupAt(Timestamp.MIN_VALUE)
+                .build();
+
+        TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
+
+        // ref point - 3 days time travel < table creation time --> table is not ready for backup
+        Timestamp refPoint = Timestamp.parseTimestamp("2023-01-07 00:00:00");
+        Timestamp tableCreationTs = Timestamp.parseTimestamp("2023-01-06 00:00:00");
+
+        ConfiguratorResponse configuratorResponse = executeConfigurator(
+                targetTable,
+                "1665734583289-T",
+                "1665734583289-T-xyz",
+                backupPolicy,
+                refPoint,
+                tableCreationTs
+                );
+
+        // this run returns a static BackupPolicy. Assert expectations based on it
+        PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
+        PubSubPublishResults gcsQueryPublishResults = configuratorResponse.getGcsBackupPublishingResults();
+
+        // no backup requests should be created
+        assertNull(gcsQueryPublishResults);
+        assertNull(bigQueryPublishResults);
+
+        assertEquals(false, configuratorResponse.isTableCreatedBeforeTimeTravel());
+        assertEquals(false, configuratorResponse.isBackupTime());
     }
 
 

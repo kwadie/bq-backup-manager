@@ -104,4 +104,9 @@ public class BigQueryServiceImpl implements BigQueryService {
                 .setJobId(JobId.of(jobId))
                 .build());
     }
+
+    @Override
+    public Long getTableCreationTime(TableSpec table) {
+        return bigQuery.getTable(table.toTableId()).getCreationTime();
+    }
 }

@@ -136,7 +136,7 @@ public class Utils {
      */
     public static Tuple<TableSpec, Long> getTableSpecWithTimeTravel(TableSpec table, TimeTravelOffsetDays timeTravelOffsetDays, Timestamp referencePoint) {
         Long timeTravelMs;
-        Long refPointMs = referencePoint.getSeconds()*1000;
+        Long refPointMs = timestampToUnixTimeMillis(referencePoint);
 
         if (timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_0)) {
             // always use time travel for consistency and traceability
@@ -155,6 +155,10 @@ public class Utils {
                         String.format("%s@%s", table.getTable(), timeTravelMs)),
                 timeTravelMs
         );
+    }
+
+    public static Long timestampToUnixTimeMillis(Timestamp ts){
+        return ts.toSqlTimestamp().getTime();
     }
 
     public static String trimSlashes(String str){
