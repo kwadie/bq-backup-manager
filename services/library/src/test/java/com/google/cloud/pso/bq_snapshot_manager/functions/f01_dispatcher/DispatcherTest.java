@@ -17,6 +17,7 @@
 package com.google.cloud.pso.bq_snapshot_manager.functions.f01_dispatcher;
 
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
+import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
@@ -56,7 +57,7 @@ public class DispatcherTest {
             "testTaggerTopic"
     );
 
-    String runId = "R-testxxxxxxx";
+    String runId = "1679574252412-R";
 
     @Test
     public void testDispatcher() throws IOException, NonRetryableApplicationException, InterruptedException {
@@ -85,17 +86,17 @@ public class DispatcherTest {
                 return new PubSubPublishResults(
                         Arrays.asList(
                                 new SuccessPubSubMessage(
-                                        new ConfiguratorRequest( TableSpec.fromSqlString("p1.d1.t1"), "runId", "trackingId", false, false),
+                                        new ConfiguratorRequest( TableSpec.fromSqlString("p1.d1.t1"), "runId", "trackingId", false, false, Timestamp.now()),
                                         "publishedMessageId"
                                 ),
                                 new SuccessPubSubMessage(
-                                        new ConfiguratorRequest( TableSpec.fromSqlString("p1.d1.t2"), "runId", "trackingId",false, false),
+                                        new ConfiguratorRequest( TableSpec.fromSqlString("p1.d1.t2"), "runId", "trackingId",false, false, Timestamp.now()),
                                         "publishedMessageId"
                                 )
                         ),
                         Arrays.asList(
                                 new FailedPubSubMessage(
-                                        new ConfiguratorRequest(TableSpec.fromSqlString("test.fail.msg"), "runId", "trackingId",false, false),
+                                        new ConfiguratorRequest(TableSpec.fromSqlString("test.fail.msg"), "runId", "trackingId",false, false, Timestamp.now()),
                                         new Exception("test fail message")
                                 )
                         )

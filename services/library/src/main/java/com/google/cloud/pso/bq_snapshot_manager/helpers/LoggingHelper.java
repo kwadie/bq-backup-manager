@@ -16,15 +16,14 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
+import com.google.cloud.bigquery.BigQueryException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.*;
-import com.google.flatbuffers.Table;
 import org.apache.commons.lang3.exception.ExceptionUtils;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.event.Level;
 
 import javax.annotation.Nullable;
-import javax.swing.text.StyledEditorKit;
 import java.util.Arrays;
 import java.util.stream.Stream;
 
@@ -97,7 +96,7 @@ public class LoggingHelper {
                 null,
                 trackingId,
                 tableSpec,
-                String.format("Dispatched request for table '%s' with trackindId `%s`", tableSpec.toSqlString(), dispatchedTrackingId),
+                String.format("Dispatched request for table '%s' with trackingId `%s`", tableSpec.toSqlString(), dispatchedTrackingId),
                 Level.INFO,
                 attributes
         );
@@ -134,6 +133,8 @@ public class LoggingHelper {
                 kv("non_retryable_ex_tracking_id", trackingId),
                 kv("non_retryable_ex_name", ex.getClass().getName()),
                 kv("non_retryable_ex_msg", ExceptionUtils.getStackTrace(ex)),
+                kv("non_retryable_ex_code", getExceptionCode(ex)),
+                kv("non_retryable_ex_reason", getExceptionReason(ex)),
         };
 
         logWithTracker(
@@ -141,7 +142,9 @@ public class LoggingHelper {
                 null,
                 trackingId,
                 tableSpec,
-                String.format("Caught a Non-Retryable exception while processing tracker `%s`. Exception: %s. Msg: %s", trackingId, ex.getClass().getName(), ex.getMessage()),
+                String.format("Caught a Non-Retryable exception while processing tracker `%s`. %s.",
+                        trackingId,
+                        generateExceptionSummary(ex)),
                 Level.ERROR,
                 attributes
         );
@@ -155,7 +158,8 @@ public class LoggingHelper {
                 kv("retryable_ex_tracking_id", trackingId),
                 kv("retryable_ex_name", ex.getClass().getName()),
                 kv("retryable_ex_msg", ExceptionUtils.getStackTrace(ex)),
-                kv("retryable_ex_reason", reason),
+                kv("retryable_ex_code", getExceptionCode(ex)),
+                kv("retryable_ex_reason", getExceptionReason(ex)),
         };
 
         logWithTracker(
@@ -163,10 +167,9 @@ public class LoggingHelper {
                 null,
                 trackingId,
                 tableSpec,
-                String.format("Caught a Retryable exception while processing tracker `%s`. Exception: %s. Msg: %s. Classification Reason: %s.",
+                String.format("Caught a Retryable exception while processing tracker `%s`. %s. Classification Reason: %s.",
                         trackingId,
-                        ex.getClass().getName(),
-                        ex.getMessage(),
+                        generateExceptionSummary(ex),
                         reason
                 ),
                 Level.WARN,
@@ -296,5 +299,36 @@ public class LoggingHelper {
                         Arrays.stream(extraAttributes)
                 ).toArray()
         );
+    }
+
+    public Integer getExceptionCode(Exception ex) {
+        if (BigQueryException.class.isAssignableFrom(ex.getClass())) {
+            return ((BigQueryException) ex).getCode();
+        }
+        return null;
+    }
+
+    public String getExceptionReason(Exception ex) {
+        if (BigQueryException.class.isAssignableFrom(ex.getClass())) {
+            return ((BigQueryException) ex).getReason();
+        }
+        return null;
+    }
+
+    public String generateExceptionSummary(Exception ex){
+
+        if (BigQueryException.class.isAssignableFrom(ex.getClass())) {
+            BigQueryException bigQueryException = (BigQueryException) ex;
+            return String.format("Name: BigQueryException. Msg: %s.Reason: %s. Code: %s",
+                    bigQueryException.getMessage(),
+                    bigQueryException.getReason(),
+                    bigQueryException.getCode()
+            );
+        }else{
+            return String.format("Name: %s. Msg: %s",
+                    ex.getClass().getName(),
+                    ex.getMessage()
+            );
+        }
     }
 }

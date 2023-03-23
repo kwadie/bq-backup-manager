@@ -18,28 +18,13 @@ package com.google.cloud.pso.bq_snapshot_manager.helpers;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
-import com.google.cloud.datacatalog.v1.TagField;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
-import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
-import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
-import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
-import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
-import jdk.jshell.execution.Util;
 import org.junit.Test;
-import org.springframework.scheduling.support.CronExpression;
-
-import java.io.IOException;
-import java.time.Instant;
-import java.time.LocalDateTime;
-import java.util.HashMap;
-import java.util.Map;
 
 import static org.junit.Assert.assertEquals;
 
 public class UtilsTest {
-
-
 
     @Test(expected = IllegalArgumentException.class)
     public void getConfigFromEnv_Required() {
@@ -95,5 +80,12 @@ public class UtilsTest {
     public void testTrimSlashes(){
         assertEquals("bla", Utils.trimSlashes("/bla/"));
         assertEquals("bla", Utils.trimSlashes("bla"));
+    }
+
+    @Test
+    public void test(){
+        Timestamp ts = Timestamp.now();
+        System.out.println(ts.toSqlTimestamp().getTime());
+        System.out.println(Utils.timestampToUnixTimeMillis(ts));
     }
 }

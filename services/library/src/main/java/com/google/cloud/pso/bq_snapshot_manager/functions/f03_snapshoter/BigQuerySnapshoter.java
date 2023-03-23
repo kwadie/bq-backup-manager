@@ -102,19 +102,17 @@ public class BigQuerySnapshoter {
         // validate required params
         validateInput(request);
 
-        // Perform the Snapshot operation using the BigQuery service
-
-        // expiry date is calculated relative to the operation time
-        Timestamp expiryTs = Timestamp.ofTimeSecondsAndNanos(
-                operationTs.getSeconds() + (request.getBackupPolicy().getBigQuerySnapshotExpirationDays().longValue() * 86400L),
-                0);
-
         // time travel is calculated relative to the operation time
         Tuple<TableSpec, Long> sourceTableWithTimeTravelTuple = Utils.getTableSpecWithTimeTravel(
                 request.getTargetTable(),
                 request.getBackupPolicy().getTimeTravelOffsetDays(),
                 operationTs
         );
+
+        // expiry date is calculated relative to the operation time
+        Timestamp expiryTs = Timestamp.ofTimeSecondsAndNanos(
+                operationTs.getSeconds() + (request.getBackupPolicy().getBigQuerySnapshotExpirationDays().longValue() * 86400L),
+                0);
 
         // construct the snapshot table from the request params and calculated timetravel
         TableSpec snapshotTable = getSnapshotTableSpec(
@@ -141,9 +139,10 @@ public class BigQuerySnapshoter {
 
 
         if(!request.isDryRun()){
-            // API Call
+
             String jobId = TrackingHelper.generateBQSnapshotJobId(request.getTrackingId());
 
+            // API Call
             bqService.createSnapshot(
                     jobId,
                     sourceTableWithTimeTravelTuple.x(),

@@ -16,6 +16,7 @@
 
 package com.google.cloud.pso.bq_snapshot_manager.functions.f01_dispatcher;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.pso.bq_snapshot_manager.entities.JsonMessage;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
@@ -105,6 +106,8 @@ public class Dispatcher {
 
         // Convert each table in scope to a ConfiguratorRequest to be sent as a PubSub message
         List<JsonMessage> pubSubMessagesToPublish = new ArrayList<>();
+        // use the start time of this run as a reference point in time for CRON checks across all requests in this run
+        Timestamp refTs = TrackingHelper.parseRunIdAsTimestamp(runId);
         for (TableSpec tableSpec : tablesInScope) {
             pubSubMessagesToPublish.add(
                     new ConfiguratorRequest(
@@ -112,7 +115,9 @@ public class Dispatcher {
                             runId,
                             TrackingHelper.generateTrackingId(runId),
                             dispatcherRequest.isDryRun(),
-                            dispatcherRequest.isForceRun())
+                            dispatcherRequest.isForceRun(),
+                            refTs
+                    )
             );
         }
 

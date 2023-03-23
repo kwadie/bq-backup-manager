@@ -13,6 +13,7 @@ import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.Snapsho
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
+import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
@@ -30,6 +31,9 @@ public class Configurator {
     private final LoggingHelper logger;
     private final Integer functionNumber;
     private final ConfiguratorConfig config;
+
+    private final BigQueryService bqService;
+
     private final DataCatalogService dataCatalogService;
     private final PubSubService pubSubService;
     private final PersistentSet persistentSet;
@@ -38,6 +42,7 @@ public class Configurator {
 
 
     public Configurator(ConfiguratorConfig config,
+                        BigQueryService bqService,
                         DataCatalogService dataCatalogService,
                         PubSubService pubSubService,
                         PersistentSet persistentSet,
@@ -45,6 +50,7 @@ public class Configurator {
                         String persistentSetObjectPrefix,
                         Integer functionNumber) {
         this.config = config;
+        this.bqService = bqService;
         this.dataCatalogService = dataCatalogService;
         this.pubSubService = pubSubService;
         this.persistentSet = persistentSet;
@@ -73,21 +79,35 @@ public class Configurator {
         // 1. Find the backup policy of this table
         BackupPolicy backupPolicy = getBackupPolicy(request);
 
-        // 2. Determine if we should take a backup at this run given the policy CRON expression
+        // 2a. Determine if we should take a backup at this run given the policy CRON expression
         // if the table has been backed up before then check if we should backup at this run
-
-        // use the start time of this run as a reference point in time for CRON checks across all requests in this run
-        Timestamp refTs = TrackingHelper.parseRunIdAsTimestamp(request.getRunId());
-        boolean isBackupTime = isBackupTime(
-                request.isForceRun(),
+        boolean isBackupCronTime = isBackupCronTime(
                 request.getTargetTable(),
                 backupPolicy.getCron(),
-                refTs,
+                request.getRefTimestamp(),
                 backupPolicy.getConfigSource(),
                 backupPolicy.getLastBackupAt(),
                 logger,
                 request.getTrackingId()
         );
+
+        // 2b. Check if the table has been created before the desired time travel
+        Tuple<TableSpec, Long> sourceTableWithTimeTravelTuple = Utils.getTableSpecWithTimeTravel(
+                request.getTargetTable(),
+                backupPolicy.getTimeTravelOffsetDays(),
+                request.getRefTimestamp()
+        );
+
+        // API Call
+        Long tableCreationTime = bqService.getTableCreationTime(request.getTargetTable());
+
+        // check if the table is created after the time travel timestamp
+        boolean isTableCreatedBeforeTimeTravel = tableCreationTime < sourceTableWithTimeTravelTuple.y();
+
+
+        // To take a backup, the backup cron expression must match this run and the table has to be around for
+        // enough time to apply the desired time travel. Otherwise, skip the backup this run
+        boolean isBackupTime = isBackupTime(request.isForceRun(), isBackupCronTime, isTableCreatedBeforeTimeTravel);
 
         // 3. Prepare and send the backup request(s) if required
         SnapshoterRequest bqSnapshotRequest = null;
@@ -184,7 +204,9 @@ public class Configurator {
                 request.getTrackingId(),
                 request.isDryRun(),
                 backupPolicy,
-                refTs,
+                request.getRefTimestamp(),
+                isBackupCronTime,
+                isTableCreatedBeforeTimeTravel,
                 isBackupTime,
                 bqSnapshotRequest,
                 gcsSnapshotRequest,
@@ -227,8 +249,7 @@ public class Configurator {
         }
     }
 
-    public static boolean isBackupTime(
-            boolean isForceRun,
+    public static boolean isBackupCronTime(
             TableSpec targetTable,
             String cron,
             Timestamp referencePoint,
@@ -240,22 +261,20 @@ public class Configurator {
 
         boolean takeBackup;
 
-        if (isForceRun
-                || (configSource.equals(BackupConfigSource.SYSTEM)
-                && lastBackupAt == null)) {
+        if (configSource.equals(BackupConfigSource.SYSTEM)
+                && lastBackupAt == null) {
             // this means the table has not been backed up before
-            // CASE 1: It's a force run --> take backup
-            // CASE 2: It's a fallback configuration (SYSTEM) running for the first time --> take backup
+            // CASE 1: It's a fallback configuration (SYSTEM) running for the first time --> take backup
             takeBackup = true;
         } else {
 
             if (lastBackupAt == null) {
                 // this means the table has not been backed up before
-                // CASE 3: It's a MANUAL config but running for the first time
+                // CASE 2: It's a MANUAL config but running for the first time
                 takeBackup = true;
             } else {
 
-                // CASE 4: It's MANUAL OR SYSTEM config that ran before and already attached to the table
+                // CASE 3: It's MANUAL OR SYSTEM config that ran before and already attached to the table
                 // --> decide based on CRON next trigger check
 
                 Tuple<Boolean, LocalDateTime> takeBackupTuple = getCronNextTrigger(
@@ -285,6 +304,15 @@ public class Configurator {
             }
         }
         return takeBackup;
+    }
+
+    public static boolean isBackupTime(boolean isForceRun,
+                                       boolean isBackupCronTime,
+                                       boolean isTableCreatedBeforeTimeTravel){
+        // table must have enough history to use the time travel feature.
+        // In addition to that, the run has to be a force run or the backup is due based on the backup cron
+
+        return isTableCreatedBeforeTimeTravel && (isForceRun || isBackupCronTime);
     }
 
     /**

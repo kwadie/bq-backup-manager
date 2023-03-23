@@ -29,6 +29,7 @@ import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRespo
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
@@ -122,6 +123,7 @@ public class ConfiguratorController {
 
             Configurator configurator = new Configurator(
                     environment.toConfig(),
+                    new BigQueryServiceImpl(configuratorRequest.getTargetTable().getProject()),
                     dataCatalogService,
                     new PubSubServiceImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),

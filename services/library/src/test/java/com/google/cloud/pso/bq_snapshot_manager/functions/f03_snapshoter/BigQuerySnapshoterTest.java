@@ -50,6 +50,11 @@ public class BigQuerySnapshoterTest {
                     @Override
                     public void exportToGCS(String jobId, TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId, Map<String, String> jobLabels) throws InterruptedException {
                     }
+
+                    @Override
+                    public Long getTableCreationTime(TableSpec table) {
+                        return 0L;
+                    }
                 },
                 new PubSubServiceTestImpl(),
                 new PersistentSetTestImpl(),
@@ -69,7 +74,7 @@ public class BigQuerySnapshoterTest {
 
         TableSpec sourceTable = TableSpec.fromSqlString("project.dataset.table");
         Timestamp operationTime = Timestamp.ofTimeSecondsAndNanos(1667478075L, 0);
-        Long timeTravelMilis = (operationTime.getSeconds() - (3 * 86400)) * 1000;
+        Long timeTravelMilis = (Utils.timestampToUnixTimeMillis(operationTime) - (3 * 86400000));
         TableSpec expectedSourceTable = TableSpec.fromSqlString("project.dataset.table@" + timeTravelMilis);
         TableSpec expectedSnapshotTable = TableSpec.fromSqlString("backup-p.backup-d.project_dataset_table_runId_" + timeTravelMilis);
 
