@@ -49,3 +49,12 @@ gcloud services enable serviceusage.googleapis.com
 
 echo "enabling appengine .."
 gcloud services enable appengine.googleapis.com
+
+echo "enabling cloudscheduler .."
+gcloud services enable cloudscheduler.googleapis.com
+
+echo "enabling compute engine .."
+gcloud services enable compute.googleapis.com
+
+echo "enabling vpcaccess .."
+gcloud services enable vpcaccess.googleapis.com

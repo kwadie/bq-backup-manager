@@ -1,13 +1,7 @@
-project        = "bqsm-host"
-compute_region = "europe-west3"
-data_region    = "eu"
-
-bigquery_dataset_name = "bq_snapshot_manager"
-
-is_dry_run = false
-
-cloud_scheduler_account = "service-752982373840@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
-
+project                   = "bqsm-host"
+compute_region            = "europe-west3"
+data_region               = "eu"
+bigquery_dataset_name     = "bq_snapshot_manager"
 terraform_service_account = "bq-snapshot-mgr-terraform@bqsm-host.iam.gserviceaccount.com"
 
 dispatcher_service_image     = "europe-west3-docker.pkg.dev/bqsm-host/docker-repo/bqsm-dispatcher-service:latest"
@@ -18,8 +12,8 @@ tagger_service_image         = "europe-west3-docker.pkg.dev/bqsm-host/docker-rep
 
 schedulers = [
   {
-    name    = "heart_beat"
-    cron    = "0 * * * *" # hourly
+    name = "heart_beat"
+    cron = "0 * * * *" # hourly
     payload = {
       is_force_run = false
       is_dry_run   = false
@@ -34,8 +28,8 @@ schedulers = [
     }
   },
   {
-    name    = "force_run"
-    cron    = "0 0 1 1 *" # once a year on 1/1/* at 00:00
+    name = "force_run"
+    cron = "0 0 1 1 *" # once a year on 1/1/* at 00:00
     payload = {
       is_force_run = true
       is_dry_run   = false
@@ -50,8 +44,8 @@ schedulers = [
     }
   },
   {
-    name    = "dry_run"
-    cron    = "0 0 1 1 *" # once a year on 1/1/* at 00:00
+    name = "dry_run"
+    cron = "0 0 1 1 *" # once a year on 1/1/* at 00:00
     payload = {
       is_force_run = true
       is_dry_run   = true
@@ -119,8 +113,8 @@ fallback_policy = {
       "backup_time_travel_offset_days" : "0",
       "backup_project" : "bqsc-dwh-v1",
       # bq settings
-#      "bq_snapshot_expiration_days" : "1",
-#      "bq_snapshot_storage_dataset" : "stress_testing_backups",
+      #      "bq_snapshot_expiration_days" : "1",
+      #      "bq_snapshot_storage_dataset" : "stress_testing_backups",
       # gcs settings
       "gcs_snapshot_storage_location" : "gs://bqsc-dwh-v1-backups/stress-tests/"
       "gcs_snapshot_format" : "AVRO_SNAPPY"

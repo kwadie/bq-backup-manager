@@ -13,7 +13,7 @@
 #   limitations under the License.
 
 variable "application_name" {
-  type = string
+  type    = string
   default = "bq_backup_manager"
 }
 
@@ -30,147 +30,142 @@ variable "data_region" {
 }
 
 variable "bigquery_dataset_name" {
-  type = string
+  type    = string
   default = "bq_backup_manager"
 }
 
-
-
 variable "sa_dispatcher" {
-  type = string
+  type    = string
   default = "dispatcher"
 }
 
-
 variable "sa_dispatcher_tasks" {
-  type = string
+  type    = string
   default = "dispatcher-tasks"
 }
 
 variable "sa_configurator" {
-  type = string
+  type    = string
   default = "configurator"
 }
 
 variable "sa_configurator_tasks" {
-  type = string
+  type    = string
   default = "configurator-tasks"
 }
 
 variable "sa_snapshoter_bq" {
-  type = string
+  type    = string
   default = "snapshoter-bq"
 }
 
 variable "sa_snapshoter_bq_tasks" {
-  type = string
+  type    = string
   default = "snapshoter-bq-tasks"
 }
 
 variable "sa_snapshoter_gcs" {
-  type = string
+  type    = string
   default = "snapshoter-gcs"
 }
 
 variable "sa_snapshoter_gcs_tasks" {
-  type = string
+  type    = string
   default = "snapshoter-gcs-tasks"
 }
 
 variable "sa_tagger" {
-  type = string
+  type    = string
   default = "tagger"
 }
 
 variable "sa_tagger_tasks" {
-  type = string
+  type    = string
   default = "tagger-tasks"
 }
 
 variable "log_sink_name" {
-  type = string
+  type    = string
   default = "sc_bigquery_log_sink"
 }
 
-
 variable "dispatcher_service_name" {
-  type = string
+  type    = string
   default = "s1-dispatcher"
 }
 
 variable "configurator_service_name" {
-  type = string
+  type    = string
   default = "s2-configurator"
 }
 
 variable "snapshoter_bq_service_name" {
-  type = string
+  type    = string
   default = "s3-snapshoter-bq"
 }
 
 variable "snapshoter_gcs_service_name" {
-  type = string
+  type    = string
   default = "s3-snapshoter-gcs"
 }
 
 variable "tagger_service_name" {
-  type = string
+  type    = string
   default = "s4-tagger"
 }
 
-
 variable "dispatcher_pubsub_topic" {
-  type = string
+  type    = string
   default = "dispatcher_topic"
 }
 
 variable "dispatcher_pubsub_sub" {
-  type = string
+  type    = string
   default = "dispatcher_push_sub"
 }
 
 variable "configurator_pubsub_topic" {
-  type = string
+  type    = string
   default = "configurator_topic"
 }
 
 variable "configurator_pubsub_sub" {
-  type = string
+  type    = string
   default = "configurator_push_sub"
 }
 
 variable "snapshoter_bq_pubsub_topic" {
-  type = string
+  type    = string
   default = "snapshoter_bq_topic"
 }
 
 variable "snapshoter_bq_pubsub_sub" {
-  type = string
+  type    = string
   default = "snapshoter_bq_push_sub"
 }
 
 variable "snapshoter_gcs_pubsub_topic" {
-  type = string
+  type    = string
   default = "snapshoter_gcs_topic"
 }
 
 variable "snapshoter_gcs_pubsub_sub" {
-  type = string
+  type    = string
   default = "snapshoter_gcs_push_sub"
 }
 
 variable "tagger_pubsub_topic" {
-  type = string
+  type    = string
   default = "tagger_topic"
 }
 
 variable "tagger_pubsub_sub" {
-  type = string
+  type    = string
   default = "tagger_push_sub"
 }
 
 variable "gcs_flags_bucket_name" {
-  type = string
+  type    = string
   default = "bq-snapshot-mgr-flags"
 }
 
@@ -195,28 +190,22 @@ variable "tagger_service_image" {
   type = string
 }
 
-
-variable "cloud_scheduler_account" {
-  type = string
-  description = "Service agent account for Cloud Scheduler. Format service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
-}
-
 variable "terraform_service_account" {
-  type = string
+  type        = string
   description = "service account used by terraform to deploy to GCP"
 }
 
 # Dispatcher settings.
 variable "dispatcher_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
-  type = number
+  type        = number
   # Dispatcher might need relatively long time to process large BigQuery scan scopes
   default = 540 # 9m
 }
 
 variable "dispatcher_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
-  type = number
+  type        = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
   // range is 10 to 600
   default = 600 # 10m
@@ -224,7 +213,7 @@ variable "dispatcher_subscription_ack_deadline_seconds" {
 
 variable "dispatcher_subscription_message_retention_duration" {
   description = "How long to retain unacknowledged messages in the subscription's backlog"
-  type = string
+  type        = string
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Tagger issuing unnecessary BQ queries)
   # min value must be at least equal to the ack_deadline_seconds
   # Dispatcher should have the shortest retention possible because we want to avoid retries (on the app level as well)
@@ -234,14 +223,14 @@ variable "dispatcher_subscription_message_retention_duration" {
 # configurator settings.
 variable "configurator_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
-  type = number
+  type        = number
   // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
   default = 300 # 5m
 }
 
 variable "configurator_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
-  type = number
+  type        = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
   // range [10,600] seconds
   default = 420 # 7m
@@ -249,7 +238,7 @@ variable "configurator_subscription_ack_deadline_seconds" {
 
 variable "configurator_subscription_message_retention_duration" {
   description = "How long to retain unacknowledged messages in the subscription's backlog"
-  type = string
+  type        = string
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Service issuing unnecessary API Calls)
   # It also sets how long should we keep trying to process one run
   # min value must be at least equal to the ack_deadline_seconds
@@ -260,14 +249,14 @@ variable "configurator_subscription_message_retention_duration" {
 # snapshoter_bq settings.
 variable "snapshoter_bq_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
-  type = number
+  type        = number
   // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
   default = 300 # 5m
 }
 
 variable "snapshoter_bq_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
-  type = number
+  type        = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
   // range [10,600] seconds
   default = 420 # 7m
@@ -275,7 +264,7 @@ variable "snapshoter_bq_subscription_ack_deadline_seconds" {
 
 variable "snapshoter_bq_subscription_message_retention_duration" {
   description = "How long to retain unacknowledged messages in the subscription's backlog"
-  type = string
+  type        = string
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Service issuing unnecessary API Calls)
   # It also sets how long should we keep trying to process one run
   # min value must be at least equal to the ack_deadline_seconds
@@ -286,7 +275,7 @@ variable "snapshoter_bq_subscription_message_retention_duration" {
 # snapshoter_gcs settings.
 variable "snapshoter_gcs_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
-  type = number
+  type        = number
   // GCS snapshoter might take relatively long time for export jobs
   // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
   default = 540 # 9m
@@ -294,7 +283,7 @@ variable "snapshoter_gcs_service_timeout_seconds" {
 
 variable "snapshoter_gcs_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
-  type = number
+  type        = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
   // range [10,600] seconds
   default = 600 # 10m
@@ -302,7 +291,7 @@ variable "snapshoter_gcs_subscription_ack_deadline_seconds" {
 
 variable "snapshoter_gcs_subscription_message_retention_duration" {
   description = "How long to retain unacknowledged messages in the subscription's backlog"
-  type = string
+  type        = string
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Service issuing unnecessary API Calls)
   # It also sets how long should we keep trying to process one run
   # min value must be at least equal to the ack_deadline_seconds
@@ -313,14 +302,14 @@ variable "snapshoter_gcs_subscription_message_retention_duration" {
 # Tagger settings.
 variable "tagger_service_timeout_seconds" {
   description = "Max period for the cloud run service to complete a request. Otherwise, it terminates with HTTP 504 and NAK to PubSub (retry)"
-  type = number
+  type        = number
   // this should be lower than subscription_ack_deadline_seconds to avoid retrying messages that are still processing
   default = 540 # 9m
 }
 
 variable "tagger_subscription_ack_deadline_seconds" {
   description = "This value is the maximum time after a subscriber receives a message before the subscriber should acknowledge the message. If it timeouts without ACK PubSub will retry the message."
-  type = number
+  type        = number
   // This should be higher than the service_timeout_seconds to avoid retrying messages that are still processing
   // range [10,600] seconds
   default = 600 # 10m
@@ -328,7 +317,7 @@ variable "tagger_subscription_ack_deadline_seconds" {
 
 variable "tagger_subscription_message_retention_duration" {
   description = "How long to retain unacknowledged messages in the subscription's backlog"
-  type = string
+  type        = string
   # In case of unexpected problems we want to avoid a buildup that re-trigger functions (e.g. Tagger issuing unnecessary BQ queries)
   # It also sets how long should we keep trying to process one run
   # min value must be at least equal to the ack_deadline_seconds
@@ -341,36 +330,32 @@ variable "schedulers" {
     name = string,
     cron = string,
     payload = object({
-      is_force_run = bool,
-      is_dry_run = bool,
-      folders_include_list = list(number),
+      is_force_run          = bool,
+      is_dry_run            = bool,
+      folders_include_list  = list(number),
       projects_include_list = list(string),
       projects_exclude_list = list(string),
       datasets_include_list = list(string),
       datasets_exclude_list = list(string),
-      tables_include_list = list(string),
-      tables_exclude_list = list(string),
+      tables_include_list   = list(string),
+      tables_exclude_list   = list(string),
     })
   }))
 }
 
 variable "fallback_policy" {
   type = object({
-    default_policy = map(string),
-    folder_overrides = map(map(string)),
+    default_policy    = map(string),
+    folder_overrides  = map(map(string)),
     project_overrides = map(map(string)),
     dataset_overrides = map(map(string)),
-    table_overrides = map(map(string)),
+    table_overrides   = map(map(string)),
   })
 }
 
 // make sure that you include all projects in this list while calling /scripts/prepare_backup_projects.sh to grant terraform SA permissions to deploy resources there
 variable "additional_backup_projects" {
-  type = list(string)
+  type        = list(string)
   description = "Projects were backup operations will run but not defined in the fallback policy (e.g. in Tag policies). Used to deploy required resources on these projects."
+  default     = []
 }
-
-
-
-
-

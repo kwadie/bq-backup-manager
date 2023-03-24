@@ -5,13 +5,13 @@ locals {
 }
 
 resource "google_cloud_run_service" "service" {
-  project = var.project
-  name = var.service_name
+  project  = var.project
+  name     = var.service_name
   location = var.region
 
   template {
     spec {
-      timeout_seconds = var.timeout_seconds
+      timeout_seconds      = var.timeout_seconds
       service_account_name = var.service_account_email
 
       container_concurrency = var.max_requests_per_container
@@ -21,15 +21,15 @@ resource "google_cloud_run_service" "service" {
 
         resources {
           limits = {
-            "memory": var.max_memory
-            "cpu": var.max_cpu
+            "memory" : var.max_memory
+            "cpu" : var.max_cpu
           }
         }
 
-        dynamic env {
+        dynamic "env" {
           for_each = var.environment_variables
           content {
-            name = env.value["name"]
+            name  = env.value["name"]
             value = env.value["value"]
           }
         }
@@ -37,15 +37,16 @@ resource "google_cloud_run_service" "service" {
 
         # Hack to force terraform to re-deploy this service (e.g. update latest image)
         env {
-          name = "TERRAFORM_UPDATED_AT"
+          name  = "TERRAFORM_UPDATED_AT"
           value = local.timestamp
         }
       }
     }
     metadata {
       annotations = {
-        "autoscaling.knative.dev/maxScale"  = var.max_containers
-        #"run.googleapis.com/ingress" : "internal"
+        "autoscaling.knative.dev/maxScale"        = var.max_containers
+        "run.googleapis.com/vpc-access-connector" = var.vpc_access_connector
+        "run.googleapis.com/vpc-access-egress"    = "all-traffic"
       }
     }
   }
@@ -58,7 +59,7 @@ resource "google_cloud_run_service" "service" {
   }
 
   traffic {
-    percent = 100
+    percent         = 100
     latest_revision = true
   }
 }
@@ -66,9 +67,9 @@ resource "google_cloud_run_service" "service" {
 ### Service X Tasks SA must be able to invoke Service X  ####
 resource "google_cloud_run_service_iam_member" "sa_invoker" {
 
-  project = google_cloud_run_service.service.project
+  project  = google_cloud_run_service.service.project
   location = google_cloud_run_service.service.location
-  service = google_cloud_run_service.service.name
-  role = "roles/run.invoker"
-  member = "serviceAccount:${var.invoker_service_account_email}"
+  service  = google_cloud_run_service.service.name
+  role     = "roles/run.invoker"
+  member   = "serviceAccount:${var.invoker_service_account_email}"
 }

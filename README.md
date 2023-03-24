@@ -339,7 +339,7 @@ All exclusion lists accept regular expressions in the form "regex:<regular expre
 If the fully qualified entry name (e.g. project.dataset.table) matches any of the supplied regex, it will be excluded from the backup scope. 
 Some common use cases would be:
 * Excluding all "<xyz>_landing" datasets: `datasets_exclude_list = ["regex:.*\\_landing$"]`
-* Excluding all tables ending with _test, _tst, _bkp or _copy: `tables_exclude_list = ["regex:.*\_(test|tst|bkp|copy)"]`
+* Excluding all tables ending with _test, _tst, _bkp or _copy: `tables_exclude_list = ["regex:.*\\_(test|tst|bkp|copy)"]`
 
 
 ##### Fallback Policies

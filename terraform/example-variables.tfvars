@@ -1,9 +1,6 @@
-project        = "<host project name>"
-compute_region = "<gcp region>"
-data_region    = "<gcp region including multi-regions eu|us>"
-
-cloud_scheduler_account = "service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
-
+project                   = "<host project name>"
+compute_region            = "<gcp region>"
+data_region               = "<gcp region including multi-regions eu|us>"
 terraform_service_account = "bq-backup-mgr-terraform@<host project name>.iam.gserviceaccount.com"
 
 dispatcher_service_image     = "<compute region>-docker.pkg.dev/<host project>/<docker repo>/bqsm-dispatcher-service:latest"
@@ -14,8 +11,8 @@ tagger_service_image         = "<compute region>-docker.pkg.dev/<host project>/<
 
 schedulers = [
   {
-    name    = "heart_beat"
-    cron    = "0 * * * *" # hourly
+    name = "heart_beat"
+    cron = "0 * * * *" # hourly
     payload = {
       is_force_run = false
       is_dry_run   = false

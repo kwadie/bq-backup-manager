@@ -20,58 +20,50 @@ set -e
 for project in "$@"
 do
 
-  echo "Preparing data project ${project} .."
+   echo "Preparing data project ${project} .."
 
-  echo "Preparing Dispatcher SA permissions on data project ${project} .."
-  # Dispatcher permissions
-  # Dispatcher needs to list datasets and tables in a project and know the location of datasets
-  gcloud projects add-iam-policy-binding "${project}" \
+   echo "Preparing Dispatcher SA permissions on data project ${project} .."
+   # Dispatcher permissions
+   # Dispatcher needs to list datasets and tables in a project and know the location of datasets
+   gcloud projects add-iam-policy-binding "${project}" \
       --member="serviceAccount:${SA_DISPATCHER_EMAIL}" \
-     --role="roles/bigquery.metadataViewer"
+      --role="roles/bigquery.metadataViewer"
 
-  echo "Preparing Configurator SA permissions on data project ${project} .."
+   echo "Preparing Configurator SA permissions on data project ${project} .."
 
-  # Configurator permissions
-  gcloud projects add-iam-policy-binding "${project}" \
-    --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
-    --role="roles/bigquery.metadataViewer"
+   # Configurator permissions
+   gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
+      --role="roles/bigquery.metadataViewer"
 
-  gcloud projects add-iam-policy-binding "${project}" \
-    --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
-    --role="roles/datacatalog.viewer"
+   gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${SA_CONFIGURATOR_EMAIL}" \
+      --role="roles/datacatalog.viewer"
 
-  echo "Preparing BQ Snapshoter SA permissions on data project ${project} .."
+   echo "Preparing BQ Snapshoter SA permissions on data project ${project} .."
 
-  # BigQuery Snapshoter needs to create snapshot jobs and read table data
-  gcloud projects add-iam-policy-binding "${project}" \
-     --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
-     --role="roles/bigquery.jobUser"
+   # BigQuery Snapshoter needs to read table data
+   gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
+      --role="roles/bigquery.dataViewer"
 
-  gcloud projects add-iam-policy-binding "${project}" \
-     --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
-     --role="roles/bigquery.dataViewer"
+   # GCS Snapshoter needs to read table datas
+   gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
+      --role="roles/bigquery.dataViewer"
 
-    # GCS Snapshoter needs to create snapshot jobs and read table data
-    gcloud projects add-iam-policy-binding "${project}" \
-       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
-       --role="roles/bigquery.jobUser"
+   # Tagger roles
 
-    gcloud projects add-iam-policy-binding "${project}" \
-       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
-       --role="roles/bigquery.dataViewer"
+   echo "Preparing Tagger SA permissions on data project ${project} .."
 
-  # Tagger roles
+   # Provides access to modify tags on Google Cloud assets for BigQuery
+   gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${SA_TAGGER_EMAIL}" \
+      --role="roles/datacatalog.tagEditor"
 
-  echo "Preparing Tagger SA permissions on data project ${project} .."
-
-  # Provides access to modify tags on Google Cloud assets for BigQuery
-  gcloud projects add-iam-policy-binding "${project}" \
-     --member="serviceAccount:${SA_TAGGER_EMAIL}" \
-     --role="roles/datacatalog.tagEditor"
-
-  # to lookup meta data (e.g. tags)
-  gcloud projects add-iam-policy-binding "${project}" \
-    --member="serviceAccount:${SA_TAGGER_EMAIL}" \
-    --role="roles/bigquery.metadataViewer"
+   # to lookup meta data (e.g. tags)
+   gcloud projects add-iam-policy-binding "${project}" \
+      --member="serviceAccount:${SA_TAGGER_EMAIL}" \
+      s--role="roles/bigquery.metadataViewer"
 
 done
