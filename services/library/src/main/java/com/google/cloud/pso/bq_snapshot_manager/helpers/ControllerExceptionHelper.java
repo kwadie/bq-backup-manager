@@ -80,6 +80,15 @@ public class ControllerExceptionHelper {
                         String.format("Retryable: 'code' = %s assignable from BigQueryException",
                                 bigQueryException.getCode()));
             }
+
+            // handling transit internalError https://cloud.google.com/bigquery/docs/error-messages#errortable
+            if (bigQueryException.getReason() != null && bigQueryException.getReason().equals("internalError")
+            ) {
+                return new ThrowableInfo(throwable,
+                        true,
+                        String.format("Retryable: 'reason' = %s assignable from BigQueryException",
+                                bigQueryException.getReason()));
+            }
         }
 
         // BaseServiceException Thrown by BigQuery
