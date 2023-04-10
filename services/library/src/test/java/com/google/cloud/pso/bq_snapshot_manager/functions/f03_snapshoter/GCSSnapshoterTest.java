@@ -70,6 +70,7 @@ public class GCSSnapshoterTest {
                 TimeTravelOffsetDays.DAYS_3,
                 BackupConfigSource.SYSTEM,
                 "project")
+                .setBackupOperationProject("project")
                 .setGcsSnapshotStorageLocation("gs://backups")
                 .setGcsExportFormat(GCSSnapshotFormat.AVRO_SNAPPY)
                 .setGcsUseAvroLogicalTypes(true)

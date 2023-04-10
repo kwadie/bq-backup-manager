@@ -386,21 +386,22 @@ There are different sets of policy fields depending on the backup method:
 
 ##### Required Policy Fields
 
-| Field                   | Description                                                                                                                                                                                                                                                     |
-|-------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `backup_cron`                  | A CRON expression to set the frequency in which a table is backed up. This must be a [Spring-Framwork compatible](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) CRON expression. |
+| Field                            | Description                                                                                                                                                                                                                                                     |
+|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `backup_cron`                    | A CRON expression to set the frequency in which a table is backed up. This must be a [Spring-Framwork compatible](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) CRON expression. |
 | `backup_method`                  | One method from `BigQuery Snapshot`, `GCS Snapshot` or `Both`. One must then provide the required fields for each chosen backup method as shown below.                                                                                                          |
-| `backup_time_travel_offset_days`          | A `string` value with the number of days that determines a previous point of time to backup the table from. Values allowed are `0` to `7`.                                                                                                                      | 
-| `backup_project`            | The project name on which all snapshot and export operations are performed. This also the project that contains the BigQuery dataset or the GCS bucket to store snapshots.                                                                                      | 
+| `backup_time_travel_offset_days` | A `string` value with the number of days that determines a previous point of time to backup the table from. Values allowed are `0` to `7`.                                                                                                                      | 
+| `backup_storage_project`         | Project ID on which all snapshot and export operations are stored. This is the project where the bq_snapshot_storage_dataset and/or gcs_snapshot_storage_location resides.                                                                                      |
+| `backup_operation_project`       | Project ID on which all snapshot and export operations will run. Snapshot and Export job quotas and limits will be against this project. This could be the same value as backup_storage_project.                                                                |                                                                                                                                                                                        
 
 ##### BigQuery Snapshot Policy Fields
 
 One must set the below fields when choosing the `BigQuery Snapshot` or `Both` backup_method:
 
-| Field                   | Description                                                                                   |
-|-------------------------|-----------------------------------------------------------------------------------------------|
-| `bq_snapshot_storage_dataset`                  | A dataset name to store snapshots to. The dataset must already exist in the `backup_project`. |
-| `bq_snapshot_expiration_days`                  | A `string` value representing the number of days to keep each snapshot.                       |
+| Field                   | Description                                                                                           |
+|-------------------------|-------------------------------------------------------------------------------------------------------|
+| `bq_snapshot_storage_dataset`                  | A dataset name to store snapshots to. The dataset must already exist in the `backup_storage_project`. |
+| `bq_snapshot_expiration_days`                  | A `string` value representing the number of days to keep each snapshot.                               |
 
 ##### GCS Snapshot Policy Fields
 
@@ -424,32 +425,32 @@ BigQuery Types to Avro Logical Types mapping:
 
 ##### Configure Backup Projects
 
-###### Additional Backup Projects
+###### Additional Backup Operation Projects
 
 Terraform needs to deploy resources to the backup projects where the backup operations will run. For example, log
 sinks that send notifications to the Tagger once a backup operation has completed.
 
-By default, all projects listed in the `backup_project` field in the fallback policy will be automatically included.
+By default, all projects listed in the `backup_operation_project` field in the fallback policy will be automatically included.
 However, for additional backup projects such as the ones defined in external configuration (i.e. table backup policy tags),
 one must add them to the below list.
 
 ```
-additional_backup_projects = ["project1", "project2", ..]
+additional_backup_operation_projects = ["project1", "project2", ..]
 ```
 
 If you're only using the fallback backup policy and without table-level external policies, you can set this variable to an empty list `[]`
 
 ###### Configure Terraform SA permissions on Backup Projects
 
-In order for Terraform to deploy resources on the backup projects (configured in the previous step), the service account
+In order for Terraform to deploy resources on the backup operation projects (configured in the previous step), the service account
 used by Terraform must have the required permissions on these projects. To do so, run the following command:
 
 ```shell
-./scripts/prepare_backup_projects_for_terraform.sh <project1> <project2> <etc>
+./scripts/prepare_backup_operation_projects_for_terraform.sh <project1> <project2> <etc>
 ```
 
-The list of projects must include all projects you're planning to store backups in. This includes all projects listed under the `backup_project` 
-field in the fallback policy, plus the ones included in the `additional_backup_projects` Terraform variable. 
+The list of projects must include all projects you're planning to run backup operations in. This includes all projects listed under the 
+`backup_operation_project` field in the fallback policy, plus the ones included in the `additional_backup_operation_projects` Terraform variable. 
 
 #### Terraform Deployment
 
@@ -492,23 +493,27 @@ To do so, run the following script from the project root folder:
 
 ##### Prepare Source and Destination Projects
 
-To enable the application to take backup of tables in "data projects" (i.e. source projects) and store them
-under "backup projects" (i.e. destination projects) one must grant a number of permissions on each of these project.  
+To enable the application to take backup of tables in "data projects" (i.e. source projects), run backup operations on "data operation projects"
+and store them under "backup storage projects" (i.e. destination projects) one must grant a number of permissions on each of these project.  
 
 To do so, run the following script from the project root folder:
 
 ```shell
 ./scripts/prepare_data_projects.sh <project1> <project2> <etc>
 
-./scripts/prepare_backup_projects.sh <project1> <project2> <etc>
+./scripts/prepare_backup_storage_projects.sh <project1> <project2> <etc>
+
+./scripts/prepare_backup_operation_projects.sh <project1> <project2> <etc>
 ```
 
 PS: 
 * Update the SA emails if the default names have been changed in Terraform  
 * If you have tables to be backed-up in the host project, run the above script and include the host project in the list
 * For data projects, use the same projects listed in all the `include lists` in the Terraform variable `schedulers`
-* For backup projects, use the same projects listed in all the `backup_project` fields in the Terraform variable `fallback_policy` and in the manually attached templates.
-* If a project is used both as the source and destination, include the project in both scripts     
+* For backup storage projects, use the same projects listed in all the `backup_storage_project` fields in the Terraform variable `fallback_policy` and in the manually attached backup tag-templates.
+* For backup operation projects, use the same projects listed in all the `backup_operation_project` fields in the Terraform variable `fallback_policy` and in the manually attached backup tag-templates.
+* If a project is used both as the source and destination, include the project in all scripts   
+* If a project is used both as the `backup_storage_project` and `backup_operation_project`, include the project in both respective scripts
 
 ##### Target tables with policy tags
 
@@ -554,7 +559,8 @@ export TAG="{
 'backup_cron' : '0 0 0 1 1 1',
 'backup_method' : 'Both',
 'backup_time_travel_offset_days' : '3',
-'backup_project' : 'backup_project_name',
+'backup_storage_project' : 'backup_project_name',
+'backup_operation_project' : 'backup_project_name',
 'gcs_snapshot_storage_location' : 'gs://backup-bucket',
 'gcs_snapshot_format' : 'AVRO_SNAPPY',
 'gcs_avro_use_logical_types' : true,
@@ -640,6 +646,6 @@ AND jsonPayload.unified_component = "2"
 ```
 
 ## Limits
-* Each `backup_project` can run up to 50,000 table snapshot jobs per day.
-* Each `backup_project` can run 100,000 export jobs per day (e.g. to GCS). Could be extended by slot reservation.
-* Each `backup_project` can export 50 TB per day for free using the shared slots pool (e.g. to GCS). Could be extended by slot reservation.
+* Each `backup_operation_project` can run up to 50,000 table snapshot jobs per day.
+* Each `backup_operation_project` can run 100,000 export jobs per day (e.g. to GCS). Could be extended by slot reservation.
+* Each `backup_operation_project` can export 50 TB per day for free using the shared slots pool (e.g. to GCS). Could be extended by slot reservation.

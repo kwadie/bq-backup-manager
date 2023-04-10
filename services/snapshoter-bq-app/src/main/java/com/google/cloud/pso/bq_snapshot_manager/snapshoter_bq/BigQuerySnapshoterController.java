@@ -96,8 +96,7 @@ public class BigQuerySnapshoterController {
 
             BigQuerySnapshoter snapshoter = new BigQuerySnapshoter(
                     environment.toConfig(),
-                    // run BQ snapshot jobs on the backup project
-                    new BigQueryServiceImpl( snapshoterRequest.getBackupPolicy().getBackupProject()),
+                    new BigQueryServiceImpl(snapshoterRequest.computeBackupOperationProject()),
                     new PubSubServiceImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
                     "snapshoter-bq-flags",

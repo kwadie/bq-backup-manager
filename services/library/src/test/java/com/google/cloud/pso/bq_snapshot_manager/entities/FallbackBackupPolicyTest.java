@@ -23,7 +23,8 @@ public class FallbackBackupPolicyTest {
                 "    \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "    \"backup_time_travel_offset_days\": \"0\",\n" +
                 "    \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "    \"backup_project\": \"project\",\n" +
+                "    \"backup_storage_project\": \"project\",\n" +
+                "    \"backup_operation_project\": \"project\",\n" +
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -34,7 +35,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "    \"backup_storage_project\": \"project\",\n" +
+                "    \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -44,7 +46,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "    \"backup_storage_project\": \"project\",\n" +
+                "    \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -56,7 +59,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"project\",\n" +
+                "      \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -66,7 +70,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"project\",\n" +
+                "      \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -78,7 +83,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"project\",\n" +
+                "      \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -88,7 +94,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"project\",\n" +
+                "      \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -100,7 +107,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"project\",\n" +
+                "      \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -110,7 +118,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"project\",\n" +
+                "      \"backup_operation_project\": \"project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -122,7 +131,9 @@ public class FallbackBackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.SYSTEM,
-                "project")
+                "project"
+        )
+                .setBackupOperationProject("project")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("dataset")
                 .setGcsSnapshotStorageLocation("gs://bla/")
@@ -131,20 +142,20 @@ public class FallbackBackupPolicyTest {
         FallbackBackupPolicy expected = new FallbackBackupPolicy(
                 testPolicy,
                 Stream.of(
-                        new AbstractMap.SimpleEntry<>("folder1", testPolicy),
-                        new AbstractMap.SimpleEntry<>("folder2", testPolicy))
+                                new AbstractMap.SimpleEntry<>("folder1", testPolicy),
+                                new AbstractMap.SimpleEntry<>("folder2", testPolicy))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
                 Stream.of(
-                        new AbstractMap.SimpleEntry<>("project1", testPolicy),
-                        new AbstractMap.SimpleEntry<>("project2", testPolicy))
+                                new AbstractMap.SimpleEntry<>("project1", testPolicy),
+                                new AbstractMap.SimpleEntry<>("project2", testPolicy))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
                 Stream.of(
-                        new AbstractMap.SimpleEntry<>("dataset1", testPolicy),
-                        new AbstractMap.SimpleEntry<>("dataset2", testPolicy))
+                                new AbstractMap.SimpleEntry<>("dataset1", testPolicy),
+                                new AbstractMap.SimpleEntry<>("dataset2", testPolicy))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
                 Stream.of(
-                        new AbstractMap.SimpleEntry<>("table1", testPolicy),
-                        new AbstractMap.SimpleEntry<>("table2", testPolicy))
+                                new AbstractMap.SimpleEntry<>("table1", testPolicy),
+                                new AbstractMap.SimpleEntry<>("table2", testPolicy))
                         .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue))
         );
 

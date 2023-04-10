@@ -1,6 +1,5 @@
 package com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy;
 
-import com.google.api.client.util.Data;
 import com.google.cloud.Timestamp;
 import com.google.cloud.datacatalog.v1.Tag;
 import com.google.cloud.datacatalog.v1.TagField;
@@ -8,8 +7,6 @@ import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.common.base.Objects;
 import com.google.gson.Gson;
 
-import javax.annotation.Nonnull;
-import javax.annotation.Nullable;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
@@ -21,7 +18,9 @@ public class BackupPolicy {
     private final TimeTravelOffsetDays timeTravelOffsetDays;
 
     private final Double bigQuerySnapshotExpirationDays;
-    private final String backupProject;
+    private final String backupStorageProject;
+
+    private final String backupOperationProject;
     private final String bigQuerySnapshotStorageDataset;
     private final String gcsSnapshotStorageLocation;
     private final GCSSnapshotFormat gcsExportFormat;
@@ -54,7 +53,8 @@ public class BackupPolicy {
         this.method = builder.method;
         this.timeTravelOffsetDays = builder.timeTravelOffsetDays;
         this.bigQuerySnapshotExpirationDays = builder.bigQuerySnapshotExpirationDays;
-        this.backupProject = builder.backupProject;
+        this.backupStorageProject = builder.backupStorageProject;
+        this.backupOperationProject = builder.backupOperationProject;
         this.bigQuerySnapshotStorageDataset = builder.bigQuerySnapshotStorageDataset;
         this.gcsSnapshotStorageLocation = builder.gcsSnapshotStorageLocation;
         this.gcsExportFormat = builder.gcsExportFormat;
@@ -84,8 +84,8 @@ public class BackupPolicy {
         if (builder.configSource == null) {
             missingRequired.add(DataCatalogBackupPolicyTagFields.config_source);
         }
-        if (builder.backupProject == null) {
-            missingRequired.add(DataCatalogBackupPolicyTagFields.backup_project);
+        if (builder.backupStorageProject == null) {
+            missingRequired.add(DataCatalogBackupPolicyTagFields.backup_storage_project);
         }
 
         // if required params are missing return and don't continue with other checks
@@ -149,8 +149,12 @@ public class BackupPolicy {
         return bigQuerySnapshotExpirationDays;
     }
 
-    public String getBackupProject() {
-        return backupProject;
+    public String getBackupStorageProject() {
+        return backupStorageProject;
+    }
+
+    public String getBackupOperationProject() {
+        return backupOperationProject;
     }
 
     public String getBigQuerySnapshotStorageDataset() {
@@ -209,7 +213,8 @@ public class BackupPolicy {
                 ", method=" + method +
                 ", timeTravelOffsetDays=" + timeTravelOffsetDays +
                 ", bigQuerySnapshotExpirationDays=" + bigQuerySnapshotExpirationDays +
-                ", backupProject='" + backupProject + '\'' +
+                ", backupStorageProject='" + backupStorageProject + '\'' +
+                ", backupOperationProject='" + backupOperationProject + '\'' +
                 ", bigQuerySnapshotStorageDataset='" + bigQuerySnapshotStorageDataset + '\'' +
                 ", gcsSnapshotStorageLocation='" + gcsSnapshotStorageLocation + '\'' +
                 ", gcsExportFormat=" + gcsExportFormat +
@@ -228,12 +233,12 @@ public class BackupPolicy {
         if (this == o) return true;
         if (o == null || getClass() != o.getClass()) return false;
         BackupPolicy that = (BackupPolicy) o;
-        return Objects.equal(cron, that.cron) && method == that.method && timeTravelOffsetDays == that.timeTravelOffsetDays && Objects.equal(bigQuerySnapshotExpirationDays, that.bigQuerySnapshotExpirationDays) && Objects.equal(backupProject, that.backupProject) && Objects.equal(bigQuerySnapshotStorageDataset, that.bigQuerySnapshotStorageDataset) && Objects.equal(gcsSnapshotStorageLocation, that.gcsSnapshotStorageLocation) && gcsExportFormat == that.gcsExportFormat && Objects.equal(gcsCsvDelimiter, that.gcsCsvDelimiter) && Objects.equal(gcsCsvExportHeader, that.gcsCsvExportHeader) && Objects.equal(gcsUseAvroLogicalTypes, that.gcsUseAvroLogicalTypes) && configSource == that.configSource && Objects.equal(lastBackupAt, that.lastBackupAt) && Objects.equal(lastBqSnapshotStorageUri, that.lastBqSnapshotStorageUri) && Objects.equal(lastGcsSnapshotStorageUri, that.lastGcsSnapshotStorageUri);
+        return Objects.equal(cron, that.cron) && method == that.method && timeTravelOffsetDays == that.timeTravelOffsetDays && Objects.equal(bigQuerySnapshotExpirationDays, that.bigQuerySnapshotExpirationDays) && Objects.equal(backupStorageProject, that.backupStorageProject) && Objects.equal(bigQuerySnapshotStorageDataset, that.bigQuerySnapshotStorageDataset) && Objects.equal(gcsSnapshotStorageLocation, that.gcsSnapshotStorageLocation) && gcsExportFormat == that.gcsExportFormat && Objects.equal(gcsCsvDelimiter, that.gcsCsvDelimiter) && Objects.equal(gcsCsvExportHeader, that.gcsCsvExportHeader) && Objects.equal(gcsUseAvroLogicalTypes, that.gcsUseAvroLogicalTypes) && configSource == that.configSource && Objects.equal(lastBackupAt, that.lastBackupAt) && Objects.equal(lastBqSnapshotStorageUri, that.lastBqSnapshotStorageUri) && Objects.equal(lastGcsSnapshotStorageUri, that.lastGcsSnapshotStorageUri);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hashCode(cron, method, timeTravelOffsetDays, bigQuerySnapshotExpirationDays, backupProject, bigQuerySnapshotStorageDataset, gcsSnapshotStorageLocation, gcsExportFormat, gcsCsvDelimiter, gcsCsvExportHeader, gcsUseAvroLogicalTypes, configSource, lastBackupAt, lastBqSnapshotStorageUri, lastGcsSnapshotStorageUri);
+        return Objects.hashCode(cron, method, timeTravelOffsetDays, bigQuerySnapshotExpirationDays, backupStorageProject, bigQuerySnapshotStorageDataset, gcsSnapshotStorageLocation, gcsExportFormat, gcsCsvDelimiter, gcsCsvExportHeader, gcsUseAvroLogicalTypes, configSource, lastBackupAt, lastBqSnapshotStorageUri, lastGcsSnapshotStorageUri);
     }
 
     /**
@@ -270,9 +275,15 @@ public class BackupPolicy {
                                         .build())
                         .build());
 
-        //required: backup project
-        TagField backupProjectField = TagField.newBuilder().setStringValue(backupProject).build();
-        tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_project.toString(), backupProjectField);
+        //required: backup storage project
+        TagField backupStorageProjectField = TagField.newBuilder().setStringValue(backupStorageProject).build();
+        tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_storage_project.toString(), backupStorageProjectField);
+
+        //optional: backup operation project
+        if(backupOperationProject != null){
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_operation_project.toString(),
+                    TagField.newBuilder().setStringValue(backupOperationProject).build());
+        }
 
         // optional: bq snapshot expiration
         if (bigQuerySnapshotExpirationDays != null) {
@@ -380,7 +391,7 @@ public class BackupPolicy {
                 Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days.toString())
         );
 
-        String backupProject = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_project.toString());
+        String backupStorageProject = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_storage_project.toString());
 
         // config source is not required in the fallback policies. It defaults to SYSTEM if not present
         String configSourceStr = tagTemplate.getOrDefault(
@@ -389,12 +400,18 @@ public class BackupPolicy {
 
         BackupConfigSource configSource = configSourceStr == null ? BackupConfigSource.SYSTEM : BackupConfigSource.fromString(configSourceStr);
 
-
-        BackupPolicyBuilder backupPolicyBuilder = new BackupPolicyBuilder(cron, method, timeTravelOffsetDays, configSource, backupProject);
-
+        BackupPolicyBuilder backupPolicyBuilder = new BackupPolicyBuilder(cron, method, timeTravelOffsetDays, configSource, backupStorageProject);
 
         // parse optional fields
         // these fields might not exist in the attached tag template if not filled. Same for fallback policies
+
+        backupPolicyBuilder.setBackupOperationProject(
+                tagTemplate.getOrDefault(
+                        DataCatalogBackupPolicyTagFields.backup_operation_project.toString(),
+                        null
+                )
+        );
+
         backupPolicyBuilder.setBigQuerySnapshotStorageDataset(
                 tagTemplate.getOrDefault(
                         DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString(),
@@ -407,7 +424,6 @@ public class BackupPolicy {
         backupPolicyBuilder.setBigQuerySnapshotExpirationDays(
                 bqSnapshotExpirationDaysStr == null? null: Double.parseDouble(bqSnapshotExpirationDaysStr)
         );
-
 
         // parse optional GCS snapshot settings
         backupPolicyBuilder.setGcsSnapshotStorageLocation(
@@ -473,7 +489,11 @@ public class BackupPolicy {
         private BackupMethod method;
         private TimeTravelOffsetDays timeTravelOffsetDays;
         private BackupConfigSource configSource;
-        private String backupProject;
+        // project where the backup will be stored
+        private String backupStorageProject;
+
+        // project where operations will run (e.g. snapshot, export, etc)
+        private String backupOperationProject;
 
         // optional
         private Double bigQuerySnapshotExpirationDays;
@@ -494,8 +514,9 @@ public class BackupPolicy {
                     backupPolicy.method,
                     backupPolicy.timeTravelOffsetDays,
                     backupPolicy.configSource,
-                    backupPolicy.backupProject
+                    backupPolicy.backupStorageProject
             ).setBigQuerySnapshotExpirationDays(backupPolicy.bigQuerySnapshotExpirationDays)
+                    .setBackupOperationProject(backupPolicy.backupOperationProject)
                     .setBigQuerySnapshotStorageDataset(backupPolicy.bigQuerySnapshotStorageDataset)
                     .setGcsSnapshotStorageLocation(backupPolicy.gcsSnapshotStorageLocation)
                     .setGcsExportFormat(backupPolicy.gcsExportFormat)
@@ -507,12 +528,12 @@ public class BackupPolicy {
                     .setLastGcsSnapshotStorageUri(backupPolicy.lastGcsSnapshotStorageUri);
         }
 
-        public BackupPolicyBuilder(String cron, BackupMethod method, TimeTravelOffsetDays timeTravelOffsetDays, BackupConfigSource configSource, String backupProject){
+        public BackupPolicyBuilder(String cron, BackupMethod method, TimeTravelOffsetDays timeTravelOffsetDays, BackupConfigSource configSource, String backupStorageProject){
             this.cron = cron;
             this.method = method;
             this.timeTravelOffsetDays = timeTravelOffsetDays;
             this.configSource = configSource;
-            this.backupProject = backupProject;
+            this.backupStorageProject = backupStorageProject;
         }
 
         public BackupPolicyBuilder setLastBackupAt(Timestamp lastBackupAt) {
@@ -527,6 +548,11 @@ public class BackupPolicy {
 
         public BackupPolicyBuilder setLastGcsSnapshotStorageUri(String lastGcsSnapshotStorageUri) {
             this.lastGcsSnapshotStorageUri = lastGcsSnapshotStorageUri;
+            return this;
+        }
+
+        public BackupPolicyBuilder  setBackupOperationProject(String backupOperationProject) {
+            this.backupOperationProject = backupOperationProject;
             return this;
         }
 
@@ -550,8 +576,8 @@ public class BackupPolicy {
             return this;
         }
 
-        public BackupPolicyBuilder setBackupProject(String backupProject) {
-            this.backupProject = backupProject;
+        public BackupPolicyBuilder setBackupStorageProject(String backupStorageProject) {
+            this.backupStorageProject = backupStorageProject;
             return this;
         }
 

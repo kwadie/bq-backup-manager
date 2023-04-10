@@ -11,7 +11,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "config_source"
     display_name = "Configuration Source"
-    order = 15
+    order = 16
     type {
       enum_type {
         allowed_values {
@@ -28,7 +28,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_cron"
     display_name = "Cron expression for backup frequency"
-    order = 14
+    order = 15
     type {
       primitive_type = "STRING"
     }
@@ -38,7 +38,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_time_travel_offset_days"
     display_name = "Number of days in the past where the backup is taken relative to NOW"
-    order = 13
+    order = 14
     type {
       enum_type {
         allowed_values {
@@ -73,7 +73,7 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   fields {
     field_id = "backup_method"
     display_name = "How to backup this table"
-    order = 12
+    order = 13
     type {
       enum_type {
         allowed_values {
@@ -91,13 +91,23 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
   }
 
   fields {
-    field_id = "backup_project"
-    display_name = "Project to run snapshot and export operations and store their results"
-    order = 11
+    field_id = "backup_storage_project"
+    display_name = "Project to store the backup on"
+    order = 12
     type {
       primitive_type = "STRING"
     }
     is_required = true
+  }
+
+  fields {
+    field_id = "backup_operation_project"
+    display_name = "Project to run the backup operations on. If not set default will be the source table project"
+    order = 11
+    type {
+      primitive_type = "STRING"
+    }
+    is_required = false
   }
 
   fields {
