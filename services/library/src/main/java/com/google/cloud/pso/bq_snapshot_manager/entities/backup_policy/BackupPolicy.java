@@ -87,9 +87,6 @@ public class BackupPolicy {
         if (builder.backupStorageProject == null) {
             missingRequired.add(DataCatalogBackupPolicyTagFields.backup_storage_project);
         }
-        if (builder.backupOperationProject == null) {
-            missingRequired.add(DataCatalogBackupPolicyTagFields.backup_operation_project);
-        }
 
         // if required params are missing return and don't continue with other checks
         if(!missingRequired.isEmpty()){
@@ -282,9 +279,11 @@ public class BackupPolicy {
         TagField backupStorageProjectField = TagField.newBuilder().setStringValue(backupStorageProject).build();
         tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_storage_project.toString(), backupStorageProjectField);
 
-        //required: backup operation project
-        TagField backupOperationProjectField = TagField.newBuilder().setStringValue(backupOperationProject).build();
-        tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_operation_project.toString(), backupOperationProjectField);
+        //optional: backup operation project
+        if(backupOperationProject != null){
+            tagBuilder.putFields(DataCatalogBackupPolicyTagFields.backup_operation_project.toString(),
+                    TagField.newBuilder().setStringValue(backupOperationProject).build());
+        }
 
         // optional: bq snapshot expiration
         if (bigQuerySnapshotExpirationDays != null) {
@@ -394,8 +393,6 @@ public class BackupPolicy {
 
         String backupStorageProject = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_storage_project.toString());
 
-        String backupOperationProject = Utils.getOrFail(tagTemplate, DataCatalogBackupPolicyTagFields.backup_operation_project.toString());
-
         // config source is not required in the fallback policies. It defaults to SYSTEM if not present
         String configSourceStr = tagTemplate.getOrDefault(
                 DataCatalogBackupPolicyTagFields.config_source.toString(),
@@ -403,12 +400,18 @@ public class BackupPolicy {
 
         BackupConfigSource configSource = configSourceStr == null ? BackupConfigSource.SYSTEM : BackupConfigSource.fromString(configSourceStr);
 
-
-        BackupPolicyBuilder backupPolicyBuilder = new BackupPolicyBuilder(cron, method, timeTravelOffsetDays, configSource, backupStorageProject, backupOperationProject);
-
+        BackupPolicyBuilder backupPolicyBuilder = new BackupPolicyBuilder(cron, method, timeTravelOffsetDays, configSource, backupStorageProject);
 
         // parse optional fields
         // these fields might not exist in the attached tag template if not filled. Same for fallback policies
+
+        backupPolicyBuilder.setBackupOperationProject(
+                tagTemplate.getOrDefault(
+                        DataCatalogBackupPolicyTagFields.backup_operation_project.toString(),
+                        null
+                )
+        );
+
         backupPolicyBuilder.setBigQuerySnapshotStorageDataset(
                 tagTemplate.getOrDefault(
                         DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset.toString(),
@@ -421,7 +424,6 @@ public class BackupPolicy {
         backupPolicyBuilder.setBigQuerySnapshotExpirationDays(
                 bqSnapshotExpirationDaysStr == null? null: Double.parseDouble(bqSnapshotExpirationDaysStr)
         );
-
 
         // parse optional GCS snapshot settings
         backupPolicyBuilder.setGcsSnapshotStorageLocation(
@@ -512,9 +514,9 @@ public class BackupPolicy {
                     backupPolicy.method,
                     backupPolicy.timeTravelOffsetDays,
                     backupPolicy.configSource,
-                    backupPolicy.backupStorageProject,
-                    backupPolicy.backupOperationProject
+                    backupPolicy.backupStorageProject
             ).setBigQuerySnapshotExpirationDays(backupPolicy.bigQuerySnapshotExpirationDays)
+                    .setBackupOperationProject(backupPolicy.backupOperationProject)
                     .setBigQuerySnapshotStorageDataset(backupPolicy.bigQuerySnapshotStorageDataset)
                     .setGcsSnapshotStorageLocation(backupPolicy.gcsSnapshotStorageLocation)
                     .setGcsExportFormat(backupPolicy.gcsExportFormat)
@@ -526,13 +528,12 @@ public class BackupPolicy {
                     .setLastGcsSnapshotStorageUri(backupPolicy.lastGcsSnapshotStorageUri);
         }
 
-        public BackupPolicyBuilder(String cron, BackupMethod method, TimeTravelOffsetDays timeTravelOffsetDays, BackupConfigSource configSource, String backupStorageProject, String backupOperationProject){
+        public BackupPolicyBuilder(String cron, BackupMethod method, TimeTravelOffsetDays timeTravelOffsetDays, BackupConfigSource configSource, String backupStorageProject){
             this.cron = cron;
             this.method = method;
             this.timeTravelOffsetDays = timeTravelOffsetDays;
             this.configSource = configSource;
             this.backupStorageProject = backupStorageProject;
-            this.backupOperationProject = backupOperationProject;
         }
 
         public BackupPolicyBuilder setLastBackupAt(Timestamp lastBackupAt) {

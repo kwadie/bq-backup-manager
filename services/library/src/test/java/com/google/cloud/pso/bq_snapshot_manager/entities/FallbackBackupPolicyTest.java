@@ -131,9 +131,9 @@ public class FallbackBackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.SYSTEM,
-                "project",
                 "project"
         )
+                .setBackupOperationProject("project")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("dataset")
                 .setGcsSnapshotStorageLocation("gs://bla/")

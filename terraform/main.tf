@@ -76,11 +76,11 @@ locals {
     }
   ]
 
-  fallback_policy_default_level_backup_op_project = lookup(lookup(var.fallback_policy, "default_policy") , "backup_operation_project")
-  fallback_policy_folder_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "folder_overrides"): lookup(v,"backup_operation_project")]
-  fallback_policy_project_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "project_overrides"): lookup(v,"backup_operation_project")]
-  fallback_policy_dataset_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "dataset_overrides"): lookup(v,"backup_operation_project")]
-  fallback_policy_table_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "table_overrides"): lookup(v,"backup_operation_project")]
+  fallback_policy_default_level_backup_op_project = lookup(lookup(var.fallback_policy, "default_policy") , "backup_operation_project", null)
+  fallback_policy_folder_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "folder_overrides"): lookup(v,"backup_operation_project", null)]
+  fallback_policy_project_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "project_overrides"): lookup(v,"backup_operation_project", null)]
+  fallback_policy_dataset_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "dataset_overrides"): lookup(v,"backup_operation_project", null)]
+  fallback_policy_table_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "table_overrides"): lookup(v,"backup_operation_project", null)]
   fallback_policy_backup_op_projects = distinct(concat(
     [local.fallback_policy_default_level_backup_op_project],
     local.fallback_policy_folder_level_backup_op_projects,
@@ -88,7 +88,7 @@ locals {
     local.fallback_policy_dataset_level_backup_op_projects,
     local.fallback_policy_table_level_backup_op_projects
   ))
-  all_backup_op_projects = distinct(concat(var.additional_backup_operation_projects, local.fallback_policy_backup_op_projects))
+  all_backup_op_projects = [for e in distinct(concat(var.additional_backup_operation_projects, local.fallback_policy_backup_op_projects)): e if e != null]
 
 }
 

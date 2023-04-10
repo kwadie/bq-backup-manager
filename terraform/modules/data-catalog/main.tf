@@ -102,12 +102,12 @@ resource "google_data_catalog_tag_template" "snapshot_tag_template" {
 
   fields {
     field_id = "backup_operation_project"
-    display_name = "Project to run the backup operations on"
+    display_name = "Project to run the backup operations on. If not set default will be the source table project"
     order = 11
     type {
       primitive_type = "STRING"
     }
-    is_required = true
+    is_required = false
   }
 
   fields {

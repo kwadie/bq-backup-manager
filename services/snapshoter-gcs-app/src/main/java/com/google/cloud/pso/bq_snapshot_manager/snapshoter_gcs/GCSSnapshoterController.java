@@ -98,7 +98,7 @@ public class GCSSnapshoterController {
 
             GCSSnapshoter snapshoter = new GCSSnapshoter(
                     environment.toConfig(),
-                    new BigQueryServiceImpl(snapshoterRequest.getBackupPolicy().getBackupOperationProject()),
+                    new BigQueryServiceImpl(snapshoterRequest.computeBackupOperationProject()),
                     new PubSubServiceImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
                     "snapshoter-gcs-flags",

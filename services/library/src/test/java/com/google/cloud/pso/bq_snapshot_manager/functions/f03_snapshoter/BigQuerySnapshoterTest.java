@@ -66,8 +66,8 @@ public class BigQuerySnapshoterTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_3,
                 BackupConfigSource.SYSTEM,
-                "backup-p",
                 "backup-p")
+                .setBackupOperationProject("backup-p")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("backup-d")
                 .setGcsSnapshotStorageLocation("gs://bucket/folder")

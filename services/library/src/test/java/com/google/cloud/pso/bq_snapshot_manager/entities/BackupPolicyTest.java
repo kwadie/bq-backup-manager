@@ -15,7 +15,7 @@ import static org.junit.Assert.assertEquals;
 public class BackupPolicyTest {
 
     @Test
-    public void testFromJson(){
+    public void testFromJson1(){
 
         String jsonPolicyStr = "{\n" +
                 "    \"backup_cron\": \"*****\",\n" +
@@ -34,9 +34,44 @@ public class BackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.SYSTEM,
-                "storage_project",
-                "operation_project"
+                "storage_project"
                 )
+                .setBackupOperationProject("operation_project")
+                .setBigQuerySnapshotExpirationDays(15.0)
+                .setBigQuerySnapshotStorageDataset("dataset")
+                .setGcsSnapshotStorageLocation("gs://bla/")
+                .setGcsExportFormat(GCSSnapshotFormat.AVRO)
+                .build();
+
+
+        BackupPolicy actual = BackupPolicy.fromJson(jsonPolicyStr);
+
+        assertEquals(expected, actual);
+    }
+
+    @Test
+    public void testFromJson2(){
+
+        String jsonPolicyStr = "{\n" +
+                "    \"backup_cron\": \"*****\",\n" +
+                "    \"backup_method\": \"BigQuery Snapshot\",\n" +
+                "    \"backup_time_travel_offset_days\": \"0\",\n" +
+                "    \"bq_snapshot_expiration_days\": \"15\",\n" +
+                "    \"backup_storage_project\": \"storage_project\",\n" +
+                //"    \"backup_operation_project\": \"operation_project\",\n" +
+                "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
+                "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
+                "    \"gcs_snapshot_format\": \"AVRO\",\n" +
+                "    \"config_source\": \"SYSTEM\"\n" +
+                "  }";
+
+        BackupPolicy expected = new BackupPolicy.BackupPolicyBuilder("*****",
+                BackupMethod.BIGQUERY_SNAPSHOT,
+                TimeTravelOffsetDays.DAYS_0,
+                BackupConfigSource.SYSTEM,
+                "storage_project"
+        )
+               // .setBackupOperationProject("operation_project")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("dataset")
                 .setGcsSnapshotStorageLocation("gs://bla/")
@@ -101,9 +136,9 @@ public class BackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.MANUAL,
-                "storage-project",
-                "operation-project"
+                "storage-project"
                 )
+                .setBackupOperationProject("operation_project")
                 .setBigQuerySnapshotExpirationDays(0.0)
                 .setBigQuerySnapshotStorageDataset("test-dataset")
                 .build();
@@ -136,8 +171,8 @@ public class BackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.MANUAL,
-                "storage-project",
-                "operation-project")
+                "storage-project")
+                .setBackupOperationProject("operation_project")
                 .setBigQuerySnapshotExpirationDays(0.0)
                 .setBigQuerySnapshotStorageDataset("test-dataset")
                 .setLastBqSnapshotStorageUri("last bq uri")
@@ -169,8 +204,8 @@ public class BackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.SYSTEM,
-                "storage-project",
-                "operation-project")
+                "storage-project")
+                .setBackupOperationProject("operation_project")
                 .setBigQuerySnapshotExpirationDays(0.0)
                 .setBigQuerySnapshotStorageDataset("test-dataset")
                 .build();
@@ -202,8 +237,8 @@ public class BackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.SYSTEM,
-                "storage-project",
-                "operation-project")
+                "storage-project")
+                .setBackupOperationProject("operation_project")
                 .setBigQuerySnapshotExpirationDays(0.0)
                 .setBigQuerySnapshotStorageDataset("test-dataset")
                 .setLastBackupAt(Timestamp.MAX_VALUE)
@@ -238,8 +273,8 @@ public class BackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.SYSTEM,
-                "storage-project",
-                "operation-project")
+                "storage-project")
+                .setBackupOperationProject("operation_project")
                 .setBigQuerySnapshotExpirationDays(0.0)
                 .setBigQuerySnapshotStorageDataset("test-dataset")
                 .setGcsSnapshotStorageLocation("test-bucket")
@@ -275,15 +310,14 @@ public class BackupPolicyTest {
     @Test
     public void testValidate_Required(){
 
-        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder(null,null,null,null,null, null);
+        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder(null,null,null,null,null);
         List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
         List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
                 DataCatalogBackupPolicyTagFields.backup_cron,
                 DataCatalogBackupPolicyTagFields.backup_method,
                 DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days,
                 DataCatalogBackupPolicyTagFields.config_source,
-                DataCatalogBackupPolicyTagFields.backup_storage_project,
-                DataCatalogBackupPolicyTagFields.backup_operation_project
+                DataCatalogBackupPolicyTagFields.backup_storage_project
         );
 
         assertEquals(expected, actual);
@@ -292,7 +326,7 @@ public class BackupPolicyTest {
     @Test
     public void testValidate_BQSnapshot(){
 
-        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.BIGQUERY_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"","");
+        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.BIGQUERY_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
         List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
         List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
                 DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset,
@@ -305,7 +339,7 @@ public class BackupPolicyTest {
     @Test
     public void testValidate_GCSSnapshot(){
 
-        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"", "");
+        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
 
         List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
         List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
@@ -319,7 +353,7 @@ public class BackupPolicyTest {
     @Test
     public void testValidate_GCSSnapshotCSV(){
 
-        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"", "");
+        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
         builder.setGcsExportFormat(GCSSnapshotFormat.CSV);
 
         List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
@@ -335,7 +369,7 @@ public class BackupPolicyTest {
     @Test
     public void testValidate_GCSSnapshotAvro(){
 
-        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"", "");
+        BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
         builder.setGcsExportFormat(GCSSnapshotFormat.AVRO_SNAPPY);
 
         List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);

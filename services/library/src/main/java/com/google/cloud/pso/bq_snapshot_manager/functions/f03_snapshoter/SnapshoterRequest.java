@@ -39,4 +39,12 @@ public class SnapshoterRequest extends TableOperationRequestResponse {
     public int hashCode() {
         return Objects.hashCode(super.hashCode(), backupPolicy);
     }
+
+    public String computeBackupOperationProject(){
+        // if the backup policy specifies a project to run the backup operations on, use it. Otherwise,
+        // use the source table project
+        return this.backupPolicy.getBackupOperationProject() != null?
+                this.backupPolicy.getBackupOperationProject():
+                this.getTargetTable().getProject();
+    }
 }

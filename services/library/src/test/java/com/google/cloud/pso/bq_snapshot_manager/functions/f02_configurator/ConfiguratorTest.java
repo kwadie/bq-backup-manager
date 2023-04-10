@@ -142,8 +142,8 @@ public class ConfiguratorTest {
             BackupMethod.BIGQUERY_SNAPSHOT,
             TimeTravelOffsetDays.DAYS_0,
             BackupConfigSource.SYSTEM,
-            "project",
             "project")
+            .setBackupOperationProject("project")
             .setBigQuerySnapshotExpirationDays(15.0)
             .setBigQuerySnapshotStorageDataset("dataset")
             .setGcsSnapshotStorageLocation("gs://bla")
@@ -395,8 +395,8 @@ public class ConfiguratorTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_7,
                 BackupConfigSource.MANUAL,
-                "snapshotProject",
                 "snapshotProject")
+                .setBackupOperationProject("snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
                 .setGcsSnapshotStorageLocation("gs://bla/")
@@ -449,8 +449,8 @@ public class ConfiguratorTest {
                 BackupMethod.GCS_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.MANUAL,
-                "snapshotProject",
                 "snapshotProject")
+                .setBackupOperationProject("snapshotProject")
                 .setGcsSnapshotStorageLocation("gs://bucket/folder")
                 .setGcsExportFormat(GCSSnapshotFormat.AVRO)
                 .setGcsUseAvroLogicalTypes(true)
@@ -500,8 +500,8 @@ public class ConfiguratorTest {
                 BackupMethod.BOTH,
                 TimeTravelOffsetDays.DAYS_7,
                 BackupConfigSource.MANUAL,
-                "snapshotProject",
                 "snapshotProject")
+                .setBackupOperationProject("snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
                 .setGcsSnapshotStorageLocation("gs://bucket/folder")
@@ -567,8 +567,8 @@ public class ConfiguratorTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_7,
                 BackupConfigSource.SYSTEM,
-                "snapshotProject",
                 "snapshotProject")
+                .setBackupOperationProject("snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
                 .setLastBackupAt(Timestamp.MIN_VALUE)
@@ -611,9 +611,9 @@ public class ConfiguratorTest {
                         BackupMethod.BIGQUERY_SNAPSHOT,
                         TimeTravelOffsetDays.DAYS_0,
                         BackupConfigSource.SYSTEM,
-                        "project",
                         "project"
                 )
+                        .setBackupOperationProject("project")
                         .setBigQuerySnapshotExpirationDays(15.0)
                         .setBigQuerySnapshotStorageDataset("dataset")
                         .setLastBackupAt(Timestamp.MIN_VALUE)
@@ -630,8 +630,8 @@ public class ConfiguratorTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_3,
                 BackupConfigSource.MANUAL,
-                "snapshotProject",
                 "snapshotProject")
+                .setBackupOperationProject("snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
                 .setGcsSnapshotStorageLocation("gs://bla/")
