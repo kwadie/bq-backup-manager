@@ -22,36 +22,22 @@ set -e
 for project in "$@"
 do
 
-  echo "Preparing backup project ${project} .."
+  echo "Preparing backup storage project ${project} .."
 
-  echo "Preparing BQ Snapshoter SA permissions on backup project ${project} .."
+  echo "Preparing BQ Snapshoter SA permissions on backup storage project ${project} .."
 
   # BigQuery Snapshoter needs to create snapshot tables and manipulate them
+  # required permissions: bigquery.tables.create, bigquery.tables.deleteSnapshot
   gcloud projects add-iam-policy-binding "${project}" \
      --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
      --role="roles/bigquery.dataOwner"
 
-  # BigQuery Snapshoter needs to create snapshot jobs
-  gcloud projects add-iam-policy-binding "${project}" \
-     --member="serviceAccount:${SA_SNAPSHOTER_BQ_EMAIL}" \
-     --role="roles/bigquery.jobUser"
-
-  echo "Preparing GCS Snapshoter SA permissions on backup project ${project} .."
-
-  # GCS Snapshoter needs to create export jobs
-  gcloud projects add-iam-policy-binding "${project}" \
-       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
-       --role="roles/bigquery.jobUser"
+  echo "Preparing GCS Snapshoter SA permissions on backup storage project ${project} .."
 
   # GCS Snapshoter needs to write to GCS
+  # permission: storage.objects.create
   gcloud projects add-iam-policy-binding "${project}" \
       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
-      --role="roles/storage.objectAdmin"
-
-   # Terraform needs to create log sinks to capture GCS export operation completion
-  gcloud projects add-iam-policy-binding "${project}" \
-      --member="serviceAccount:${TF_SA}@${PROJECT_ID}.iam.gserviceaccount.com" \
-      --role="roles/logging.configWriter"
-
+      --role="roles/storage.objectCreator"
 
 done

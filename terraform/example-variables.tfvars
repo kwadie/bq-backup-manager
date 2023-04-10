@@ -37,7 +37,8 @@ fallback_policy = {
     "backup_cron" : "0 0 */6 * * *", # every 6 hours each day
     "backup_method" : "Both",
     "backup_time_travel_offset_days" : "7",
-    "backup_project" : "project name",
+    "backup_storage_project" : "project name",
+    "backup_operation_project" : "project name",
     # bq settings
     "bq_snapshot_expiration_days" : "15",
     "bq_snapshot_storage_dataset" : "backups",

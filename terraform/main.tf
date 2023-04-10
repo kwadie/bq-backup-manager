@@ -76,19 +76,19 @@ locals {
     }
   ]
 
-  fallback_policy_default_level_backup_project = lookup(lookup(var.fallback_policy, "default_policy") , "backup_project")
-  fallback_policy_folder_level_backup_projects = [for k, v in lookup(var.fallback_policy, "folder_overrides"): lookup(v,"backup_project")]
-  fallback_policy_project_level_backup_projects = [for k, v in lookup(var.fallback_policy, "project_overrides"): lookup(v,"backup_project")]
-  fallback_policy_dataset_level_backup_projects = [for k, v in lookup(var.fallback_policy, "dataset_overrides"): lookup(v,"backup_project")]
-  fallback_policy_table_level_backup_projects = [for k, v in lookup(var.fallback_policy, "table_overrides"): lookup(v,"backup_project")]
-  fallback_policy_backup_projects = distinct(concat(
-    [local.fallback_policy_default_level_backup_project],
-    local.fallback_policy_folder_level_backup_projects,
-    local.fallback_policy_project_level_backup_projects,
-    local.fallback_policy_dataset_level_backup_projects,
-    local.fallback_policy_table_level_backup_projects
+  fallback_policy_default_level_backup_op_project = lookup(lookup(var.fallback_policy, "default_policy") , "backup_operation_project")
+  fallback_policy_folder_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "folder_overrides"): lookup(v,"backup_operation_project")]
+  fallback_policy_project_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "project_overrides"): lookup(v,"backup_operation_project")]
+  fallback_policy_dataset_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "dataset_overrides"): lookup(v,"backup_operation_project")]
+  fallback_policy_table_level_backup_op_projects = [for k, v in lookup(var.fallback_policy, "table_overrides"): lookup(v,"backup_operation_project")]
+  fallback_policy_backup_op_projects = distinct(concat(
+    [local.fallback_policy_default_level_backup_op_project],
+    local.fallback_policy_folder_level_backup_op_projects,
+    local.fallback_policy_project_level_backup_op_projects,
+    local.fallback_policy_dataset_level_backup_op_projects,
+    local.fallback_policy_table_level_backup_op_projects
   ))
-  all_backup_projects = distinct(concat(var.additional_backup_projects, local.fallback_policy_backup_projects))
+  all_backup_op_projects = distinct(concat(var.additional_backup_operation_projects, local.fallback_policy_backup_op_projects))
 
 }
 
@@ -384,11 +384,11 @@ module "data-catalog" {
 
 module "async-gcs-snapshoter" {
 
-  count = length(local.all_backup_projects)
+  count = length(local.all_backup_op_projects)
   source = "./modules/async-gcs-snapshoter"
 
   application_name  = var.application_name
-  log_project    = local.all_backup_projects[count.index]
+  log_project    = local.all_backup_op_projects[count.index]
   host_project      = var.project
   log_sink_name     = "bq_backup_manager_gcs_export_pubsub_sink"
   pubsub_topic_name = module.pubsub-tagger.topic-name

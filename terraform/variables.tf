@@ -364,8 +364,8 @@ variable "fallback_policy" {
   })
 }
 
-// make sure that you include all projects in this list while calling /scripts/prepare_backup_projects.sh to grant terraform SA permissions to deploy resources there
-variable "additional_backup_projects" {
+// make sure that you include all projects in this list while calling /scripts/prepare_backup_storage_projects.sh to grant terraform SA permissions to deploy resources there
+variable "additional_backup_operation_projects" {
   type = list(string)
   description = "Projects were backup operations will run but not defined in the fallback policy (e.g. in Tag policies). Used to deploy required resources on these projects."
 }

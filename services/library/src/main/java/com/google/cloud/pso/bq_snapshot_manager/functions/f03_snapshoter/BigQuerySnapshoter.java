@@ -19,7 +19,6 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
-import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
@@ -78,7 +77,7 @@ public class BigQuerySnapshoter {
             throw new IllegalArgumentException(String.format("BigQuerySnapshotExpirationDays is missing in the BackupPolicy %s",
                     request.getBackupPolicy()));
         }
-        if (request.getBackupPolicy().getBackupProject() == null) {
+        if (request.getBackupPolicy().getBackupStorageProject() == null) {
             throw new IllegalArgumentException(String.format("BigQuerySnapshotStorageProject is missing in the BackupPolicy %s",
                     request.getBackupPolicy()));
         }
@@ -117,7 +116,7 @@ public class BigQuerySnapshoter {
         // construct the snapshot table from the request params and calculated timetravel
         TableSpec snapshotTable = getSnapshotTableSpec(
                 request.getTargetTable(),
-                request.getBackupPolicy().getBackupProject(),
+                request.getBackupPolicy().getBackupStorageProject(),
                 request.getBackupPolicy().getBigQuerySnapshotStorageDataset(),
                 request.getRunId(),
                 sourceTableWithTimeTravelTuple.y()

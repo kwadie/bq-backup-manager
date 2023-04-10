@@ -44,7 +44,8 @@ public class ConfiguratorTest {
             "    \"backup_method\": \"BigQuery Snapshot\",\n" +
             "    \"backup_time_travel_offset_days\": \"0\",\n" +
             "    \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "    \"backup_project\": \"project\",\n" +
+            "    \"backup_storage_project\": \"project\",\n" +
+            "    \"backup_operation_project\": \"project\",\n" +
             "    \"bq_snapshot_storage_dataset\": \"dataset\"\n" +
             "  },\n" +
             "  \"folder_overrides\": {\n" +
@@ -53,7 +54,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -62,7 +64,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
@@ -73,7 +76,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -82,7 +86,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
@@ -93,7 +98,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -102,7 +108,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
@@ -113,7 +120,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    },\n" +
@@ -122,7 +130,8 @@ public class ConfiguratorTest {
             "      \"backup_method\": \"BigQuery Snapshot\",\n" +
             "      \"backup_time_travel_offset_days\": \"0\",\n" +
             "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_project\": \"project\",\n" +
+            "      \"backup_storage_project\": \"project\",\n" +
+            "      \"backup_operation_project\": \"project\",\n" +
             "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
             "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
             "    }\n" +
@@ -133,6 +142,7 @@ public class ConfiguratorTest {
             BackupMethod.BIGQUERY_SNAPSHOT,
             TimeTravelOffsetDays.DAYS_0,
             BackupConfigSource.SYSTEM,
+            "project",
             "project")
             .setBigQuerySnapshotExpirationDays(15.0)
             .setBigQuerySnapshotStorageDataset("dataset")
@@ -145,15 +155,15 @@ public class ConfiguratorTest {
             testPolicy,
             // folder level
             Stream.of(
-                    new AbstractMap.SimpleEntry<>("folder1", testPolicy))
+                            new AbstractMap.SimpleEntry<>("folder1", testPolicy))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
             // project level
             Stream.of(
-                    new AbstractMap.SimpleEntry<>("p2", testPolicy))
+                            new AbstractMap.SimpleEntry<>("p2", testPolicy))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
             // dataset level
             Stream.of(
-                    new AbstractMap.SimpleEntry<>("p1.d2", testPolicy))
+                            new AbstractMap.SimpleEntry<>("p1.d2", testPolicy))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
             // table level
             Stream.of(new AbstractMap.SimpleEntry<>("p1.d1.t1", testPolicy))
@@ -318,7 +328,7 @@ public class ConfiguratorTest {
             BackupPolicy testBackupPolicy,
             Timestamp refTS,
             Timestamp tableCreationTS
-            ) throws NonRetryableApplicationException, InterruptedException, IOException {
+    ) throws NonRetryableApplicationException, InterruptedException, IOException {
 
         ConfiguratorConfig config = new ConfiguratorConfig(
                 "test-project",
@@ -345,7 +355,7 @@ public class ConfiguratorTest {
                         return Utils.timestampToUnixTimeMillis(tableCreationTS);
                     }
                 },
-        new DataCatalogService() {
+                new DataCatalogService() {
 
                     @Override
                     public Tag createOrUpdateBackupPolicyTag(TableSpec tableSpec, BackupPolicy backupPolicy, String backupPolicyTagTemplateId) {
@@ -385,6 +395,7 @@ public class ConfiguratorTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_7,
                 BackupConfigSource.MANUAL,
+                "snapshotProject",
                 "snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
@@ -402,7 +413,7 @@ public class ConfiguratorTest {
                 backupPolicy,
                 Timestamp.now(),
                 Timestamp.MIN_VALUE
-                );
+        );
 
         // this run returns a static BackupPolicy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -438,6 +449,7 @@ public class ConfiguratorTest {
                 BackupMethod.GCS_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.MANUAL,
+                "snapshotProject",
                 "snapshotProject")
                 .setGcsSnapshotStorageLocation("gs://bucket/folder")
                 .setGcsExportFormat(GCSSnapshotFormat.AVRO)
@@ -453,7 +465,7 @@ public class ConfiguratorTest {
                 backupPolicy,
                 Timestamp.now(),
                 Timestamp.MIN_VALUE
-                );
+        );
 
         // this run returns a static BackupPolicy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -488,6 +500,7 @@ public class ConfiguratorTest {
                 BackupMethod.BOTH,
                 TimeTravelOffsetDays.DAYS_7,
                 BackupConfigSource.MANUAL,
+                "snapshotProject",
                 "snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
@@ -554,6 +567,7 @@ public class ConfiguratorTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_7,
                 BackupConfigSource.SYSTEM,
+                "snapshotProject",
                 "snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
@@ -569,7 +583,7 @@ public class ConfiguratorTest {
                 backupPolicy,
                 Timestamp.now(),
                 Timestamp.MIN_VALUE
-                );
+        );
 
         // this run returns the fallback policy with Timestamp.MIN_VALUE from the system generated policy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -597,6 +611,7 @@ public class ConfiguratorTest {
                         BackupMethod.BIGQUERY_SNAPSHOT,
                         TimeTravelOffsetDays.DAYS_0,
                         BackupConfigSource.SYSTEM,
+                        "project",
                         "project"
                 )
                         .setBigQuerySnapshotExpirationDays(15.0)
@@ -606,8 +621,7 @@ public class ConfiguratorTest {
         );
 
 
-
-                assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
+        assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
     }
 
     public void testConfiguratorWithNewlyCreatedTable() throws IOException, NonRetryableApplicationException, InterruptedException {
@@ -616,6 +630,7 @@ public class ConfiguratorTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_3,
                 BackupConfigSource.MANUAL,
+                "snapshotProject",
                 "snapshotProject")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("snapshotDataset")
@@ -637,7 +652,7 @@ public class ConfiguratorTest {
                 backupPolicy,
                 refPoint,
                 tableCreationTs
-                );
+        );
 
         // this run returns a static BackupPolicy. Assert expectations based on it
         PubSubPublishResults bigQueryPublishResults = configuratorResponse.getBigQueryBackupPublishingResults();
@@ -650,7 +665,6 @@ public class ConfiguratorTest {
         assertEquals(false, configuratorResponse.isTableCreatedBeforeTimeTravel());
         assertEquals(false, configuratorResponse.isBackupTime());
     }
-
 
 
 }
