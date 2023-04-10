@@ -84,7 +84,7 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 * Generates a unique run-id for this run including a timestamp
 * Uses the BigQuery API to list down all table in-scope based on the inclusion and exclusion lists passed to it
 * Creates a unique tracking_id per table in the form of run_id + “_” + UUID
-* Creates and publishes one request per table to the next service via PubSub. 
+* Creates and publishes one request per table to the next service via PubSub.
 
 #### Configurator
 * Fetch configuration
@@ -110,7 +110,7 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
     // Skip
     ```
 
-* Dispatch Backup Request  
+* Dispatch Backup Request
   * Based on the Filter step output the service will decide on which backup method should be used, build a backup request using the backup configurations from step 1 and send it to the GCS Backup service or the BQ snapshot service (or both)
 
 #### BigQuery Snapshoter
@@ -168,8 +168,8 @@ gcloud auth application-default login
 
 ### One-time Environment Setup
 
-Follow the below steps to create one-time resources. 
-One can skip this section when re-deploying the solution (e.g. after new commits) 
+Follow the below steps to create one-time resources.
+One can skip this section when re-deploying the solution (e.g. after new commits)
 
 #### Enable GCP APIs
 
@@ -185,7 +185,7 @@ gsutil mb -p $PROJECT_ID -l $COMPUTE_REGION -b on $BUCKET
 
 #### Prepare Terraform Service Account
 
-Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.  
+Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.
 
 ```shell
 ./scripts/prepare_terraform_service_account.sh
@@ -202,7 +202,7 @@ gcloud artifacts repositories create $DOCKER_REPO_NAME --repository-format=docke
 
 ### Solution Deployment
 
-Make sure that the previous deployment steps have run at least once, 
+Make sure that the previous deployment steps have run at least once,
 then follow the below steps to (re)deploy the latest codebase to the GCP environment.
 
 #### gcloud
@@ -235,7 +235,7 @@ on the Terraform side.
 ##### Create a Terraform .tfvars file
 
 Create a new .tfvars file and override the variables in the below sections. You can use the example
-tfavrs files as a base [example-variables](terraform/example-variables.tfvars). 
+tfavrs files as a base [example-variables](terraform/example-variables.tfvars).
 
 ```shell
 export VARS=my-variables.tfvars
@@ -256,7 +256,7 @@ data_region = "<GCP region to deploy data resources (buckets, datasets, tag temp
 
 ##### Configure Cloud Scheduler Service Account
 
-We will need to grant the Cloud Scheduler account permissions to use parts of the solution 
+We will need to grant the Cloud Scheduler account permissions to use parts of the solution
 
 ```yaml
 cloud_scheduler_account = "service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
@@ -268,10 +268,10 @@ PS: project number is different from project id/name. You can find both info on 
 
 ##### Configure Terraform Service Account
 
-Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.  
+Terraform needs to run with a service account to deploy DLP resources. User accounts are not enough.
 
-This service account name is defined in the "Setup Environment Variables" step and created 
-in the "Prepare Terraform Service Account" step. 
+This service account name is defined in the "Setup Environment Variables" step and created
+in the "Prepare Terraform Service Account" step.
 Use the full email of the created account.
 ```yaml
 terraform_service_account = "bq-backup-mgr-terraform@<host project>.iam.gserviceaccount.com"
@@ -281,9 +281,9 @@ terraform_service_account = "bq-backup-mgr-terraform@<host project>.iam.gservice
 
 Earlier, we used Docker to build container images that will be used by the solution.
 In this step, we instruct Terraform to use these published images in the Cloud Run services
-that Terraform will create. 
+that Terraform will create.
 
-PS: Terraform will just "link" a Cloud Run to an existing image. It will not build the images from the code base (this 
+PS: Terraform will just "link" a Cloud Run to an existing image. It will not build the images from the code base (this
 is already done in a previous step)
 
 ```yaml
@@ -297,25 +297,25 @@ tagger_service_image         = "< value of env variable TAGGER_IMAGE>"
 ##### Configure Scheduler(s)
 
 Define at least one scheduler under the `schedulers` variable.  
-There must be at least one scheduler acting as a heart-beat of the solution that 
-periodically lists tables and check if a backup is due for each of them based on their table-level backup CRON.  
+There must be at least one scheduler acting as a heart-beat of the solution that
+periodically lists tables and check if a backup is due for each of them based on their table-level backup CRON.
 ```yaml
   {
     name    = "heart_beat"
     cron    = "0 * * * *" # hourly
     payload = {
-      is_force_run = false
-      is_dry_run   = false
+        is_force_run = false
+        is_dry_run   = false
 
-      folders_include_list  = []
-      projects_include_list = []
-      projects_exclude_list = []
-      datasets_include_list = []
-      datasets_exclude_list = []
-      tables_include_list   = []
-      tables_exclude_list   = []
-    }
-  }
+        folders_include_list  = []
+        projects_include_list = []
+        projects_exclude_list = []
+        datasets_include_list = []
+        datasets_exclude_list = []
+        tables_include_list   = []
+        tables_exclude_list   = []
+}
+}
 ```
 
 ###### Payload Fields:
@@ -334,9 +334,9 @@ periodically lists tables and check if a backup is due for each of them based on
 | `tables_include_list`   | List of tables e.g. `["porject1.dataset1.table1", "project1.dataset2.table2"]` to backup. This has no effect if `folders_include_list`, `projects_include_list` or `datasets_include_list` is set.                                       | 
 | `tables_exclude_list`   | List of tables or regex e.g. `["porject1.dataset1.table1", "regex:.*\_test"]` to NOT take backups for. This field could be used in combination with `folders_include_list`, `projects_include_list` or `datasets_include_list`           | 
 
-###### Using regular expressions in exclusion lists:  
-All exclusion lists accept regular expressions in the form "regex:<regular expression>". 
-If the fully qualified entry name (e.g. project.dataset.table) matches any of the supplied regex, it will be excluded from the backup scope. 
+###### Using regular expressions in exclusion lists:
+All exclusion lists accept regular expressions in the form "regex:<regular expression>".
+If the fully qualified entry name (e.g. project.dataset.table) matches any of the supplied regex, it will be excluded from the backup scope.
 Some common use cases would be:
 * Excluding all "<xyz>_landing" datasets: `datasets_exclude_list = ["regex:.*\\_landing$"]`
 * Excluding all tables ending with _test, _tst, _bkp or _copy: `tables_exclude_list = ["regex:.*\_(test|tst|bkp|copy)"]`
@@ -344,55 +344,55 @@ Some common use cases would be:
 
 ##### Fallback Policies
 
-On each run the solution needs to determine the backup policy of each in-scope table. 
+On each run the solution needs to determine the backup policy of each in-scope table.
 This could be a [manually attached policy to a table](#Setting-table-level-backup-policies)
-or a "Fallback Policy" for tables without attached policies. 
+or a "Fallback Policy" for tables without attached policies.
 Note that manually attached policies have precedence over fallback policies when determining the backup policy of a table
 
 The "Fallback Policy" is defined by a `default_policy` and a set
 of exceptions\overrides to that policy on different levels (folder, project, dataset and table).
-This provides granular flexibility without creating an entry for each single table.  
+This provides granular flexibility without creating an entry for each single table.
 
-##### Fallback Policy Structure 
+##### Fallback Policy Structure
 
 ```yaml
 fallback_policy = {
-  "default_policy" : {..Policy Fields..},
-  "folder_overrides" : {
-    "<folder1 number>" : {..Policy Fields..},
-    "<folder2 number>" : {..Policy Fields..},
-    ..etc
-  },
-  "project_overrides" : {
-    "<project1 name>" : {..Policy Fields..},
-    "<project2 name>" : {..Policy Fields..},
-    ..etc
-  },
-  "dataset_overrides" : {
-    "<project name>.<dataset1 name>" : {..Policy Fields..},
-    "<project name>.<dataset2 name>" : {..Policy Fields..}
-    ..etc
-  },
-  "table_overrides" : {
-    "<project name>.<dataset name>.<table1 name>" : {..Policy Fields..},
-    "<project name>.<dataset name>.<table2 name>" : {..Policy Fields..},
-    etc
-  }
+"default_policy" : {..Policy Fields..},
+"folder_overrides" : {
+  "<folder1 number>" : {..Policy Fields..},
+  "<folder2 number>" : {..Policy Fields..},
+                       ..etc
+},
+"project_overrides" : {
+  "<project1 name>" : {..Policy Fields..},
+  "<project2 name>" : {..Policy Fields..},
+                        ..etc
+},
+"dataset_overrides" : {
+  "<project name>.<dataset1 name>" : {..Policy Fields..},
+  "<project name>.<dataset2 name>" : {..Policy Fields..}
+                                       ..etc
+},
+"table_overrides" : {
+  "<project name>.<dataset name>.<table1 name>" : {..Policy Fields..},
+  "<project name>.<dataset name>.<table2 name>" : {..Policy Fields..},
+                      etc
+}
 ```
 
-PS: If no overrides are set on a certain level, set that level to an empty map (e.g. `project_overrides : {}`  ).  
+PS: If no overrides are set on a certain level, set that level to an empty map (e.g. `project_overrides : {}`  ).
 
 There are different sets of policy fields depending on the backup method:
 
-##### Required Policy Fields
+##### Common Policy Fields
 
-| Field                            | Description                                                                                                                                                                                                                                                     |
-|----------------------------------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
-| `backup_cron`                    | A CRON expression to set the frequency in which a table is backed up. This must be a [Spring-Framwork compatible](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) CRON expression. |
-| `backup_method`                  | One method from `BigQuery Snapshot`, `GCS Snapshot` or `Both`. One must then provide the required fields for each chosen backup method as shown below.                                                                                                          |
-| `backup_time_travel_offset_days` | A `string` value with the number of days that determines a previous point of time to backup the table from. Values allowed are `0` to `7`.                                                                                                                      | 
-| `backup_storage_project`         | Project ID on which all snapshot and export operations are stored. This is the project where the bq_snapshot_storage_dataset and/or gcs_snapshot_storage_location resides.                                                                                      |
-| `backup_operation_project`       | Project ID on which all snapshot and export operations will run. Snapshot and Export job quotas and limits will be against this project. This could be the same value as backup_storage_project.                                                                |                                                                                                                                                                                        
+| Field                            | Required | Description                                                                                                                                                                                                                                                     |
+|----------------------------------|----------|-----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------|
+| `backup_cron`                    | True     | A CRON expression to set the frequency in which a table is backed up. This must be a [Spring-Framwork compatible](https://docs.spring.io/spring-framework/docs/current/javadoc-api/org/springframework/scheduling/support/CronExpression.html) CRON expression. |
+| `backup_method`                  | True     | One method from `BigQuery Snapshot`, `GCS Snapshot` or `Both`. One must then provide the required fields for each chosen backup method as shown below.                                                                                                          |
+| `backup_time_travel_offset_days` | True     | A `string` value with the number of days that determines a previous point of time to backup the table from. Values allowed are `0` to `7`.                                                                                                                      | 
+| `backup_storage_project`         | True     | Project ID on which all snapshot and export operations are stored. This is the project where the bq_snapshot_storage_dataset and/or gcs_snapshot_storage_location resides.                                                                                      |
+| `backup_operation_project`       | False    | Project ID on which all snapshot and export operations will run. Snapshot and Export job quotas and limits will be against this project. This could be the same value as backup_storage_project. If not set, the source table project will be used.             |                                                                                                                                                                                        
 
 ##### BigQuery Snapshot Policy Fields
 
@@ -432,7 +432,7 @@ sinks that send notifications to the Tagger once a backup operation has complete
 
 By default, all projects listed in the `backup_operation_project` field in the fallback policy will be automatically included.
 However, for additional backup projects such as the ones defined in external configuration (i.e. table backup policy tags),
-one must add them to the below list.
+or if you want to use the default source tables projects, one must add them to the below list.
 
 ```
 additional_backup_operation_projects = ["project1", "project2", ..]
@@ -449,8 +449,10 @@ used by Terraform must have the required permissions on these projects. To do so
 ./scripts/prepare_backup_operation_projects_for_terraform.sh <project1> <project2> <etc>
 ```
 
-The list of projects must include all projects you're planning to run backup operations in. This includes all projects listed under the 
-`backup_operation_project` field in the fallback policy, plus the ones included in the `additional_backup_operation_projects` Terraform variable. 
+The list of projects must include all projects you're planning to run backup operations in. This includes the following:
+* All projects listed under the`backup_operation_project` field in the fallback policy
+* Source tables projects (if you're not setting the `backup_operation_project`)
+* Projects included in the `additional_backup_operation_projects` Terraform variable.
 
 #### Terraform Deployment
 
@@ -494,7 +496,7 @@ To do so, run the following script from the project root folder:
 ##### Prepare Source and Destination Projects
 
 To enable the application to take backup of tables in "data projects" (i.e. source projects), run backup operations on "data operation projects"
-and store them under "backup storage projects" (i.e. destination projects) one must grant a number of permissions on each of these project.  
+and store them under "backup storage projects" (i.e. destination projects) one must grant a number of permissions on each of these project.
 
 To do so, run the following script from the project root folder:
 
@@ -506,19 +508,22 @@ To do so, run the following script from the project root folder:
 ./scripts/prepare_backup_operation_projects.sh <project1> <project2> <etc>
 ```
 
-PS: 
-* Update the SA emails if the default names have been changed in Terraform  
+PS:
+* Update the SA emails if the default names have been changed in Terraform
 * If you have tables to be backed-up in the host project, run the above script and include the host project in the list
 * For data projects, use the same projects listed in all the `include lists` in the Terraform variable `schedulers`
 * For backup storage projects, use the same projects listed in all the `backup_storage_project` fields in the Terraform variable `fallback_policy` and in the manually attached backup tag-templates.
-* For backup operation projects, use the same projects listed in all the `backup_operation_project` fields in the Terraform variable `fallback_policy` and in the manually attached backup tag-templates.
-* If a project is used both as the source and destination, include the project in all scripts   
+* For backup operation projects, use the same projects listed in:
+  * All the `backup_operation_project` fields in the Terraform variable `fallback_policy`
+  * Source tables projects in all inclusion lists in the BigQuery Scan scope (if you're not explicitly setting the `backup_operation_project` field)
+  * The manually attached backup tag-templates
+* If a project is used both as the source and destination, include the project in all scripts
 * If a project is used both as the `backup_storage_project` and `backup_operation_project`, include the project in both respective scripts
 
 ##### Target tables with policy tags
 
 For tables that use column-level access control, one must grant access to the solution's service accounts
-to be able to read the table data in order to create a backup.  
+to be able to read the table data in order to create a backup.
 
 To do so, identify the Dataplex policy tag taxonomies used and run the following script for each of them:
 ```shell
@@ -541,11 +546,11 @@ $TAXONOMY \
 
 #### From Terminal
 
-Required Permissions:  
+Required Permissions:
 * Make sure that the `gcloud` tool is set to use the host project (i.e. `$PROJECT_ID`) via checking `gcloud config  get project`
- and that you are authenticated to it via `gcloud auth application-default login`
+  and that you are authenticated to it via `gcloud auth application-default login`
 * The user running the below commands (i.e `$ACCOUNT`) should have the following permissions:
-  * On the host project (i.e. `$PROJECT_ID`) 
+  * On the host project (i.e. `$PROJECT_ID`)
     * "Service Usage Consumer" (`roles/serviceusage.serviceUsageConsumer`). This is to use the Data Catalog API. (PS: Data Catalog API doesn't have to be enabled on the data project)
     * "Data Catalog TagTemplate User" (`roles/datacatalog.tagTemplateUser`). This is to use tag templates to tag tables
   * On the data project (i.e. containing the table to be tagged)
@@ -590,8 +595,8 @@ gcloud data-catalog tags create \
   * on "Choose the tag templates": Select "BigQuery Backup Manager"
   * set "Configuration Source" to "MANUAL"
   * set the rest of the fields according to the desired backup policy
-    * Refer to the [Required Policy Fields](#Required-Policy-Fields), [BigQuery Snapshot Policy Fields](#BigQuery-Snapshot-Policy-Fields) and [GCS Snapshot Policy Fields](#GCS-Snapshot-Policy-Fields) sections for fields description 
-  * ignore all the fields marked as "Read-Only" 
+    * Refer to the [Required Policy Fields](#Required-Policy-Fields), [BigQuery Snapshot Policy Fields](#BigQuery-Snapshot-Policy-Fields) and [GCS Snapshot Policy Fields](#GCS-Snapshot-Policy-Fields) sections for fields description
+  * ignore all the fields marked as "Read-Only"
   * Click "Save"
 
 ### Triggering backup operations
