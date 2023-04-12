@@ -22,7 +22,7 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMet
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
-import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
+import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 
 public class Tagger {
@@ -30,14 +30,14 @@ public class Tagger {
     private final LoggingHelper logger;
 
     private final TaggerConfig config;
-    private final DataCatalogService dataCatalogService;
+    private final BackupPolicyService backupPolicyService;
     private final PersistentSet persistentSet;
     private final String persistentSetObjectPrefix;
 
-    public Tagger(LoggingHelper logger, TaggerConfig config, DataCatalogService dataCatalogService, PersistentSet persistentSet, String persistentSetObjectPrefix) {
+    public Tagger(LoggingHelper logger, TaggerConfig config, BackupPolicyService backupPolicyService, PersistentSet persistentSet, String persistentSetObjectPrefix) {
         this.logger = logger;
         this.config = config;
-        this.dataCatalogService = dataCatalogService;
+        this.backupPolicyService = backupPolicyService;
         this.persistentSet = persistentSet;
         this.persistentSetObjectPrefix = persistentSetObjectPrefix;
     }
@@ -99,10 +99,9 @@ public class Tagger {
             if(!request.isDryRun()){
                 // update the tag
                 // API Calls
-                dataCatalogService.createOrUpdateBackupPolicyTag(
+                backupPolicyService.createOrUpdateBackupPolicyForTable(
                         request.getTargetTable(),
-                        upDatedBackupPolicy,
-                        config.getTagTemplateId()
+                        upDatedBackupPolicy
                 );
             }
 
