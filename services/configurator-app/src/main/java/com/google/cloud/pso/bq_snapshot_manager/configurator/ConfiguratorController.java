@@ -26,6 +26,7 @@ import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.Confi
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceGCSImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceFireStoreImpl;
@@ -61,7 +62,8 @@ public class ConfiguratorController {
         logger = new LoggingHelper(
                 ConfiguratorController.class.getSimpleName(),
                 functionNumber,
-                environment.getProjectId()
+                environment.getProjectId(),
+                environment.getApplicationName()
         );
 
         logger.logInfoWithTracker(
@@ -117,7 +119,7 @@ public class ConfiguratorController {
 
             logger.logInfoWithTracker(configuratorRequest.isDryRun(), trackingId, configuratorRequest.getTargetTable(), String.format("Parsed Request: %s", configuratorRequest.toString()));
 
-            backupPolicyService = new BackupPolicyServiceFireStoreImpl();
+            backupPolicyService = new BackupPolicyServiceGCSImpl(environment.getGcsBackupPoliciesBucket());
 
             Configurator configurator = new Configurator(
                     environment.toConfig(),

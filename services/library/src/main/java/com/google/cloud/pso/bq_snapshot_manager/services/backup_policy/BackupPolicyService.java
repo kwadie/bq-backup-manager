@@ -8,7 +8,7 @@ import java.io.IOException;
 
 public interface BackupPolicyService {
 
-    void createOrUpdateBackupPolicyForTable(TableSpec tableSpec, BackupPolicy backupPolicy);
+    void createOrUpdateBackupPolicyForTable(TableSpec tableSpec, BackupPolicy backupPolicy) throws IOException;
 
     @Nullable BackupPolicy getBackupPolicyForTable(TableSpec tableSpec) throws IOException, IllegalArgumentException;
 

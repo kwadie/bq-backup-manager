@@ -20,10 +20,13 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplication
 import com.google.cloud.pso.bq_snapshot_manager.entities.RetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.GCSSnapshoter;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
+
+import java.io.IOException;
 
 public class Tagger {
 
@@ -34,12 +37,21 @@ public class Tagger {
     private final PersistentSet persistentSet;
     private final String persistentSetObjectPrefix;
 
-    public Tagger(LoggingHelper logger, TaggerConfig config, BackupPolicyService backupPolicyService, PersistentSet persistentSet, String persistentSetObjectPrefix) {
-        this.logger = logger;
+    private final Integer functionNumber;
+
+    public Tagger(TaggerConfig config, BackupPolicyService backupPolicyService, PersistentSet persistentSet, String persistentSetObjectPrefix, Integer functionNumber) {
         this.config = config;
         this.backupPolicyService = backupPolicyService;
         this.persistentSet = persistentSet;
         this.persistentSetObjectPrefix = persistentSetObjectPrefix;
+        this.functionNumber = functionNumber;
+
+        logger = new LoggingHelper(
+                Tagger.class.getSimpleName(),
+                functionNumber,
+                config.getProjectId(),
+                config.getApplicationName()
+        );
     }
 
     /**
@@ -52,7 +64,7 @@ public class Tagger {
     public TaggerResponse execute(
             TaggerRequest request,
             String pubSubMessageId
-    ) throws NonRetryableApplicationException, RetryableApplicationException {
+    ) throws NonRetryableApplicationException, RetryableApplicationException, IOException {
 
         // run common service start logging and checks
         Utils.runServiceStartRoutines(

@@ -60,7 +60,8 @@ public class Configurator {
         logger = new LoggingHelper(
                 Configurator.class.getSimpleName(),
                 functionNumber,
-                config.getProjectId()
+                config.getProjectId(),
+                config.getApplicationName()
         );
     }
 
@@ -223,8 +224,21 @@ public class Configurator {
 
         // if there is manually attached backup policy (e.g. by the table designer) then use it.
         if (attachedBackupPolicy != null && attachedBackupPolicy.getConfigSource().equals(BackupConfigSource.MANUAL)) {
+
+            logger.logInfoWithTracker(request.isDryRun(),
+                    request.getTrackingId(),
+                    request.getTargetTable(),
+                    String.format("Attached backup policy found for table %s", request.getTargetTable())
+            );
+
             return attachedBackupPolicy;
         }else{
+
+            logger.logInfoWithTracker(request.isDryRun(),
+                    request.getTrackingId(),
+                    request.getTargetTable(),
+                    String.format("No 'config_source=MANUAL' backup policy found for table %s. Will search for a fallback policy.", request.getTargetTable())
+            );
 
             // find the most granular fallback policy table > dataset > project
             BackupPolicy fallbackPolicy = findFallbackBackupPolicy(fallbackBackupPolicy,

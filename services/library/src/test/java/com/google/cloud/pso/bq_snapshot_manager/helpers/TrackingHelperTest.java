@@ -21,7 +21,7 @@ public class TrackingHelperTest {
     public void parseTrackingIdFromJobId(){
         String trackingId = TrackingHelper.generateTrackingId(TrackingHelper.MIN_RUN_ID);
         String parsedTrackingId = TrackingHelper.parseTrackingIdFromBQExportJobId(
-                TrackingHelper.generateBQExportJobId(trackingId)
+                TrackingHelper.generateBQExportJobId(trackingId, "bq_backup_manager")
         );
 
         assertEquals(trackingId, parsedTrackingId);

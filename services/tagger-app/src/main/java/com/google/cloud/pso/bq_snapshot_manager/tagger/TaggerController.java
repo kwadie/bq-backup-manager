@@ -26,6 +26,7 @@ import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceFireStoreImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceGCSImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.map.GcsPersistentMapImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.map.PersistentMap;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
@@ -57,7 +58,8 @@ public class TaggerController {
         logger = new LoggingHelper(
                 TaggerController.class.getSimpleName(),
                 functionNumber,
-                environment.getProjectId()
+                environment.getProjectId(),
+                environment.getApplicationName()
         );
     }
 
@@ -125,13 +127,13 @@ public class TaggerController {
 
             logger.logInfoWithTracker(taggerRequest.isDryRun(), trackingId, taggerRequest.getTargetTable(), String.format("Parsed Request: %s", taggerRequest.toString()));
 
-            backupPolicyService = new BackupPolicyServiceFireStoreImpl();
+            backupPolicyService = new BackupPolicyServiceGCSImpl(environment.getGcsBackupPoliciesBucket());
             Tagger tagger = new Tagger(
-                    new LoggingHelper(Tagger.class.getSimpleName(), functionNumber, environment.getProjectId()),
                     environment.toConfig(),
                     backupPolicyService,
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
-                    "tagger-flags"
+                    "tagger-flags",
+                    functionNumber
             );
 
             taggerResponse = tagger.execute(

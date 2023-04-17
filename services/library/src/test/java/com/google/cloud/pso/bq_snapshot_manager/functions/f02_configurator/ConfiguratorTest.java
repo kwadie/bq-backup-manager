@@ -33,7 +33,8 @@ public class ConfiguratorTest {
     LoggingHelper testLogger = new LoggingHelper(
             ConfiguratorTest.class.getSimpleName(),
             2,
-            "testProject"
+            "testProject",
+            "bq_backup_manager"
     );
 
     String jsonPolicyStr = "{\n" +
@@ -332,7 +333,8 @@ public class ConfiguratorTest {
                 "test-project",
                 "test-bqSnapshoterTopic",
                 "test-gcsSnapshoterTopic",
-                "test-templateId"
+                "test-templateId",
+                "bq_backup_manager"
         );
 
         Configurator configurator = new Configurator(
