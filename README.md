@@ -626,6 +626,12 @@ WHERE jsonPayload.global_app_log = 'UNIFIED_LOG'
 AND jsonPayload.unified_component = "2"
 ```
 
+To get the backup policies that are manually added or assigned by the system based on fallbacks
+```roomsql
+SELECT * FROM `bq_backup_manager.ext_backup_policies`
+```
+
+
 ## Limits
 * Each `backup_operation_project` can run up to 50,000 table snapshot jobs per day.
 * Each `backup_operation_project` can run 100,000 export jobs per day (e.g. to GCS). Could be extended by slot reservation.
