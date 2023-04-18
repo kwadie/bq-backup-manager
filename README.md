@@ -69,7 +69,7 @@ and [BigQuery exports to Cloud Storage](https://cloud.google.com/bigquery/docs/e
 ### Backup Policies
 There are two ways to define backup policies for tables, and they can be used together:
 * Data Owner Configuration (decentralized). Referred to as "Manual" backup policies
-  * Defined on table level by the data owner via a Cloud Data Catalog tag template attached to the table.
+  * Defined on table level by the data owner via a JSON file stored in a common bucket.
 * Organization Default Configuration (centralized). Referred to as "Fallback" backup policies
   * Centrally defined JSON as part of the solution (i.e. in Terraform)
   * It offers default backup strategies on folder, project, dataset and table levels
@@ -88,12 +88,12 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 
 #### Configurator
 * Fetch configuration
-  * Checks if the target table has a “Backup Policy” tag template with config_source = ‘manual’ attached to it or not
+  * Checks if the target table has a “Backup Policy” defined for it with config_source = ‘manual’ or not
     * If TRUE
       * Retrieves the cron_expression, last_backup_at fields and backup configurations (GCS and/or BQ Snapshot)
     * If FALSE
       * Retrieves the cron_expression and backup configurations from the most granular Fallback Policy (Table > dataset > project > folder)
-      * Check if the table has a “Backup Policy” tag template with config_source = ‘system’ attached. If so, retrieves the last_backup_at fields or null (first time backup)
+      * Check if the table has a “Backup Policy” with config_source = ‘system’ attached. If so, retrieves the last_backup_at fields or null (first time backup)
 
 * Filter
   * If the last_backup_at == null
@@ -125,7 +125,7 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 * When the export job completes, BigQuery will log an event to Cloud Logging that is captured by a Log Sink and sent to the Tagger service
 
 #### Tagger
-* If the request originates from the BigQuery Snapshoter, the tagger request is parsed from the PubSub message itslef.
+* If the request originates from the BigQuery Snapshoter, the tagger request is parsed from the PubSub message itself.
 * If the request originates from the GCS Snapshoter, the tagger request is parsed from the staging persistent storage.
 * If the table has a “Backup Policy” it updates the `last_backup_at`, `last_bq_snapshot_storage_uri` and `last_gcs_snapshot_storage_uri`
 * If the table doesn't have a "Backup Policy" it creates a new one with config_source = ‘SYSTEM’ and sets all the backup policy fields based on the fallback policy used
@@ -251,7 +251,7 @@ Both ways, one must set the below variables:
 ```yaml
 project = "<GCP project ID to deploy solution to (equals to $PROJECT_ID) >"
 compute_region = "<GCP region to deploy compute resources e.g. cloud run, iam, etc (equals to $COMPUTE_REGION)>"
-data_region = "<GCP region to deploy data resources (buckets, datasets, tag templates, etc> (equals to $DATA_REGION)"
+data_region = "<GCP region to deploy data resources (buckets, datasets, etc> (equals to $DATA_REGION)"
 ```
 
 ##### Configure Cloud Scheduler Service Account
@@ -544,22 +544,19 @@ $TAXONOMY \
 
 ### Setting table-level backup policies
 
-#### From Terminal
-
-Required Permissions:
-* Make sure that the `gcloud` tool is set to use the host project (i.e. `$PROJECT_ID`) via checking `gcloud config  get project`
-  and that you are authenticated to it via `gcloud auth application-default login`
-* The user running the below commands (i.e `$ACCOUNT`) should have the following permissions:
-  * On the host project (i.e. `$PROJECT_ID`)
-    * "Service Usage Consumer" (`roles/serviceusage.serviceUsageConsumer`). This is to use the Data Catalog API. (PS: Data Catalog API doesn't have to be enabled on the data project)
-    * "Data Catalog TagTemplate User" (`roles/datacatalog.tagTemplateUser`). This is to use tag templates to tag tables
-  * On the data project (i.e. containing the table to be tagged)
-    * "BigQuery Metadata reader" (`roles/bigquery.metadataViewer`). This is to be able to lookup the table entry ID
-    * "bigquery.tables.updateTag" permission (e.g. included in `roles/bigquery.dataEditor`). This is to attach the tag template entry to the table
+Update the fields in the below example policy and store in the backup policies store (i.e. GCS)
 
 ```shell
-# Example tag template. Config Source must be 'MANUAL'.
-export TAG="{
+# Use the default backup policies bucket unless overwritten in the .tfvars
+export POLICIES_BUCKET=${PROJECT_ID}-bq-backup-manager-policies 
+
+# set target table info
+export TABLE_PROJECT=<table_project>
+export TABLE_DATASET=<table_dataset>
+export TABLE=<table_name>
+
+# Config Source must be 'MANUAL' when assigned this way.
+export BACKUP_POLICY="{
 'config_source' : 'MANUAL',
 'backup_cron' : '0 0 0 1 1 1',
 'backup_method' : 'Both',
@@ -568,36 +565,15 @@ export TAG="{
 'backup_operation_project' : 'backup_project_name',
 'gcs_snapshot_storage_location' : 'gs://backup-bucket',
 'gcs_snapshot_format' : 'AVRO_SNAPPY',
-'gcs_avro_use_logical_types' : true,
+'gcs_avro_use_logical_types' : 'true',
 'bq_snapshot_storage_dataset' : 'bq_backup',
-'bq_snapshot_expiration_days' : 15}"
+'bq_snapshot_expiration_days' : '15'}"
 
-echo $TAG >> tag.json
+# File name MUST BE backup_policy.json
+echo $BACKUP_POLICY >> backup_policy.json
 
-# Replace <project>, <dataset> and <table> to reflect the table to be tagged
-TABLE_ID=$(gcloud data-catalog entries lookup 'bigquery.table.`<project>`.<dataset>.<table>' --format="get(name)")
-
-gcloud data-catalog tags create \
---location=eu \
---entry-group=bigquery \
---entry=$TABLE_ID \
---tag-template=projects/$PROJECT_ID/locations/$DATA_REGION/tagTemplates/bq_backup_manager_template \
---tag-file=tag.json
+gsutil cp backup_policy.json gs://${POLICIES_BUCKET}/project=${TABLE_PROJECT}/dataset=${TABLE_DATASET}/table=${TABLE}/backup_policy.json
 ```
-
-#### From UI
-
-* From the GCP console, navigate to DataPlex
-* Search for the table to be tagged
-* Open the table link and press "Attach Tags"
-* Follow the wizard
-  * on "Choose what to tag": Select "Table"
-  * on "Choose the tag templates": Select "BigQuery Backup Manager"
-  * set "Configuration Source" to "MANUAL"
-  * set the rest of the fields according to the desired backup policy
-    * Refer to the [Required Policy Fields](#Required-Policy-Fields), [BigQuery Snapshot Policy Fields](#BigQuery-Snapshot-Policy-Fields) and [GCS Snapshot Policy Fields](#GCS-Snapshot-Policy-Fields) sections for fields description
-  * ignore all the fields marked as "Read-Only"
-  * Click "Save"
 
 ### Triggering backup operations
 The entry point of the solution is any of the Cloud Schedulers configured earlier. Cloud Schedulers will
