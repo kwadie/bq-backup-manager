@@ -56,9 +56,7 @@ public class DispatcherController {
         logger = new LoggingHelper(
                 DispatcherController.class.getSimpleName(),
                 functionNumber,
-                environment.getProjectId(),
-                environment.getApplicationName()
-                );
+                environment.getProjectId());
     }
 
     @RequestMapping(value = "/", method = RequestMethod.POST)

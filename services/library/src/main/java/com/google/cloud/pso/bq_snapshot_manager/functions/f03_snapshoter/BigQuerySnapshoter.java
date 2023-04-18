@@ -63,8 +63,7 @@ public class BigQuerySnapshoter {
         logger = new LoggingHelper(
                 BigQuerySnapshoter.class.getSimpleName(),
                 functionNumber,
-                config.getProjectId(),
-                config.getApplicationName()
+                config.getProjectId()
         );
     }
 
@@ -140,7 +139,7 @@ public class BigQuerySnapshoter {
 
         if(!request.isDryRun()){
 
-            String jobId = TrackingHelper.generateBQSnapshotJobId(request.getTrackingId(), config.getApplicationName());
+            String jobId = TrackingHelper.generateBQSnapshotJobId(request.getTrackingId());
 
             // API Call
             bqService.createSnapshot(

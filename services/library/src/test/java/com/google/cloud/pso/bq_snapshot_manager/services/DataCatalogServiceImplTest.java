@@ -1,15 +1,25 @@
 package com.google.cloud.pso.bq_snapshot_manager.services;
 
+import com.google.cloud.Timestamp;
 import com.google.cloud.datacatalog.v1.TagField;
-import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceDataCatalogImpl;
+import com.google.cloud.pso.bq_snapshot_manager.entities.*;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupConfigSource;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
+import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
 import org.junit.Test;
+import org.springframework.test.context.TestExecutionListeners;
 
+import java.io.IOException;
 import java.util.HashMap;
 import java.util.Map;
+import java.util.stream.Collectors;
 
 import static org.junit.Assert.assertEquals;
 
-public class BackupPolicyServiceDataCatalogImplTest {
+public class DataCatalogServiceImplTest {
 
     @Test
     public void testConvertTagFieldMapToStrMap() {
@@ -73,7 +83,7 @@ public class BackupPolicyServiceDataCatalogImplTest {
         expected.put("bq_snapshot_expiration_days","0.0");
         expected.put("gcs_snapshot_storage_location","test-bucket");
 
-        Map<String, String> actual = BackupPolicyServiceDataCatalogImpl.convertTagFieldMapToStrMap(tagMap);
+        Map<String, String> actual = DataCatalogServiceImpl.convertTagFieldMapToStrMap(tagMap);
 
         assertEquals(expected, actual);
     }

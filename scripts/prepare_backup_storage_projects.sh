@@ -35,9 +35,9 @@ do
   echo "Preparing GCS Snapshoter SA permissions on backup storage project ${project} .."
 
   # GCS Snapshoter needs to write to GCS
-  # permission: storage.objects.create, storage.objects.delete
+  # permission: storage.objects.create
   gcloud projects add-iam-policy-binding "${project}" \
       --member="serviceAccount:${SA_SNAPSHOTER_GCS_EMAIL}" \
-      --role="roles/storage.objectAdmin"
+      --role="roles/storage.objectCreator"
 
 done

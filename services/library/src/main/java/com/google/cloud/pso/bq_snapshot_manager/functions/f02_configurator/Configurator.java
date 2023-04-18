@@ -11,9 +11,10 @@ import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplication
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.FallbackBackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.SnapshoterRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
-import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
@@ -33,7 +34,7 @@ public class Configurator {
 
     private final BigQueryService bqService;
 
-    private final BackupPolicyService backupPolicyService;
+    private final DataCatalogService dataCatalogService;
     private final PubSubService pubSubService;
     private final PersistentSet persistentSet;
     private final FallbackBackupPolicy fallbackBackupPolicy;
@@ -42,7 +43,7 @@ public class Configurator {
 
     public Configurator(ConfiguratorConfig config,
                         BigQueryService bqService,
-                        BackupPolicyService backupPolicyService,
+                        DataCatalogService dataCatalogService,
                         PubSubService pubSubService,
                         PersistentSet persistentSet,
                         FallbackBackupPolicy fallbackBackupPolicy,
@@ -50,7 +51,7 @@ public class Configurator {
                         Integer functionNumber) {
         this.config = config;
         this.bqService = bqService;
-        this.backupPolicyService = backupPolicyService;
+        this.dataCatalogService = dataCatalogService;
         this.pubSubService = pubSubService;
         this.persistentSet = persistentSet;
         this.fallbackBackupPolicy = fallbackBackupPolicy;
@@ -60,8 +61,7 @@ public class Configurator {
         logger = new LoggingHelper(
                 Configurator.class.getSimpleName(),
                 functionNumber,
-                config.getProjectId(),
-                config.getApplicationName()
+                config.getProjectId()
         );
     }
 
@@ -218,27 +218,15 @@ public class Configurator {
     public BackupPolicy getBackupPolicy(ConfiguratorRequest request) throws IOException {
 
         // Check if the table has a back policy attached to it in data catalog
-        BackupPolicy attachedBackupPolicy = backupPolicyService.getBackupPolicyForTable(
-                request.getTargetTable()
+        BackupPolicy attachedBackupPolicy = dataCatalogService.getBackupPolicyTag(
+                request.getTargetTable(),
+                config.getBackupTagTemplateId()
         );
 
         // if there is manually attached backup policy (e.g. by the table designer) then use it.
         if (attachedBackupPolicy != null && attachedBackupPolicy.getConfigSource().equals(BackupConfigSource.MANUAL)) {
-
-            logger.logInfoWithTracker(request.isDryRun(),
-                    request.getTrackingId(),
-                    request.getTargetTable(),
-                    String.format("Attached backup policy found for table %s", request.getTargetTable())
-            );
-
             return attachedBackupPolicy;
         }else{
-
-            logger.logInfoWithTracker(request.isDryRun(),
-                    request.getTrackingId(),
-                    request.getTargetTable(),
-                    String.format("No 'config_source=MANUAL' backup policy found for table %s. Will search for a fallback policy.", request.getTargetTable())
-            );
 
             // find the most granular fallback policy table > dataset > project
             BackupPolicy fallbackPolicy = findFallbackBackupPolicy(fallbackBackupPolicy,

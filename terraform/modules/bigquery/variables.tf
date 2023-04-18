@@ -18,10 +18,6 @@ variable "common_labels" {
   type = map(string)
 }
 
-variable "gcs_backup_policies_bucket_name" {
-  type = string
-}
-
 
 
 

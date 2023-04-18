@@ -23,19 +23,15 @@ public class DispatcherConfig {
     private String dataRegionId;
     private String outputTopic;
 
-    private String applicationName;
-
     public DispatcherConfig(String projectId,
                             String computeRegionId,
                             String dataRegionId,
-                            String outputTopic,
-                            String applicationName
+                            String outputTopic
                             ) {
         this.projectId = projectId;
         this.computeRegionId = computeRegionId;
         this.dataRegionId = dataRegionId;
         this.outputTopic = outputTopic;
-        this.applicationName = applicationName;
     }
 
     public String getDataRegionId() {
@@ -54,9 +50,6 @@ public class DispatcherConfig {
         return outputTopic;
     }
 
-    public String getApplicationName() {
-        return applicationName;
-    }
 
     @Override
     public String toString() {
@@ -65,7 +58,6 @@ public class DispatcherConfig {
                 ", computeRegionId='" + computeRegionId + '\'' +
                 ", dataRegionId='" + dataRegionId + '\'' +
                 ", outputTopic='" + outputTopic + '\'' +
-                ", applicationName='" + applicationName + '\'' +
                 '}';
     }
 }

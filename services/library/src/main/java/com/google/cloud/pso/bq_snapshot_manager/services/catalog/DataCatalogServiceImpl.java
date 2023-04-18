@@ -1,4 +1,4 @@
-package com.google.cloud.pso.bq_snapshot_manager.services.backup_policy;
+package com.google.cloud.pso.bq_snapshot_manager.services.catalog;
 
 
 import com.google.cloud.Timestamp;
@@ -14,21 +14,19 @@ import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
 
-public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
+public class DataCatalogServiceImpl implements DataCatalogService {
 
     private final DataCatalogClient dataCatalogClient;
-    private String backupPolicyTagTemplateId;
 
-    public BackupPolicyServiceDataCatalogImpl(String backupPolicyTagTemplateId) throws IOException {
+    public DataCatalogServiceImpl() throws IOException {
         dataCatalogClient = DataCatalogClient.create();
-        this.backupPolicyTagTemplateId = backupPolicyTagTemplateId;
     }
 
-    public void shutdown() {
+    public void shutdown(){
         dataCatalogClient.shutdown();
     }
 
-    public void createOrUpdateBackupPolicyForTable(TableSpec tableSpec, BackupPolicy backupPolicy) {
+    public Tag createOrUpdateBackupPolicyTag(TableSpec tableSpec, BackupPolicy backupPolicy, String backupPolicyTagTemplateId){
 
         // API Call
         String parent = getBigQueryEntryName(tableSpec);
@@ -37,7 +35,7 @@ public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
         DataCatalogClient.ListTagsPagedResponse response = dataCatalogClient.listTags(parent);
 
         List<Tag> allTags = new ArrayList<>();
-        for (DataCatalogClient.ListTagsPage l : response.iteratePages()) {
+        for (DataCatalogClient.ListTagsPage l: response.iteratePages()){
             allTags.addAll(l.getResponse().getTagsList());
         }
 
@@ -46,12 +44,12 @@ public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
                 backupPolicyTagTemplateId
         );
 
-        if (tag == null) {
+        if(tag == null){
             // create a new tag
-            dataCatalogClient.createTag(parent, backupPolicy.toDataCatalogTag(backupPolicyTagTemplateId, null));
-        } else {
+            return dataCatalogClient.createTag(parent, backupPolicy.toDataCatalogTag(backupPolicyTagTemplateId, null));
+        }else{
             // update existing tag referencing the existing tag.name
-            dataCatalogClient.updateTag(
+            return  dataCatalogClient.updateTag(
                     backupPolicy.toDataCatalogTag(
                             backupPolicyTagTemplateId,
                             tag.getName()
@@ -60,13 +58,13 @@ public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
         }
     }
 
-    public Tag findTag(List<Tag> tags, String tagTemplateName) {
+    public Tag findTag(List<Tag> tags, String tagTemplateName){
 
         List<Tag> foundTags = tags.stream().filter(t -> t.getTemplate().equals(tagTemplateName))
                 .collect(Collectors.toList());
 
         // if more than one tag is found use the first one
-        return foundTags.size() >= 1 ? foundTags.get(0) : null;
+        return foundTags.size() >= 1? foundTags.get(0): null;
     }
 
 
@@ -74,22 +72,23 @@ public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
      * Return the attached backup policy tag template or null if no template is attached
      *
      * @param tableSpec
+     * @param backupPolicyTagTemplateId
      * @return
      * @throws IllegalArgumentException
      */
-    public @Nullable BackupPolicy getBackupPolicyForTable(TableSpec tableSpec) throws IllegalArgumentException {
+    public @Nullable BackupPolicy getBackupPolicyTag(TableSpec tableSpec, String backupPolicyTagTemplateId) throws IllegalArgumentException {
 
         Map<String, TagField> tagTemplate = getTagFieldsMap(tableSpec, backupPolicyTagTemplateId);
 
-        if (tagTemplate == null) {
+        if(tagTemplate == null){
             // no backup tag template is attached to this table
             return null;
-        } else {
+        }else{
             return BackupPolicy.fromMap(convertTagFieldMapToStrMap(tagTemplate));
         }
     }
 
-    public Tag getTag(TableSpec tableSpec, String templateId) {
+    public Tag getTag(TableSpec tableSpec, String templateId){
         // API Call
         String parent = getBigQueryEntryName(tableSpec);
         // API CALL
@@ -98,8 +97,8 @@ public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
         // TODO: handle multiple pages
         List<Tag> tags = response.getPage().getResponse().getTagsList();
 
-        for (Tag tagTemplate : tags) {
-            if (tagTemplate.getTemplate().equals(templateId)) {
+        for (Tag tagTemplate: tags){
+            if (tagTemplate.getTemplate().equals(templateId)){
                 return tagTemplate;
             }
         }
@@ -109,10 +108,10 @@ public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
     public Map<String, TagField> getTagFieldsMap(TableSpec tableSpec, String templateId) {
 
         Tag tag = getTag(tableSpec, templateId);
-        return tag == null ? null : tag.getFieldsMap();
+        return tag == null? null: tag.getFieldsMap();
     }
 
-    public String getBigQueryEntryName(TableSpec tableSpec) {
+    public String getBigQueryEntryName(TableSpec tableSpec){
         LookupEntryRequest lookupEntryRequest =
                 LookupEntryRequest.newBuilder()
                         .setLinkedResource(tableSpec.toDataCatalogLinkedResource()).build();
@@ -121,30 +120,30 @@ public class BackupPolicyServiceDataCatalogImpl implements BackupPolicyService {
         return dataCatalogClient.lookupEntry(lookupEntryRequest).getName();
     }
 
-    public static Map<String, String> convertTagFieldMapToStrMap(Map<String, TagField> tagFieldMap) {
+    public static Map<String, String> convertTagFieldMapToStrMap(Map<String, TagField> tagFieldMap){
 
         Map<String, String> strMap = new HashMap<>(tagFieldMap.size());
-        for (Map.Entry<String, TagField> entry : tagFieldMap.entrySet()) {
+        for(Map.Entry<String, TagField> entry: tagFieldMap.entrySet()){
             String strValue = "";
-            if (entry.getValue().hasBoolValue()) {
+            if(entry.getValue().hasBoolValue()){
                 strValue = String.valueOf(entry.getValue().getBoolValue());
             }
-            if (entry.getValue().hasStringValue()) {
+            if(entry.getValue().hasStringValue()){
                 strValue = entry.getValue().getStringValue();
             }
-            if (entry.getValue().hasDoubleValue()) {
+            if(entry.getValue().hasDoubleValue()){
                 strValue = String.valueOf(entry.getValue().getDoubleValue());
             }
-            if (entry.getValue().hasEnumValue()) {
+            if(entry.getValue().hasEnumValue()){
                 strValue = entry.getValue().getEnumValue().getDisplayName();
             }
-            if (entry.getValue().hasTimestampValue()) {
+            if(entry.getValue().hasTimestampValue()){
                 strValue = Timestamp.ofTimeSecondsAndNanos(
                         entry.getValue().getTimestampValue().getSeconds(),
                         entry.getValue().getTimestampValue().getNanos()
                 ).toString();
             }
-            if (entry.getValue().hasRichtextValue()) {
+            if(entry.getValue().hasRichtextValue()){
                 strValue = entry.getValue().getRichtextValue();
             }
             strMap.put(entry.getKey(), strValue);

@@ -29,8 +29,7 @@ public class Environment {
                 getProjectId(),
                 getBqSnapshoterOutputTopic(),
                 getGCSSnapshoterOutputTopic(),
-                getBackupTagTemplateId(),
-                getApplicationName()
+                getBackupTagTemplateId()
         );
     }
 
@@ -59,13 +58,4 @@ public class Environment {
     public String getGcsFlagsBucket(){
         return Utils.getConfigFromEnv("GCS_FLAGS_BUCKET", true);
     }
-
-    public String getApplicationName(){
-        return Utils.getConfigFromEnv("APPLICATION_NAME", true);
-    }
-
-    public String getGcsBackupPoliciesBucket(){
-        return Utils.getConfigFromEnv("GCS_BACKUP_POLICIES_BUCKET", true);
-    }
-
 }

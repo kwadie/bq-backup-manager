@@ -42,7 +42,7 @@ public class GCSSnapshoterTest {
     public void testExecute() throws NonRetryableApplicationException, IOException, InterruptedException {
 
         GCSSnapshoter gcsSnapshoter = new GCSSnapshoter(
-                new SnapshoterConfig("host-project", "data-region", "bq_backup_manager"),
+                new SnapshoterConfig("host-project", "data-region"),
                 new BigQueryService() {
                     @Override
                     public void createSnapshot(String jobId, TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
