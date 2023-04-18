@@ -14,6 +14,7 @@
       * [BigQuery Snapshoter](#bigquery-snapshoter)
       * [GCS Snapshoter](#gcs-snapshoter)
       * [Tagger](#tagger)
+    * [Design Notes](#design-notes)
     * [Assumptions](#assumptions)
   * [Deployment](#deployment)
     * [Install Maven](#install-maven)
@@ -129,6 +130,25 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 * If the request originates from the GCS Snapshoter, the tagger request is parsed from the staging persistent storage.
 * If the table has a “Backup Policy” it updates the `last_backup_at`, `last_bq_snapshot_storage_uri` and `last_gcs_snapshot_storage_uri`
 * If the table doesn't have a "Backup Policy" it creates a new one with config_source = ‘SYSTEM’ and sets all the backup policy fields based on the fallback policy used
+
+### Design Notes
+The solution uses multiple steps, as explained above, to list, backup and tag tables. These steps are designed so that each one
+of them is responsible for doing one main task and allow for checkpointing to handle retries in a cost-efficient way, and using
+PubSub to decouple these steps from each other. For example, if a table is backed up in a single run, via the Snpashoter step,
+and then the Tagger step fails to update its backup policy (i.e. last_update_at field) 
+due to temporarily GCP API quotas/limits with the underlying service, the request will not be acknowledged to PubSub, and  
+it will be retried again with exponential backoff. In this case only the tagging logic will be retried and not the entire backup operation
+that was already successful.   
+
+These steps are implemented in separate Cloud Run services, vs one service with multiple endpoints, to allow fine grain control
+on the concurrency, CPU, Memory and timeout settings for each step. This is especially useful since each step could use
+different settings depending on its traffic pattern and processing requirements. For example:
+* The Dispatcher executes once per run while the other services executes once per table; meaning they could use different concurrency settings (i.e. number of container, requests per container).
+Another
+* The Dispatcher uses relatively higher memory since it's listing all tables in the scan scope which could be in thousands
+* The Dispatcher and GCS Snapshoter needs relatively longer time to finish compared to the BQ Snapshoter. They could use different timeout settings
+  to avoid un-wanted retries by PubSub
+* Individual concurrency settings could be used to mitigate exceeding an underlying API limit and reduce retries (e.g. number of container * requests per container < api limit)
 
 ### Assumptions
 * Infrastructure resources such as backup projects, datasets and buckets are created outside the solution. This should be owned by the data teams and included in proper IaaC modules with CICD with the required access permissions and configuration (e.g. expiration, object lifecycle, etc).
