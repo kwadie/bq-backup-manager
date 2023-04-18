@@ -118,6 +118,11 @@
         </dependency>
 
         <dependency>
+            <groupId>com.google.cloud</groupId>
+            <artifactId>google-cloud-datastore</artifactId>
+        </dependency>
+
+        <dependency>
             <groupId>com.google.apis</groupId>
             <artifactId>google-api-services-cloudresourcemanager</artifactId>
             <version>v3-rev20220828-2.0.0</version>

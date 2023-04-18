@@ -83,6 +83,14 @@ resource "google_service_account_iam_member" "sa_dispatcher_account_user_sa_disp
 
 #### Configurator SA Permissions ###
 
+// read backup policies when using datastore as backend
+resource "google_project_iam_member" "sa_configurator_datastore_viewer" {
+project = var.project
+role    = "roles/datastore.viewer"
+member  = "serviceAccount:${google_service_account.sa_configurator.email}"
+}
+
+// read backup policies when using data catalog as backend
 resource "google_project_iam_member" "sa_configurator_datacatalog_viewer" {
   project = var.project
   role    = "roles/datacatalog.viewer"
@@ -116,6 +124,14 @@ resource "google_service_account_iam_member" "sa_snapshoter_gcs_account_user_sa_
 }
 
 #### Tagger SA Permissions ###
+
+// read / write for backup policies when using datastore as backend
+resource "google_project_iam_member" "sa_tagger_datastore_user" {
+project = var.project
+role    = "roles/datastore.user"
+member  = "serviceAccount:${google_service_account.sa_tagger.email}"
+}
+
 resource "google_project_iam_member" "sa_tagger_datacatalog_viewer" {
   project = var.project
   role    = "roles/datacatalog.viewer"

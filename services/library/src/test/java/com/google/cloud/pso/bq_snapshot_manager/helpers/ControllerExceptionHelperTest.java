@@ -33,7 +33,7 @@ public class ControllerExceptionHelperTest {
 
     @Test
     public void testRetryableApiException() {
-        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test");
+        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test", "bq_backup_manager");
 
         try {
 
@@ -64,7 +64,7 @@ public class ControllerExceptionHelperTest {
 
     @Test
     public void testNonRetryableApiException() {
-        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test");
+        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test","bq_backup_manager");
 
         try {
 
@@ -95,7 +95,7 @@ public class ControllerExceptionHelperTest {
 
     @Test
     public void testRetryableIOException() {
-        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test");
+        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test", "bq_backup_manager");
 
         try {
 
@@ -115,7 +115,7 @@ public class ControllerExceptionHelperTest {
 
     @Test
     public void testRetryableRuntimeStatusResourceExhaustedException() {
-        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test");
+        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test", "bq_backup_manager");
 
         try {
 
@@ -135,7 +135,7 @@ public class ControllerExceptionHelperTest {
 
     @Test
     public void testRetryableResourceExhaustedException() {
-        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test");
+        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test", "bq_backup_manager");
 
         try {
 
@@ -169,7 +169,7 @@ public class ControllerExceptionHelperTest {
 
     @Test
     public void testNestedRetryableException() {
-        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test");
+        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test", "bq_backup_manager");
 
         try {
             Throwable cause = new java.net.SocketException ("test socket exception");
@@ -196,7 +196,7 @@ public class ControllerExceptionHelperTest {
 
     @Test
     public void testNonRetryableException() {
-        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test");
+        LoggingHelper logger = new LoggingHelper(ControllerExceptionHelperTest.class.getSimpleName(), 0, "test", "bq_backup_manager");
 
         try {
 
