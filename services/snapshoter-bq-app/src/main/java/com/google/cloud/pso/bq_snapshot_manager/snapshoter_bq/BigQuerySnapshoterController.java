@@ -56,8 +56,7 @@ public class BigQuerySnapshoterController {
         logger = new LoggingHelper(
                 BigQuerySnapshoterController.class.getSimpleName(),
                 functionNumber,
-                environment.getProjectId(),
-                environment.getApplicationName()
+                environment.getProjectId()
         );
     }
 

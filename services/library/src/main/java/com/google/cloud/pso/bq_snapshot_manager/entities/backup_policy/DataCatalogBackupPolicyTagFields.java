@@ -1,7 +1,6 @@
 package com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy;
 
-// Field names used to represent a backup policy on external storage layer(s)
-public enum BackupPolicyFields {
+public enum DataCatalogBackupPolicyTagFields {
     backup_cron,
     backup_method,
     backup_time_travel_offset_days,

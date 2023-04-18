@@ -21,12 +21,9 @@ public class SnapshoterConfig {
     private String projectId;
     private String outputTopic;
 
-    private String applicationName;
-
-    public SnapshoterConfig(String projectId, String outputTopic, String applicationName) {
+    public SnapshoterConfig(String projectId, String outputTopic) {
         this.projectId = projectId;
         this.outputTopic = outputTopic;
-        this.applicationName = applicationName;
     }
 
     public String getProjectId() {
@@ -37,16 +34,11 @@ public class SnapshoterConfig {
         return outputTopic;
     }
 
-    public String getApplicationName() {
-        return applicationName;
-    }
-
     @Override
     public String toString() {
         return "SnapshoterConfig{" +
                 "projectId='" + projectId + '\'' +
                 ", outputTopic='" + outputTopic + '\'' +
-                ", applicationName='" + applicationName + '\'' +
                 '}';
     }
 }

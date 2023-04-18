@@ -54,8 +54,7 @@ public class DispatcherTest {
             "testProjectId",
             "testComputeRegionId",
             "testDataRegionId",
-            "testTaggerTopic",
-            "bq_backup_manager"
+            "testTaggerTopic"
     );
 
     String runId = "1679574252412-R";

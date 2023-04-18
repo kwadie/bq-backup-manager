@@ -2,6 +2,7 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
+import com.google.cloud.datacatalog.v1.Tag;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
@@ -13,12 +14,13 @@ import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.PersistentSetTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.PubSubServiceTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
-import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import org.junit.Test;
 
 import javax.annotation.Nullable;
 import java.io.IOException;
+import java.sql.Time;
 import java.time.LocalDateTime;
 import java.util.AbstractMap;
 import java.util.Map;
@@ -33,8 +35,7 @@ public class ConfiguratorTest {
     LoggingHelper testLogger = new LoggingHelper(
             ConfiguratorTest.class.getSimpleName(),
             2,
-            "testProject",
-            "bq_backup_manager"
+            "testProject"
     );
 
     String jsonPolicyStr = "{\n" +
@@ -333,8 +334,7 @@ public class ConfiguratorTest {
                 "test-project",
                 "test-bqSnapshoterTopic",
                 "test-gcsSnapshoterTopic",
-                "test-templateId",
-                "bq_backup_manager"
+                "test-templateId"
         );
 
         Configurator configurator = new Configurator(
@@ -355,21 +355,17 @@ public class ConfiguratorTest {
                         return Utils.timestampToUnixTimeMillis(tableCreationTS);
                     }
                 },
-                new BackupPolicyService() {
+                new DataCatalogService() {
 
                     @Override
-                    public void createOrUpdateBackupPolicyForTable(TableSpec tableSpec, BackupPolicy backupPolicy) {
+                    public Tag createOrUpdateBackupPolicyTag(TableSpec tableSpec, BackupPolicy backupPolicy, String backupPolicyTagTemplateId) {
 
+                        return null;
                     }
 
                     @Override
-                    public @Nullable BackupPolicy getBackupPolicyForTable(TableSpec tableSpec) throws IOException, IllegalArgumentException {
+                    public @Nullable BackupPolicy getBackupPolicyTag(TableSpec tableSpec, String backupPolicyTagTemplateId) throws IOException, IllegalArgumentException {
                         return testBackupPolicy;
-                    }
-
-                    @Override
-                    public void shutdown() {
-
                     }
                 },
                 new PubSubServiceTestImpl(),

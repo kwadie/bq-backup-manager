@@ -66,8 +66,7 @@ public class Dispatcher {
         logger = new LoggingHelper(
                 Dispatcher.class.getSimpleName(),
                 functionNumber,
-                config.getProjectId(),
-                config.getApplicationName()
+                config.getProjectId()
         );
     }
 
@@ -97,8 +96,7 @@ public class Dispatcher {
                 new LoggingHelper(
                         BigQueryScopeLister.class.getSimpleName(),
                         functionNumber,
-                        config.getProjectId(),
-                        config.getApplicationName()
+                        config.getProjectId()
                 ),
                 runId
         );

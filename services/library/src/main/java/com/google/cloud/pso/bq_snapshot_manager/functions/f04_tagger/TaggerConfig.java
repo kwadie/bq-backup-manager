@@ -18,18 +18,13 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger;
 
 public class TaggerConfig {
 
-    private final String projectId;
-    private final String tagTemplateId;
-
-    private final String applicationName;
+    private String projectId;
+    private String tagTemplateId;
 
     public TaggerConfig(String projectId,
-                        String tagTemplateId,
-                        String applicationName
-                        ) {
+                        String tagTemplateId) {
         this.projectId = projectId;
         this.tagTemplateId = tagTemplateId;
-        this.applicationName = applicationName;
     }
 
     public String getProjectId() {
@@ -40,16 +35,11 @@ public class TaggerConfig {
         return tagTemplateId;
     }
 
-    public String getApplicationName() {
-        return applicationName;
-    }
-
     @Override
     public String toString() {
         return "TaggerConfig{" +
                 "projectId='" + projectId + '\'' +
                 ", tagTemplateId='" + tagTemplateId + '\'' +
-                ", applicationName='" + applicationName + '\'' +
                 '}';
     }
 }

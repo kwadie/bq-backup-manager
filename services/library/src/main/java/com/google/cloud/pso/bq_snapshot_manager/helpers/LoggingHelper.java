@@ -37,13 +37,10 @@ public class LoggingHelper {
     // Used to create a trace
     private final String projectId;
 
-    private final String applicationName;
-
-    public LoggingHelper(String loggerName, Integer functionNumber, String projectId, String applicationName) {
+    public LoggingHelper(String loggerName, Integer functionNumber, String projectId) {
         this.loggerName = loggerName;
         this.functionNumber = functionNumber;
         this.projectId = projectId;
-        this.applicationName = applicationName;
 
         logger = LoggerFactory.getLogger(loggerName);
     }
@@ -260,7 +257,7 @@ public class LoggingHelper {
         // Enable JSON logging with Logback and SLF4J by enabling the Logstash JSON Encoder in your logback.xml configuration.
 
         String payload = String.format("%s | %s | %s | %s | %s | %s",
-                applicationName,
+                Globals.APPLICATION_NAME,
                 log,
                 loggerName,
                 isDryRun!=null? (isDryRun?"Dry-Run":"Wet-Run") : null,
@@ -277,7 +274,7 @@ public class LoggingHelper {
         }
 
         Object [] globalAttributes = new Object[]{
-                kv("global_app", applicationName),
+                kv("global_app", Globals.APPLICATION_NAME),
                 kv("global_logger_name", this.loggerName),
                 kv("global_app_log", log),
                 kv("global_tracker", tracker),

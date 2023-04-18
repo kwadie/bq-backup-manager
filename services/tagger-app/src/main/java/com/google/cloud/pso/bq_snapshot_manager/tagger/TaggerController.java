@@ -18,19 +18,21 @@ package com.google.cloud.pso.bq_snapshot_manager.tagger;
 import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.PubSubEvent;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.BigQuerySnapshoter;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter.GCSSnapshoter;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.Tagger;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerResponse;
 import com.google.cloud.pso.bq_snapshot_manager.functions.f04_tagger.TaggerRequest;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.ControllerExceptionHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
-import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
-import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceFireStoreImpl;
-import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceGCSImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.catalog.DataCatalogServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.map.GcsPersistentMapImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.map.PersistentMap;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
+import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import org.springframework.boot.SpringApplication;
@@ -58,8 +60,7 @@ public class TaggerController {
         logger = new LoggingHelper(
                 TaggerController.class.getSimpleName(),
                 functionNumber,
-                environment.getProjectId(),
-                environment.getApplicationName()
+                environment.getProjectId()
         );
     }
 
@@ -67,7 +68,7 @@ public class TaggerController {
     public ResponseEntity receiveMessage(@RequestBody PubSubEvent requestBody) {
 
         String trackingId = TrackingHelper.MIN_RUN_ID;
-        BackupPolicyService backupPolicyService = null;
+        DataCatalogServiceImpl dataCatalogService = null;
 
         // These values will be updated based on the execution flow and logged at the end
         ResponseEntity responseEntity;
@@ -127,13 +128,13 @@ public class TaggerController {
 
             logger.logInfoWithTracker(taggerRequest.isDryRun(), trackingId, taggerRequest.getTargetTable(), String.format("Parsed Request: %s", taggerRequest.toString()));
 
-            backupPolicyService = new BackupPolicyServiceGCSImpl(environment.getGcsBackupPoliciesBucket());
+            dataCatalogService = new DataCatalogServiceImpl();
             Tagger tagger = new Tagger(
+                    new LoggingHelper(Tagger.class.getSimpleName(), functionNumber, environment.getProjectId()),
                     environment.toConfig(),
-                    backupPolicyService,
+                    dataCatalogService,
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
-                    "tagger-flags",
-                    functionNumber
+                    "tagger-flags"
             );
 
             taggerResponse = tagger.execute(
@@ -156,8 +157,8 @@ public class TaggerController {
             error = e;
 
         }finally {
-            if(backupPolicyService != null){
-                backupPolicyService.shutdown();
+            if(dataCatalogService != null){
+                dataCatalogService.shutdown();
             }
         }
 

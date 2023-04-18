@@ -26,8 +26,7 @@ public class Environment {
                 getProjectId(),
                 getComputeRegionId(),
                 getDataRegionId(),
-                getOutputTopic(),
-                getApplicationName()
+                getOutputTopic()
         );
     }
 
@@ -47,9 +46,5 @@ public class Environment {
 
     public String getGcsFlagsBucket(){
         return Utils.getConfigFromEnv("GCS_FLAGS_BUCKET", true);
-    }
-
-    public String getApplicationName(){
-        return Utils.getConfigFromEnv("APPLICATION_NAME", true);
     }
 }

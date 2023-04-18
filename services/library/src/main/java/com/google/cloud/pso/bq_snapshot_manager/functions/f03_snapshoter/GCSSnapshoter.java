@@ -2,6 +2,7 @@ package com.google.cloud.pso.bq_snapshot_manager.functions.f03_snapshoter;
 
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
+import com.google.cloud.pso.bq_snapshot_manager.entities.Globals;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupMethod;
@@ -52,8 +53,7 @@ public class GCSSnapshoter {
         logger = new LoggingHelper(
                 GCSSnapshoter.class.getSimpleName(),
                 functionNumber,
-                config.getProjectId(),
-                config.getApplicationName()
+                config.getProjectId()
         );
     }
 
@@ -130,7 +130,7 @@ public class GCSSnapshoter {
         if(!request.isDryRun()){
             // create an async bq export job
 
-            String jobId = TrackingHelper.generateBQExportJobId(request.getTrackingId(), config.getApplicationName());
+            String jobId = TrackingHelper.generateBQExportJobId(request.getTrackingId());
 
             // We create the tagging request and added it to a persistent storage
             // The Tagger service will receive notifications of export job completion via log sinks and pick up the tagger request from the persistent storage
@@ -152,7 +152,7 @@ public class GCSSnapshoter {
 
             Map<String, String> jobLabels = new HashMap<>();
             // labels has to be max 63 chars, contain only lowercase letters, numeric characters, underscores, and dashes. All characters must use UTF-8 encoding, and international characters are allowed.
-            jobLabels.put("app", config.getApplicationName());
+            jobLabels.put("app", Globals.APPLICATION_NAME);
 
             // API Call
             bqService.exportToGCS(
