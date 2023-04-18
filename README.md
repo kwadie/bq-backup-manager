@@ -14,7 +14,7 @@
       * [BigQuery Snapshoter](#bigquery-snapshoter)
       * [GCS Snapshoter](#gcs-snapshoter)
       * [Tagger](#tagger)
-    * [Design Notes](#design-notes)
+      * [Design Notes](#design-notes)
     * [Assumptions](#assumptions)
   * [Deployment](#deployment)
     * [Install Maven](#install-maven)
@@ -135,16 +135,16 @@ A cloud scheduler is used to send a BigQuery “Scan Scope” to the dispatcher 
 The solution uses multiple steps, as explained above, to list, backup and tag tables. These steps are designed so that each one
 of them is responsible for doing one main task and allow for checkpointing to handle retries in a cost-efficient way, and using
 PubSub to decouple these steps from each other. For example, if a table is backed up in a single run, via the Snpashoter step,
-and then the Tagger step fails to update its backup policy (i.e. last_update_at field) 
+and then the Tagger step fails to update its backup policy (i.e. last_update_at field)
 due to temporarily GCP API quotas/limits with the underlying service, the request will not be acknowledged to PubSub, and  
 it will be retried again with exponential backoff. In this case only the tagging logic will be retried and not the entire backup operation
-that was already successful.   
+that was already successful.
 
 These steps are implemented in separate Cloud Run services, vs one service with multiple endpoints, to allow fine grain control
 on the concurrency, CPU, Memory and timeout settings for each step. This is especially useful since each step could use
 different settings depending on its traffic pattern and processing requirements. For example:
 * The Dispatcher executes once per run while the other services executes once per table; meaning they could use different concurrency settings (i.e. number of container, requests per container).
-Another
+  Another
 * The Dispatcher uses relatively higher memory since it's listing all tables in the scan scope which could be in thousands
 * The Dispatcher and GCS Snapshoter needs relatively longer time to finish compared to the BQ Snapshoter. They could use different timeout settings
   to avoid un-wanted retries by PubSub

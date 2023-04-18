@@ -20,7 +20,7 @@ public class BigQueryScopeListerTest {
 
     BigQueryScopeLister lister = new BigQueryScopeLister(
             new ResourceScannerTestImpl(),
-            new LoggingHelper("test", 1, "test-project"),
+            new LoggingHelper("test", 1, "test-project", "bq_backup_manager"),
             "R-testxxxxxxx"
     );
 

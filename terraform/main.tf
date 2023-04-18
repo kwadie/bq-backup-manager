@@ -71,6 +71,10 @@ locals {
       value = module.gcs.create_gcs_flags_bucket_name
     },
     {
+      name = "GCS_BACKUP_POLICIES_BUCKET",
+      value = module.gcs.create_gcs_backup_policies_bucket_name
+    },
+    {
       name = "APPLICATION_NAME",
       value = var.application_name
     }
@@ -111,7 +115,6 @@ module "gcs" {
   source = "./modules/gcs"
   gcs_flags_bucket_name = "${var.project}-${var.gcs_flags_bucket_name}"
   project = var.project
-  region = var.compute_region
   # because it's used by the cloud run services
   # both dispatchers should be admins. Add the inspection-dispatcher-sa only if it's being deployed
   gcs_flags_bucket_admins = [
@@ -122,6 +125,13 @@ module "gcs" {
     "serviceAccount:${module.iam.sa_tagger_email}",
   ]
   common_labels = local.common_labels
+  gcs_backup_policies_bucket_admins = [
+    "serviceAccount:${module.iam.sa_configurator_email}",
+    "serviceAccount:${module.iam.sa_tagger_email}",
+  ]
+  gcs_backup_policies_bucket_name = "${var.project}-${var.gcs_backup_policies_bucket_name}"
+  compute_region                  = var.compute_region
+  data_region                     = var.data_region
 }
 
 module "bigquery" {
@@ -131,6 +141,7 @@ module "bigquery" {
   dataset = var.bigquery_dataset_name
   logging_sink_sa = module.cloud_logging.service_account
   common_labels = local.common_labels
+  gcs_backup_policies_bucket_name = module.gcs.create_gcs_backup_policies_bucket_name
 }
 
 module "cloud_logging" {

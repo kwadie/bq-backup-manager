@@ -171,7 +171,12 @@ variable "tagger_pubsub_sub" {
 
 variable "gcs_flags_bucket_name" {
   type = string
-  default = "bq-snapshot-mgr-flags"
+  default = "bq-backup-manager-flags"
+}
+
+variable "gcs_backup_policies_bucket_name" {
+  type = string
+  default = "bq-backup-manager-policies"
 }
 
 # Images

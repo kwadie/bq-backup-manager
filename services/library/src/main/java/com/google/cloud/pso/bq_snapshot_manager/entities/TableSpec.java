@@ -109,4 +109,12 @@ public class TableSpec {
                 getTable()
                 );
     }
+
+    public String toHivePartitionPostfix(){
+        return String.format("project=%s/dataset=%s/table=%s",
+                project,
+                dataset,
+                table
+                );
+    }
 }

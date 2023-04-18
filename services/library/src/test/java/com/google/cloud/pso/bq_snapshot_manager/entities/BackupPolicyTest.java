@@ -311,13 +311,13 @@ public class BackupPolicyTest {
     public void testValidate_Required(){
 
         BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder(null,null,null,null,null);
-        List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
-        List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
-                DataCatalogBackupPolicyTagFields.backup_cron,
-                DataCatalogBackupPolicyTagFields.backup_method,
-                DataCatalogBackupPolicyTagFields.backup_time_travel_offset_days,
-                DataCatalogBackupPolicyTagFields.config_source,
-                DataCatalogBackupPolicyTagFields.backup_storage_project
+        List<BackupPolicyFields> actual = BackupPolicy.validate(builder);
+        List<BackupPolicyFields> expected = Arrays.asList(
+                BackupPolicyFields.backup_cron,
+                BackupPolicyFields.backup_method,
+                BackupPolicyFields.backup_time_travel_offset_days,
+                BackupPolicyFields.config_source,
+                BackupPolicyFields.backup_storage_project
         );
 
         assertEquals(expected, actual);
@@ -327,10 +327,10 @@ public class BackupPolicyTest {
     public void testValidate_BQSnapshot(){
 
         BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.BIGQUERY_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
-        List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
-        List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
-                DataCatalogBackupPolicyTagFields.bq_snapshot_storage_dataset,
-                DataCatalogBackupPolicyTagFields.bq_snapshot_expiration_days
+        List<BackupPolicyFields> actual = BackupPolicy.validate(builder);
+        List<BackupPolicyFields> expected = Arrays.asList(
+                BackupPolicyFields.bq_snapshot_storage_dataset,
+                BackupPolicyFields.bq_snapshot_expiration_days
         );
 
         assertEquals(expected, actual);
@@ -341,10 +341,10 @@ public class BackupPolicyTest {
 
         BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
 
-        List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
-        List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_format,
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location
+        List<BackupPolicyFields> actual = BackupPolicy.validate(builder);
+        List<BackupPolicyFields> expected = Arrays.asList(
+                BackupPolicyFields.gcs_snapshot_format,
+                BackupPolicyFields.gcs_snapshot_storage_location
         );
 
         assertEquals(expected, actual);
@@ -356,11 +356,11 @@ public class BackupPolicyTest {
         BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
         builder.setGcsExportFormat(GCSSnapshotFormat.CSV);
 
-        List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
-        List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location,
-                DataCatalogBackupPolicyTagFields.gcs_csv_delimiter,
-                DataCatalogBackupPolicyTagFields.gcs_csv_export_header
+        List<BackupPolicyFields> actual = BackupPolicy.validate(builder);
+        List<BackupPolicyFields> expected = Arrays.asList(
+                BackupPolicyFields.gcs_snapshot_storage_location,
+                BackupPolicyFields.gcs_csv_delimiter,
+                BackupPolicyFields.gcs_csv_export_header
         );
 
         assertEquals(expected, actual);
@@ -372,10 +372,10 @@ public class BackupPolicyTest {
         BackupPolicy.BackupPolicyBuilder builder = new BackupPolicy.BackupPolicyBuilder("",BackupMethod.GCS_SNAPSHOT,TimeTravelOffsetDays.DAYS_0,BackupConfigSource.SYSTEM,"");
         builder.setGcsExportFormat(GCSSnapshotFormat.AVRO_SNAPPY);
 
-        List<DataCatalogBackupPolicyTagFields> actual = BackupPolicy.validate(builder);
-        List<DataCatalogBackupPolicyTagFields> expected = Arrays.asList(
-                DataCatalogBackupPolicyTagFields.gcs_snapshot_storage_location,
-                DataCatalogBackupPolicyTagFields.gcs_avro_use_logical_types
+        List<BackupPolicyFields> actual = BackupPolicy.validate(builder);
+        List<BackupPolicyFields> expected = Arrays.asList(
+                BackupPolicyFields.gcs_snapshot_storage_location,
+                BackupPolicyFields.gcs_avro_use_logical_types
         );
 
         assertEquals(expected, actual);

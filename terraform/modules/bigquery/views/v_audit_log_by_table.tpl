@@ -21,7 +21,7 @@ CAST(JSON_VALUE(jsonPayload.unified_input_json, '$.isForceRun') AS BOOL) AS is_f
 CAST(JSON_VALUE(jsonPayload.unified_output_json, '$.isBackupCronTime') AS BOOL) AS is_backup_cron_time,
 CAST(JSON_VALUE(jsonPayload.unified_output_json, '$.isTableCreatedBeforeTimeTravel') AS BOOL) AS is_table_created_before_time_travel,
 CAST(JSON_VALUE(jsonPayload.unified_output_json, '$.isBackupTime') AS BOOL) AS is_backup_time,
-JSON_VALUE(jsonPayload.unified_output_json, '$.backupPolicy.method') AS backup_method,
+JSON_VALUE(jsonPayload.unified_output_json, '$.backupPolicy.backup_method') AS backup_method,
 CAST(JSON_VALUE(jsonPayload.unified_input_json, '$.isDryRun') AS BOOL) AS is_dry_run,
 timestamp AS configurator_log_ts
 FROM `${project}.${dataset}.${logging_table}`

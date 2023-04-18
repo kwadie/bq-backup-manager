@@ -58,7 +58,8 @@ public class GCSSnapshoterController {
         logger = new LoggingHelper(
                 GCSSnapshoterController.class.getSimpleName(),
                 functionNumber,
-                environment.getProjectId()
+                environment.getProjectId(),
+                environment.getApplicationName()
         );
     }
 
