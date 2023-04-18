@@ -8,7 +8,6 @@ resource "google_bigquery_dataset" "results_dataset" {
   project = var.project
   location = var.region
   dataset_id = var.dataset
-  description = "To store DLP results from BQ Security Classifier app"
   labels = var.common_labels
 }
 
@@ -245,6 +244,29 @@ resource "google_bigquery_table" "view_run_duration" {
   labels = var.common_labels
 }
 
+
+########## External tables #####################################
+
+resource "google_bigquery_table" "external_gcs_backup_policies" {
+  dataset_id = google_bigquery_dataset.results_dataset.dataset_id
+  table_id   = "ext_backup_policies"
+
+  external_data_configuration {
+    source_format = "NEWLINE_DELIMITED_JSON"
+    hive_partitioning_options {
+      mode = "CUSTOM" # Custom means you must encode the partition key schema within the source_uri_prefix
+      source_uri_prefix = "gs://${var.gcs_backup_policies_bucket_name}/{project:STRING}/{dataset:STRING}/{table:STRING}"
+
+    }
+    source_uris = [
+      "gs://${var.gcs_backup_policies_bucket_name}/*.json",
+    ]
+    autodetect = false # Let BigQuery try to autodetect the schema and format of the table.
+    schema = file("modules/bigquery/schema/ext_backup_policies.json")
+  }
+
+  deletion_protection = false
+}
 
 
 

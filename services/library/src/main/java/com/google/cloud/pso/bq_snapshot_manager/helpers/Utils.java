@@ -142,8 +142,8 @@ public class Utils {
             // always use time travel for consistency and traceability
             timeTravelMs = refPointMs;
         }else{
-            // use a buffer (milliseconds) to count for the operation time
-            Long bufferMs = timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_7) ? 60000L : 0L;
+            // use a buffer (milliseconds) to count for the operation time. 1 MIN = 60000 MILLISECONDS
+            Long bufferMs = timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_7) ? 60 * 60000L : 0L;
             // milli seconds per day * number of days
             Long timeTravelOffsetMs = (86400000L * Long.parseLong(timeTravelOffsetDays.getText()));
             timeTravelMs = (refPointMs - timeTravelOffsetMs) + bufferMs;

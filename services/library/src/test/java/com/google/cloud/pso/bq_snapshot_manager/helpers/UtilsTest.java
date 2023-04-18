@@ -59,7 +59,7 @@ public class UtilsTest {
                 refPoint
         );
 
-        Long expectedMs7Days = (1665665921000L - (7 * 86400000)) + 60000;
+        Long expectedMs7Days = (1665665921000L - (7 * 86400000)) + 60* 60000;
         assertEquals(TableSpec.fromSqlString("p.d.t@"+expectedMs7Days.toString()), actualWith7.x());
         assertEquals(expectedMs7Days, actualWith7.y());
 
