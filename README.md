@@ -276,15 +276,8 @@ data_region = "<GCP region to deploy data resources (buckets, datasets, etc> (eq
 
 ##### Configure Cloud Scheduler Service Account
 
-We will need to grant the Cloud Scheduler account permissions to use parts of the solution
-
-```yaml
-cloud_scheduler_account = "service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
-```
-
-If this host project never used Cloud Scheduler before, create and run a sample job to force GCP to create the service account.
-
-PS: project number is different from project id/name. You can find both info on the home page of any project.
+Terraform will need to grant the Cloud Scheduler account permissions to use parts of the solution. If this host project
+never used Cloud Scheduler before, create and run a sample job to force GCP to create the service account.
 
 ##### Configure Terraform Service Account
 

@@ -200,12 +200,6 @@ variable "tagger_service_image" {
   type = string
 }
 
-
-variable "cloud_scheduler_account" {
-  type = string
-  description = "Service agent account for Cloud Scheduler. Format service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
-}
-
 variable "terraform_service_account" {
   type = string
   description = "service account used by terraform to deploy to GCP"
@@ -372,6 +366,7 @@ variable "fallback_policy" {
 // make sure that you include all projects in this list while calling /scripts/prepare_backup_storage_projects.sh to grant terraform SA permissions to deploy resources there
 variable "additional_backup_operation_projects" {
   type = list(string)
+  default = []
   description = "Projects were backup operations will run but not defined in the fallback policy (e.g. in Tag policies). Used to deploy required resources on these projects."
 }
 
