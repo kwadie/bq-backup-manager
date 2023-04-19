@@ -12,6 +12,7 @@ import com.google.cloud.pso.bq_snapshot_manager.helpers.TrackingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import com.google.cloud.pso.bq_snapshot_manager.services.PersistentSetTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.PubSubServiceTestImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.ResourceScannerTestImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
@@ -37,112 +38,12 @@ public class ConfiguratorTest {
             "bq_backup_manager"
     );
 
-    String jsonPolicyStr = "{\n" +
-            "  \"default_policy\": {\n" +
-            "    \"backup_cron\": \"* * * * * *\",\n" +
-            "    \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "    \"backup_time_travel_offset_days\": \"0\",\n" +
-            "    \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "    \"backup_storage_project\": \"project\",\n" +
-            "    \"backup_operation_project\": \"project\",\n" +
-            "    \"bq_snapshot_storage_dataset\": \"dataset\"\n" +
-            "  },\n" +
-            "  \"folder_overrides\": {\n" +
-            "    \"folder1\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    },\n" +
-            "    \"folder2\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    }\n" +
-            "  },\n" +
-            "  \"project_overrides\": {\n" +
-            "    \"project1\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    },\n" +
-            "    \"project2\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    }\n" +
-            "  },\n" +
-            "  \"dataset_overrides\": {\n" +
-            "    \"dataset1\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    },\n" +
-            "    \"dataset2\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    }\n" +
-            "  },\n" +
-            "  \"table_overrides\": {\n" +
-            "    \"table1\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    },\n" +
-            "    \"table2\": {\n" +
-            "      \"backup_cron\": \"*****\",\n" +
-            "      \"backup_method\": \"BigQuery Snapshot\",\n" +
-            "      \"backup_time_travel_offset_days\": \"0\",\n" +
-            "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-            "      \"backup_storage_project\": \"project\",\n" +
-            "      \"backup_operation_project\": \"project\",\n" +
-            "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
-            "      \"gcs_snapshot_storage_location\": \"gs://bla/\"\n" +
-            "    }\n" +
-            "  }\n" +
-            "}";
-
-    BackupPolicy testPolicy = new BackupPolicy.BackupPolicyBuilder("*****",
+    BackupPolicy testPolicy = new BackupPolicy.BackupPolicyBuilder("* * * * * *",
             BackupMethod.BIGQUERY_SNAPSHOT,
             TimeTravelOffsetDays.DAYS_0,
             BackupConfigSource.SYSTEM,
-            "project")
-            .setBackupOperationProject("project")
+            "storage_project")
+            .setBackupOperationProject("operation_project")
             .setBigQuerySnapshotExpirationDays(15.0)
             .setBigQuerySnapshotStorageDataset("dataset")
             .setGcsSnapshotStorageLocation("gs://bla")
@@ -154,7 +55,7 @@ public class ConfiguratorTest {
             testPolicy,
             // folder level
             Stream.of(
-                            new AbstractMap.SimpleEntry<>("folder1", testPolicy))
+                            new AbstractMap.SimpleEntry<>("700", testPolicy))
                     .collect(Collectors.toMap(Map.Entry::getKey, Map.Entry::getValue)),
             // project level
             Stream.of(
@@ -170,10 +71,61 @@ public class ConfiguratorTest {
     );
 
     @Test
-    public void testFindFallbackBackupPolicy() {
+    public void testFindFallbackBackupPolicy() throws IOException {
+
+        ConfiguratorConfig config = new ConfiguratorConfig(
+                "test-project",
+                "test-bqSnapshoterTopic",
+                "test-gcsSnapshoterTopic",
+                "test-templateId",
+                "bq_backup_manager"
+        );
+
+        Configurator configurator = new Configurator(
+                config,
+                new BigQueryService() {
+                    @Override
+                    public void createSnapshot(String jobId, TableSpec sourceTable, TableSpec destinationId, Timestamp snapshotExpirationTs, String trackingId) throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public void exportToGCS(String jobId, TableSpec sourceTable, String gcsDestinationUri, GCSSnapshotFormat exportFormat, @Nullable String csvFieldDelimiter, @Nullable Boolean csvPrintHeader, @Nullable Boolean useAvroLogicalTypes, String trackingId, Map<String, String> jobLabels) throws InterruptedException {
+
+                    }
+
+                    @Override
+                    public Long getTableCreationTime(TableSpec table) {
+                        return Timestamp.MIN_VALUE.getSeconds();
+                    }
+                },
+                new BackupPolicyService() {
+
+                    @Override
+                    public void createOrUpdateBackupPolicyForTable(TableSpec tableSpec, BackupPolicy backupPolicy) {
+
+                    }
+
+                    @Override
+                    public @Nullable BackupPolicy getBackupPolicyForTable(TableSpec tableSpec) throws IOException, IllegalArgumentException {
+                        return testPolicy;
+                    }
+
+                    @Override
+                    public void shutdown() {
+
+                    }
+                },
+                new PubSubServiceTestImpl(),
+                new ResourceScannerTestImpl(),
+                new PersistentSetTestImpl(),
+                fallbackBackupPolicy,
+                "test-prefix",
+                2
+        );
 
         // test table level
-        Tuple<String, BackupPolicy> tableLevel = Configurator.findFallbackBackupPolicy(
+        Tuple<String, BackupPolicy> tableLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
                 TableSpec.fromSqlString("p1.d1.t1")
         );
@@ -182,7 +134,7 @@ public class ConfiguratorTest {
         assertEquals(testPolicy, tableLevel.y());
 
         // test dataset level
-        Tuple<String, BackupPolicy> datasetLevel = Configurator.findFallbackBackupPolicy(
+        Tuple<String, BackupPolicy> datasetLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
                 TableSpec.fromSqlString("p1.d2.t1")
         );
@@ -191,7 +143,7 @@ public class ConfiguratorTest {
         assertEquals(testPolicy, datasetLevel.y());
 
         // test project level
-        Tuple<String, BackupPolicy> projectLevel = Configurator.findFallbackBackupPolicy(
+        Tuple<String, BackupPolicy> projectLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
                 TableSpec.fromSqlString("p2.d1.t1")
         );
@@ -199,13 +151,22 @@ public class ConfiguratorTest {
         assertEquals("project", projectLevel.x());
         assertEquals(testPolicy, projectLevel.y());
 
+        // test folder level
+        Tuple<String, BackupPolicy> folderLevel = configurator.findFallbackBackupPolicy(
+                fallbackBackupPolicy,
+                TableSpec.fromSqlString("p3.d1.t1")
+        );
+
+        assertEquals("folder", folderLevel.x());
+        assertEquals(testPolicy, folderLevel.y());
+
         // test default level
-        Tuple<String, BackupPolicy> defaultLevel = Configurator.findFallbackBackupPolicy(
+        Tuple<String, BackupPolicy> defaultLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
                 TableSpec.fromSqlString("p9.d1.t1")
         );
 
-        assertEquals("global", defaultLevel.x());
+        assertEquals("default", defaultLevel.x());
         assertEquals(testPolicy, defaultLevel.y());
     }
 
@@ -373,8 +334,9 @@ public class ConfiguratorTest {
                     }
                 },
                 new PubSubServiceTestImpl(),
+                new ResourceScannerTestImpl(),
                 new PersistentSetTestImpl(),
-                FallbackBackupPolicy.fromJson(jsonPolicyStr), // has no effect since we return a static BackUpPolicy from DC stub
+                fallbackBackupPolicy,
                 "test-prefix",
                 2
         );
@@ -610,24 +572,13 @@ public class ConfiguratorTest {
                 "1665734583289-T",
                 "1665734583289-T-xyz",
                 false,
-                new BackupPolicy.BackupPolicyBuilder(
-                        "* * * * * *",
-                        BackupMethod.BIGQUERY_SNAPSHOT,
-                        TimeTravelOffsetDays.DAYS_0,
-                        BackupConfigSource.SYSTEM,
-                        "project"
-                )
-                        .setBackupOperationProject("project")
-                        .setBigQuerySnapshotExpirationDays(15.0)
-                        .setBigQuerySnapshotStorageDataset("dataset")
-                        .setLastBackupAt(Timestamp.MIN_VALUE)
-                        .build()
+                testPolicy // forming the fallback policy
         );
-
 
         assertEquals(expectedSnapshoterRequest, actualSnapshoterRequest);
     }
 
+    @Test
     public void testConfiguratorWithNewlyCreatedTable() throws IOException, NonRetryableApplicationException, InterruptedException {
 
         BackupPolicy backupPolicy = new BackupPolicy.BackupPolicyBuilder("* * * * * *",
@@ -646,8 +597,8 @@ public class ConfiguratorTest {
         TableSpec targetTable = TableSpec.fromSqlString("testProject.testDataset.testTable");
 
         // ref point - 3 days time travel < table creation time --> table is not ready for backup
-        Timestamp refPoint = Timestamp.parseTimestamp("2023-01-07 00:00:00");
-        Timestamp tableCreationTs = Timestamp.parseTimestamp("2023-01-06 00:00:00");
+        Timestamp refPoint = Timestamp.parseTimestamp("2023-01-07T00:00:00Z");
+        Timestamp tableCreationTs = Timestamp.parseTimestamp("2023-01-06T00:00:00Z");
 
         ConfiguratorResponse configuratorResponse = executeConfigurator(
                 targetTable,

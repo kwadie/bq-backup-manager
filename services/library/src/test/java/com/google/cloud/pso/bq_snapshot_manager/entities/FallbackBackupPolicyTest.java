@@ -23,8 +23,8 @@ public class FallbackBackupPolicyTest {
                 "    \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "    \"backup_time_travel_offset_days\": \"0\",\n" +
                 "    \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "    \"backup_storage_project\": \"project\",\n" +
-                "    \"backup_operation_project\": \"project\",\n" +
+                "    \"backup_storage_project\": \"storage_project\",\n" +
+                "    \"backup_operation_project\": \"operation_project\",\n" +
                 "    \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "    \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -35,8 +35,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "    \"backup_storage_project\": \"project\",\n" +
-                "    \"backup_operation_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"storage_project\",\n" +
+                "      \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -46,8 +46,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "    \"backup_storage_project\": \"project\",\n" +
-                "    \"backup_operation_project\": \"project\",\n" +
+                "    \"backup_storage_project\": \"storage_project\",\n" +
+                "    \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -59,8 +59,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_storage_project\": \"project\",\n" +
-                "      \"backup_operation_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"storage_project\",\n" +
+                "      \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -70,8 +70,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_storage_project\": \"project\",\n" +
-                "      \"backup_operation_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"storage_project\",\n" +
+                "      \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -83,8 +83,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_storage_project\": \"project\",\n" +
-                "      \"backup_operation_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"storage_project\",\n" +
+                "      \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -94,8 +94,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_storage_project\": \"project\",\n" +
-                "      \"backup_operation_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"storage_project\",\n" +
+                "      \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -107,8 +107,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_storage_project\": \"project\",\n" +
-                "      \"backup_operation_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"storage_project\",\n" +
+                "      \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -118,8 +118,8 @@ public class FallbackBackupPolicyTest {
                 "      \"backup_method\": \"BigQuery Snapshot\",\n" +
                 "      \"backup_time_travel_offset_days\": \"0\",\n" +
                 "      \"bq_snapshot_expiration_days\": \"15\",\n" +
-                "      \"backup_storage_project\": \"project\",\n" +
-                "      \"backup_operation_project\": \"project\",\n" +
+                "      \"backup_storage_project\": \"storage_project\",\n" +
+                "      \"backup_operation_project\": \"operation_project\",\n" +
                 "      \"bq_snapshot_storage_dataset\": \"dataset\",\n" +
                 "      \"gcs_snapshot_storage_location\": \"gs://bla/\",\n" +
                 "      \"config_source\": \"SYSTEM\"\n" +
@@ -131,9 +131,9 @@ public class FallbackBackupPolicyTest {
                 BackupMethod.BIGQUERY_SNAPSHOT,
                 TimeTravelOffsetDays.DAYS_0,
                 BackupConfigSource.SYSTEM,
-                "project"
+                "storage_project"
         )
-                .setBackupOperationProject("project")
+                .setBackupOperationProject("operation_project")
                 .setBigQuerySnapshotExpirationDays(15.0)
                 .setBigQuerySnapshotStorageDataset("dataset")
                 .setGcsSnapshotStorageLocation("gs://bla/")

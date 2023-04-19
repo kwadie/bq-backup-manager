@@ -16,6 +16,7 @@ import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryService;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishResults;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubService;
+import com.google.cloud.pso.bq_snapshot_manager.services.scan.ResourceScanner;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.PersistentSet;
 import org.springframework.scheduling.support.CronExpression;
 
@@ -35,6 +36,8 @@ public class Configurator {
 
     private final BackupPolicyService backupPolicyService;
     private final PubSubService pubSubService;
+
+    private final ResourceScanner resourceScanner;
     private final PersistentSet persistentSet;
     private final FallbackBackupPolicy fallbackBackupPolicy;
     private final String persistentSetObjectPrefix;
@@ -44,6 +47,7 @@ public class Configurator {
                         BigQueryService bqService,
                         BackupPolicyService backupPolicyService,
                         PubSubService pubSubService,
+                        ResourceScanner resourceScanner,
                         PersistentSet persistentSet,
                         FallbackBackupPolicy fallbackBackupPolicy,
                         String persistentSetObjectPrefix,
@@ -52,6 +56,7 @@ public class Configurator {
         this.bqService = bqService;
         this.backupPolicyService = backupPolicyService;
         this.pubSubService = pubSubService;
+        this.resourceScanner = resourceScanner;
         this.persistentSet = persistentSet;
         this.fallbackBackupPolicy = fallbackBackupPolicy;
         this.persistentSetObjectPrefix = persistentSetObjectPrefix;
@@ -241,8 +246,16 @@ public class Configurator {
             );
 
             // find the most granular fallback policy table > dataset > project
-            BackupPolicy fallbackPolicy = findFallbackBackupPolicy(fallbackBackupPolicy,
-                    request.getTargetTable()).y();
+            Tuple<String, BackupPolicy> fallbackBackupPolicyTuple = findFallbackBackupPolicy(
+                    fallbackBackupPolicy,
+                    request.getTargetTable());
+            BackupPolicy fallbackPolicy = fallbackBackupPolicyTuple.y();
+
+            logger.logInfoWithTracker(request.isDryRun(),
+                    request.getTrackingId(),
+                    request.getTargetTable(),
+                    String.format("Will use a %s-level fallback policy", fallbackBackupPolicyTuple.x() )
+            );
 
             // if there is a system attached policy, then only use the last_xyz fields from it and use the latest fallback policy
             // the last_backup_at needs to be checked to determine if we should take a backup in this run
@@ -391,9 +404,9 @@ public class Configurator {
         return Tuple.of(bqSnapshotRequest, gcsSnapshotRequest);
     }
 
-    public static Tuple<String, BackupPolicy> findFallbackBackupPolicy(FallbackBackupPolicy
+    public Tuple<String, BackupPolicy> findFallbackBackupPolicy(FallbackBackupPolicy
                                                                                fallbackBackupPolicy,
-                                                                       TableSpec tableSpec) {
+                                                                       TableSpec tableSpec) throws IOException {
 
         BackupPolicy tableLevel = fallbackBackupPolicy.getTableOverrides().get(tableSpec.toSqlString());
         if (tableLevel != null) {
@@ -414,9 +427,16 @@ public class Configurator {
             return Tuple.of("project", projectLevel);
         }
 
-        //TODO: check for folder level by getting the folder id of a project from the API
+        // API CALL
+        String folderId = resourceScanner.getParentFolderId(tableSpec.getProject());
+        if(folderId != null){
+            BackupPolicy folderLevel = fallbackBackupPolicy.getFolderOverrides().get(folderId);
+            if(folderLevel != null){
+                return Tuple.of("folder", folderLevel);
+            }
+        }
 
         // else return the global default policy
-        return Tuple.of("global", fallbackBackupPolicy.getDefaultPolicy());
+        return Tuple.of("default", fallbackBackupPolicy.getDefaultPolicy());
     }
 }

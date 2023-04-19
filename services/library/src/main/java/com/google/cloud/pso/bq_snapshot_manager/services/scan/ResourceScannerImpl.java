@@ -33,6 +33,7 @@ import java.util.Collections;
 import java.util.List;
 import java.util.stream.Collectors;
 import java.util.stream.StreamSupport;
+
 import com.google.api.services.cloudresourcemanager.v3.CloudResourceManager;
 import com.google.api.services.iam.v1.IamScopes;
 
@@ -50,30 +51,27 @@ public class ResourceScannerImpl implements ResourceScanner {
     @Override
     public List<String> listTables(String projectId, String datasetId) {
         return StreamSupport.stream(bqService.listTables(DatasetId.of(projectId, datasetId)).iterateAll().spliterator(),
-                false)
+                        false)
                 .filter(t -> t.getDefinition().getType().equals(TableDefinition.Type.TABLE))
                 .map(t -> String.format("%s.%s.%s", projectId, datasetId, t.getTableId().getTable()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
 
-
-
     @Override
     public List<String> listDatasets(String projectId) {
         return StreamSupport.stream(bqService.listDatasets(projectId)
-                        .iterateAll()
-                        .spliterator(),
-                false)
+                                .iterateAll()
+                                .spliterator(),
+                        false)
                 .map(d -> String.format("%s.%s", projectId, d.getDatasetId().getDataset()))
                 .collect(Collectors.toCollection(ArrayList::new));
     }
-
 
     @Override
     public List<String> listProjects(Long folderId) throws IOException {
 
         List<Project> projects = cloudResourceManager.projects().list()
-                .setParent("folders/"+folderId)
+                .setParent("folders/" + folderId)
                 .execute()
                 .getProjects();
 
@@ -82,6 +80,30 @@ public class ResourceScannerImpl implements ResourceScanner {
                 .map(Project::getProjectId)
                 .collect(Collectors.toCollection(ArrayList::new));
 
+    }
+
+    /**
+     * Returns the folder id of the direct parent of a project.
+     * If the project doesn't have a folder, it returns null.
+     * If the project doesn't exsist it will throw an exception
+     */
+    @Override
+    public String getParentFolderId(String project) throws IOException {
+        String parentFolder = cloudResourceManager
+                .projects()
+                .get(String.format("projects/%s", project))
+                .execute()
+                .getParent();
+
+        if (parentFolder == null) {
+            return null;
+        }
+        if (parentFolder.startsWith("folders/")){
+            // API returns "folders/folder_name" and we just return folder_name
+            return parentFolder.substring(8);
+        }
+        // in all other cases, like the parent being organizations/xyz, return null
+        return null;
     }
 
     public static CloudResourceManager createCloudResourceManagerService()
