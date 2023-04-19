@@ -40,6 +40,7 @@
         * [BigQuery Snapshot Policy Fields](#bigquery-snapshot-policy-fields)
         * [GCS Snapshot Policy Fields](#gcs-snapshot-policy-fields)
       * [Terraform Deployment](#terraform-deployment)
+      * [Manual Deployment](#manual-deployment)
       * [Setup Access to Sources and Destinations](#setup-access-to-sources-and-destinations)
         * [Set Environment Variables](#set-environment-variables)
         * [Prepare Source Folders](#prepare-source-folders)
@@ -276,15 +277,8 @@ data_region = "<GCP region to deploy data resources (buckets, datasets, etc> (eq
 
 ##### Configure Cloud Scheduler Service Account
 
-We will need to grant the Cloud Scheduler account permissions to use parts of the solution
-
-```yaml
-cloud_scheduler_account = "service-<project number>@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
-```
-
-If this host project never used Cloud Scheduler before, create and run a sample job to force GCP to create the service account.
-
-PS: project number is different from project id/name. You can find both info on the home page of any project.
+Terraform will need to grant the Cloud Scheduler account permissions to use parts of the solution. If this host project
+never used Cloud Scheduler before, create and run a sample job to force GCP to create the service account.
 
 ##### Configure Terraform Service Account
 
@@ -489,6 +483,20 @@ terraform plan -var-file=$VARS
 terraform apply -var-file=$VARS -auto-approve
 
 ```
+
+#### Manual Deployment
+
+Terraform doesn't provide modules to add TTL policies for Firestore (yet). For that, run the below command:
+
+```bash
+gcloud firestore fields ttls update expires_at \
+--collection-group=project_folder_cache \
+--enable-ttl \
+--async \
+--project=$PROJECT_ID
+```
+The solution used Firestore in Datastore mode as a cache in some situations. The TTL policy will allow
+Firestore to automatically delete entries that are expired to save cost and improve lookup performance.
 
 #### Setup Access to Sources and Destinations
 

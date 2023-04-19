@@ -47,7 +47,12 @@ provider "google-beta" {
   request_timeout = "60s"
 }
 
+data "google_project" "project" {}
+
 locals {
+
+  cloud_scheduler_sa = "service-${data.google_project.project.number}@gcp-sa-cloudscheduler.iam.gserviceaccount.com"
+
   common_labels = {
     "app" = var.application_name
     "provisioned_by" =  "terraform"
@@ -293,8 +298,7 @@ module "pubsub-dispatcher" {
   subscription_name = var.dispatcher_pubsub_sub
   subscription_service_account = module.iam.sa_dispatcher_tasks_email
   topic = var.dispatcher_pubsub_topic
-  topic_publishers_sa_emails = [
-    var.cloud_scheduler_account]
+  topic_publishers_sa_emails = [local.cloud_scheduler_sa]
   # use a deadline large enough to process BQ listing for large scopes
   subscription_ack_deadline_seconds = var.dispatcher_subscription_ack_deadline_seconds
   # avoid resending dispatcher messages if things went wrong and the msg was NAK (e.g. timeout expired, app error, etc)
@@ -403,4 +407,10 @@ module "async-gcs-snapshoter" {
   host_project      = var.project
   log_sink_name     = "bq_backup_manager_gcs_export_pubsub_sink"
   pubsub_topic_name = module.pubsub-tagger.topic-name
+}
+
+module "firestore" {
+  source = "./modules/firestore"
+  project = var.project
+  region = var.compute_region # store cache data next to the services
 }

@@ -31,6 +31,7 @@ import com.google.cloud.pso.bq_snapshot_manager.services.bq.BigQueryServiceImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyService;
 import com.google.cloud.pso.bq_snapshot_manager.services.backup_policy.BackupPolicyServiceFireStoreImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubServiceImpl;
+import com.google.cloud.pso.bq_snapshot_manager.services.scan.ResourceScannerImpl;
 import com.google.cloud.pso.bq_snapshot_manager.services.set.GCSPersistentSetImpl;
 import com.google.gson.Gson;
 import org.springframework.boot.SpringApplication;
@@ -126,6 +127,7 @@ public class ConfiguratorController {
                     new BigQueryServiceImpl(configuratorRequest.getTargetTable().getProject()),
                     backupPolicyService,
                     new PubSubServiceImpl(),
+                    new ResourceScannerImpl(),
                     new GCSPersistentSetImpl(environment.getGcsFlagsBucket()),
                     fallbackBackupPolicy,
                     "configurator-flags",

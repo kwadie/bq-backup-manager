@@ -83,10 +83,10 @@ resource "google_service_account_iam_member" "sa_dispatcher_account_user_sa_disp
 
 #### Configurator SA Permissions ###
 
-// read backup policies when using datastore as backend
+// write cache entries and/or read backup policies (when using datastore as policies backend)
 resource "google_project_iam_member" "sa_configurator_datastore_viewer" {
 project = var.project
-role    = "roles/datastore.viewer"
+role    = "roles/datastore.user"
 member  = "serviceAccount:${google_service_account.sa_configurator.email}"
 }
 
