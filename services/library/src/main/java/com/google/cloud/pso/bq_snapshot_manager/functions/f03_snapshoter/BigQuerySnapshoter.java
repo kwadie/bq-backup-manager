@@ -111,8 +111,8 @@ public class BigQuerySnapshoter {
 
         // expiry date is calculated relative to the operation time
         Timestamp expiryTs = Timestamp.ofTimeSecondsAndNanos(
-                operationTs.getSeconds() + (request.getBackupPolicy().getBigQuerySnapshotExpirationDays().longValue() * 86400L),
-                0);
+                operationTs.getSeconds() + (request.getBackupPolicy().getBigQuerySnapshotExpirationDays().longValue() * Utils.SECONDS_IN_DAY),
+                operationTs.getNanos());
 
         // construct the snapshot table from the request params and calculated timetravel
         TableSpec snapshotTable = getSnapshotTableSpec(

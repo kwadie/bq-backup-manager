@@ -217,7 +217,7 @@ public class Configurator {
                 gcsSnapshotRequest,
                 bqSnapshotPublishResults,
                 gcsSnapshotPublishResults
-                );
+        );
     }
 
     public BackupPolicy getBackupPolicy(ConfiguratorRequest request) throws IOException {
@@ -237,7 +237,7 @@ public class Configurator {
             );
 
             return attachedBackupPolicy;
-        }else{
+        } else {
 
             logger.logInfoWithTracker(request.isDryRun(),
                     request.getTrackingId(),
@@ -248,13 +248,15 @@ public class Configurator {
             // find the most granular fallback policy table > dataset > project
             Tuple<String, BackupPolicy> fallbackBackupPolicyTuple = findFallbackBackupPolicy(
                     fallbackBackupPolicy,
-                    request.getTargetTable());
+                    request.getTargetTable(),
+                    request.getRunId()
+                    );
             BackupPolicy fallbackPolicy = fallbackBackupPolicyTuple.y();
 
             logger.logInfoWithTracker(request.isDryRun(),
                     request.getTrackingId(),
                     request.getTargetTable(),
-                    String.format("Will use a %s-level fallback policy", fallbackBackupPolicyTuple.x() )
+                    String.format("Will use a %s-level fallback policy", fallbackBackupPolicyTuple.x())
             );
 
             // if there is a system attached policy, then only use the last_xyz fields from it and use the latest fallback policy
@@ -267,7 +269,7 @@ public class Configurator {
                         .setLastGcsSnapshotStorageUri(attachedBackupPolicy.getLastGcsSnapshotStorageUri())
                         .setLastBqSnapshotStorageUri(attachedBackupPolicy.getLastBqSnapshotStorageUri())
                         .build();
-            }else{
+            } else {
                 // if there is no attached policy, use fallback one
                 return fallbackPolicy;
             }
@@ -333,7 +335,7 @@ public class Configurator {
 
     public static boolean isBackupTime(boolean isForceRun,
                                        boolean isBackupCronTime,
-                                       boolean isTableCreatedBeforeTimeTravel){
+                                       boolean isTableCreatedBeforeTimeTravel) {
         // table must have enough history to use the time travel feature.
         // In addition to that, the run has to be a force run or the backup is due based on the backup cron
 
@@ -404,9 +406,10 @@ public class Configurator {
         return Tuple.of(bqSnapshotRequest, gcsSnapshotRequest);
     }
 
-    public Tuple<String, BackupPolicy> findFallbackBackupPolicy(FallbackBackupPolicy
-                                                                               fallbackBackupPolicy,
-                                                                       TableSpec tableSpec) throws IOException {
+    public Tuple<String, BackupPolicy> findFallbackBackupPolicy(FallbackBackupPolicy fallbackBackupPolicy,
+                                                                TableSpec tableSpec,
+                                                                String runId
+    ) throws IOException {
 
         BackupPolicy tableLevel = fallbackBackupPolicy.getTableOverrides().get(tableSpec.toSqlString());
         if (tableLevel != null) {
@@ -427,11 +430,11 @@ public class Configurator {
             return Tuple.of("project", projectLevel);
         }
 
-        // API CALL
-        String folderId = resourceScanner.getParentFolderId(tableSpec.getProject());
-        if(folderId != null){
+        // API CALL (or cache)
+        String folderId = resourceScanner.getParentFolderId(tableSpec.getProject(), runId);
+        if (folderId != null) {
             BackupPolicy folderLevel = fallbackBackupPolicy.getFolderOverrides().get(folderId);
-            if(folderLevel != null){
+            if (folderLevel != null) {
                 return Tuple.of("folder", folderLevel);
             }
         }

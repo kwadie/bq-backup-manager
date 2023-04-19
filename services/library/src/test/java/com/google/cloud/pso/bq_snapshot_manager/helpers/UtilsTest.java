@@ -83,9 +83,16 @@ public class UtilsTest {
     }
 
     @Test
-    public void test(){
-        Timestamp ts = Timestamp.now();
-        System.out.println(ts.toSqlTimestamp().getTime());
-        System.out.println(Utils.timestampToUnixTimeMillis(ts));
+    public void testAddSeconds(){
+
+        Timestamp today = Timestamp.parseTimestamp("2022-10-13T12:58:41Z");
+        Timestamp tomorrow = Timestamp.parseTimestamp("2022-10-14T12:58:41Z");
+
+        assertEquals(
+                Utils.addSeconds(today, 86400L),
+                tomorrow
+        );
     }
+
+
 }

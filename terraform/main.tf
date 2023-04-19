@@ -408,3 +408,9 @@ module "async-gcs-snapshoter" {
   log_sink_name     = "bq_backup_manager_gcs_export_pubsub_sink"
   pubsub_topic_name = module.pubsub-tagger.topic-name
 }
+
+module "firestore" {
+  source = "./modules/firestore"
+  project = var.project
+  region = var.compute_region # store cache data next to the services
+}

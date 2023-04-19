@@ -127,7 +127,8 @@ public class ConfiguratorTest {
         // test table level
         Tuple<String, BackupPolicy> tableLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
-                TableSpec.fromSqlString("p1.d1.t1")
+                TableSpec.fromSqlString("p1.d1.t1"),
+                "runId"
         );
 
         assertEquals("table", tableLevel.x());
@@ -136,7 +137,8 @@ public class ConfiguratorTest {
         // test dataset level
         Tuple<String, BackupPolicy> datasetLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
-                TableSpec.fromSqlString("p1.d2.t1")
+                TableSpec.fromSqlString("p1.d2.t1"),
+                "runId"
         );
 
         assertEquals("dataset", datasetLevel.x());
@@ -145,7 +147,8 @@ public class ConfiguratorTest {
         // test project level
         Tuple<String, BackupPolicy> projectLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
-                TableSpec.fromSqlString("p2.d1.t1")
+                TableSpec.fromSqlString("p2.d1.t1"),
+                "runId"
         );
 
         assertEquals("project", projectLevel.x());
@@ -154,7 +157,8 @@ public class ConfiguratorTest {
         // test folder level
         Tuple<String, BackupPolicy> folderLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
-                TableSpec.fromSqlString("p3.d1.t1")
+                TableSpec.fromSqlString("p3.d1.t1"),
+                "runId"
         );
 
         assertEquals("folder", folderLevel.x());
@@ -163,7 +167,8 @@ public class ConfiguratorTest {
         // test default level
         Tuple<String, BackupPolicy> defaultLevel = configurator.findFallbackBackupPolicy(
                 fallbackBackupPolicy,
-                TableSpec.fromSqlString("p9.d1.t1")
+                TableSpec.fromSqlString("p9.d1.t1"),
+                "runId"
         );
 
         assertEquals("default", defaultLevel.x());

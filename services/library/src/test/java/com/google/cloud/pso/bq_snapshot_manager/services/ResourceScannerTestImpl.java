@@ -52,7 +52,7 @@ public class ResourceScannerTestImpl implements ResourceScanner {
     }
 
     @Override
-    public String getParentFolderId(String project) throws IOException {
+    public String getParentFolderId(String project, String runId) throws IOException {
         switch(project){
             case "p1": return "500";
             case "p2": return "600";

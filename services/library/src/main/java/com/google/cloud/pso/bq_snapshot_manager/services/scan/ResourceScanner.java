@@ -34,5 +34,5 @@ public interface ResourceScanner {
     // list tables under a project/dataset in the format "project.dataset.table"
     List<String> listTables(String project, String dataset) throws InterruptedException, NonRetryableApplicationException;
 
-    String getParentFolderId(String project) throws IOException;
+    String getParentFolderId(String project, String runId) throws IOException;
 }

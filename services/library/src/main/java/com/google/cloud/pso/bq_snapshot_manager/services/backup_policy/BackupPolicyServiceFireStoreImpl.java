@@ -13,7 +13,7 @@ import java.util.Map;
 public class BackupPolicyServiceFireStoreImpl implements BackupPolicyService {
 
 
-    private static final String KIND = "BigQueryBackupPolicy";
+    private static final String KIND = "bigquery_backup_policy";
     private Datastore datastore;
 
     public BackupPolicyServiceFireStoreImpl() {

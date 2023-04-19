@@ -32,6 +32,9 @@ import java.util.StringTokenizer;
 
 public class Utils {
 
+    public static final Long SECONDS_IN_DAY = 86400L;
+    public static final Long MILLI_SECONDS_IN_DAY = 86400000L;
+
     public static String getOrFail(Map<String, String> map, String key) {
         String field = map.get(key);
         if (field == null) {
@@ -102,7 +105,7 @@ public class Utils {
         String flagFileName = String.format("%s/%s", persistentSetObjectPrefix, pubSubMessageId);
         if (persistentSet.contains(flagFileName)) {
             // log error and ACK and return
-            String msg = String.format("PubSub message ID '%s' has been processed before by the service. The message should be ACK to PubSub to stop retries. Please investigate further why the message was retried in the first place.",
+            String msg = String.format("PubSub message ID '%s' has been processed before by the service. This could be a PubSub duplicate message and safe to ignore or the previous messages were not ACK to PubSub to stop retries. Please investigate further if needed.",
                     pubSubMessageId
             );
             throw new NonRetryableApplicationException(msg);
@@ -145,7 +148,7 @@ public class Utils {
             // use a buffer (milliseconds) to count for the operation time. 1 MIN = 60000 MILLISECONDS
             Long bufferMs = timeTravelOffsetDays.equals(TimeTravelOffsetDays.DAYS_7) ? 60 * 60000L : 0L;
             // milli seconds per day * number of days
-            Long timeTravelOffsetMs = (86400000L * Long.parseLong(timeTravelOffsetDays.getText()));
+            Long timeTravelOffsetMs = (Utils.MILLI_SECONDS_IN_DAY * Long.parseLong(timeTravelOffsetDays.getText()));
             timeTravelMs = (refPointMs - timeTravelOffsetMs) + bufferMs;
         }
 
@@ -166,5 +169,9 @@ public class Utils {
                 StringUtils.removeEnd(str, "/"),
                 "/"
         );
+    }
+
+    public static Timestamp addSeconds(Timestamp timestamp, Long secondsDelta){
+        return Timestamp.ofTimeSecondsAndNanos(timestamp.getSeconds() + secondsDelta , timestamp.getNanos());
     }
 }

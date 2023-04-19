@@ -40,6 +40,7 @@
         * [BigQuery Snapshot Policy Fields](#bigquery-snapshot-policy-fields)
         * [GCS Snapshot Policy Fields](#gcs-snapshot-policy-fields)
       * [Terraform Deployment](#terraform-deployment)
+      * [Manual Deployment](#manual-deployment)
       * [Setup Access to Sources and Destinations](#setup-access-to-sources-and-destinations)
         * [Set Environment Variables](#set-environment-variables)
         * [Prepare Source Folders](#prepare-source-folders)
@@ -482,6 +483,20 @@ terraform plan -var-file=$VARS
 terraform apply -var-file=$VARS -auto-approve
 
 ```
+
+#### Manual Deployment
+
+Terraform doesn't provide modules to add TTL policies for Firestore (yet). For that, run the below command:
+
+```bash
+gcloud firestore fields ttls update expires_at \
+--collection-group=project_folder_cache \
+--enable-ttl \
+--async \
+--project=$PROJECT_ID
+```
+The solution used Firestore in Datastore mode as a cache in some situations. The TTL policy will allow
+Firestore to automatically delete entries that are expired to save cost and improve lookup performance.
 
 #### Setup Access to Sources and Destinations
 
