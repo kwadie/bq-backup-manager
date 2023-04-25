@@ -16,7 +16,9 @@ package com.google.cloud.pso.bq_snapshot_manager.services.scan;
  * limitations under the License.
  */
 
+import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 
 import java.io.IOException;
 import java.security.GeneralSecurityException;
@@ -34,5 +36,5 @@ public interface ResourceScanner {
     // list tables under a project/dataset in the format "project.dataset.table"
     List<String> listTables(String project, String dataset) throws InterruptedException, NonRetryableApplicationException;
 
-    String getParentFolderId(String project, String runId) throws IOException;
+    Tuple<String, String> getParentFolderId(String project, String runId) throws IOException;
 }

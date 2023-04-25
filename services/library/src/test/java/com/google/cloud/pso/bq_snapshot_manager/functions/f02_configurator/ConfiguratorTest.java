@@ -161,7 +161,7 @@ public class ConfiguratorTest {
                 "runId"
         );
 
-        assertEquals("folder", folderLevel.x());
+        assertEquals("folder-from-stub", folderLevel.x());
         assertEquals(testPolicy, folderLevel.y());
 
         // test default level

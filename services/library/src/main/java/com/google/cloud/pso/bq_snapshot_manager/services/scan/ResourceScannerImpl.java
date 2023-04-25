@@ -22,6 +22,7 @@ import com.google.api.services.cloudresourcemanager.v3.model.Project;
 import com.google.auth.http.HttpCredentialsAdapter;
 import com.google.auth.oauth2.GoogleCredentials;
 import com.google.cloud.Timestamp;
+import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.BigQuery;
 import com.google.cloud.bigquery.BigQueryOptions;
 import com.google.cloud.bigquery.DatasetId;
@@ -43,17 +44,24 @@ import com.google.cloud.datastore.Datastore;
 import com.google.cloud.datastore.DatastoreOptions;
 import com.google.cloud.datastore.Entity;
 import com.google.cloud.datastore.Key;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicy;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.BackupPolicyFields;
+import com.google.cloud.pso.bq_snapshot_manager.functions.f02_configurator.Configurator;
+import com.google.cloud.pso.bq_snapshot_manager.helpers.LoggingHelper;
 import com.google.cloud.pso.bq_snapshot_manager.helpers.Utils;
 import jdk.jshell.execution.Util;
 
 public class ResourceScannerImpl implements ResourceScanner {
 
+    public static final String DATASTORE_KIND = "project_folder_cache";
+
+    public static final String PROJECT_FOLDER_LKP_SRC_API = "api";
+
+    public static final String PROJECT_FOLDER_LKP_SRC_CACHE = "cache";
+
     private final BigQuery bqService;
     private final CloudResourceManager cloudResourceManager;
-
-    private static final String DATASTORE_KIND = "project_folder_cache";
 
     private Datastore datastore;
 
@@ -98,13 +106,25 @@ public class ResourceScannerImpl implements ResourceScanner {
 
     }
 
+
     /**
      * Returns the folder id of the direct parent of a project.
      * If the project doesn't have a folder, it returns null.
      * If the project doesn't exist it will throw an exception
+     *
+     * returns a Tuple of (folder ID, source (cache | api))
+     */
+
+    /**
+     * Returns the folder id of the direct parent of a project.
+     *      * If the project doesn't have a folder, it returns null.
+     *      * If the project doesn't exist it will throw an exception
+     * @param projectId project id to lookup it's folder id
+     * @param runId unique identifier of the run that is used to create keys for the cache
+     * @return Tuple of Tuple<String, String> where x = folder id and y = source of the lookup operation (api | cache)
      */
     @Override
-    public String getParentFolderId(String project, String runId) throws IOException {
+    public Tuple<String, String> getParentFolderId(String projectId, String runId) throws IOException {
 
         /**
          * Resource Manager API has a rate limit of 10 GET operations per second. This means that
@@ -115,40 +135,50 @@ public class ResourceScannerImpl implements ResourceScanner {
         // 1. Lookup the project in the cache
 
         // construct a key including the pro
-        String keyStr = generateProjectFolderCacheKey(project, runId);
+        String keyStr = generateProjectFolderCacheKey(projectId, runId);
 
         Key projectFolderKey = datastore.newKeyFactory().setKind(DATASTORE_KIND).newKey(keyStr);
         Entity projectFolderEntity = datastore.get(projectFolderKey);
+
         if(projectFolderEntity == null){
             // 2.a project-folder entity doesn't exist in the cache
 
             // 2.a.1. Query the Resource Manager API
             String parentFolderFromApi = cloudResourceManager
                     .projects()
-                    .get(String.format("projects/%s", project))
+                    .get(String.format("projects/%s", projectId))
                     .execute()
                     .getParent();
 
             // API returns "folders/folder_name" and we just return folder_name
-            String parentFolderFinal = parentFolderFromApi.startsWith("folders/")? parentFolderFromApi.substring(8): null;
+            String parentFolderFinal = parentFolderFromApi.startsWith("folders/")?
+                    parentFolderFromApi.substring(8):
+                    null;
 
             Timestamp now = Timestamp.now();
             // 2.a.2. Add it to the cache
             projectFolderEntity = Entity.newBuilder(projectFolderKey)
-                    .set("project", project)
+                    .set("project", projectId)
                     .set("parent_folder", parentFolderFinal)
                     .set("run_id", runId)
-                    .set("created_at", now)
+                    .set("updated_at", now)
                     .set("expires_at", Utils.addSeconds(now, Utils.SECONDS_IN_DAY)) // TTL 1 day
                     .build();
+
             datastore.put(projectFolderEntity);
 
             // 2.a.3 return it to the caller
-            return parentFolderFinal;
+            return Tuple.of(parentFolderFinal, PROJECT_FOLDER_LKP_SRC_API);
         }else{
+
+            String projectFolderFromCache = projectFolderEntity
+                    .getValue("parent_folder")
+                    .get()
+                    .toString();
+
             // project-folder entity exist in the cache
             // 2.b.1 Return from cache
-            return projectFolderEntity.getValue("parent_folder").toString();
+            return Tuple.of(projectFolderFromCache, PROJECT_FOLDER_LKP_SRC_CACHE);
         }
     }
 
