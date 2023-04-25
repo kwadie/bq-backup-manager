@@ -82,7 +82,8 @@ public class Configurator {
         );
 
         // 1. Find the backup policy of this table
-        BackupPolicy backupPolicy = getBackupPolicy(request);
+        Tuple<BackupPolicy, String> backupPolicyTuple = getBackupPolicy(request);
+        BackupPolicy backupPolicy = backupPolicyTuple.x();
 
         // 2a. Determine if we should take a backup at this run given the policy CRON expression
         // if the table has been backed up before then check if we should backup at this run
@@ -209,6 +210,7 @@ public class Configurator {
                 request.getTrackingId(),
                 request.isDryRun(),
                 backupPolicy,
+                backupPolicyTuple.y(), // source of the backup policy
                 request.getRefTimestamp(),
                 isBackupCronTime,
                 isTableCreatedBeforeTimeTravel,
@@ -220,9 +222,15 @@ public class Configurator {
         );
     }
 
-    public BackupPolicy getBackupPolicy(ConfiguratorRequest request) throws IOException {
+    /**
+     * Retrieve the backup policy for a single table either from the table-level policy store or from fallback policies
+     * @param request
+     * @return Tuple<BackupPolicy, String> where x = the backup policy for the table and y = description of how the backup policy was found/computed (used for logging and debugging)
+     * @throws IOException
+     */
+    public Tuple<BackupPolicy, String> getBackupPolicy(ConfiguratorRequest request) throws IOException {
 
-        // Check if the table has a back policy attached to it in data catalog
+        // Check if the table has a back policy attached to it
         BackupPolicy attachedBackupPolicy = backupPolicyService.getBackupPolicyForTable(
                 request.getTargetTable()
         );
@@ -236,7 +244,7 @@ public class Configurator {
                     String.format("Attached backup policy found for table %s", request.getTargetTable())
             );
 
-            return attachedBackupPolicy;
+            return Tuple.of(attachedBackupPolicy, "Manually attached policy");
         } else {
 
             logger.logInfoWithTracker(request.isDryRun(),
@@ -250,7 +258,7 @@ public class Configurator {
                     fallbackBackupPolicy,
                     request.getTargetTable(),
                     request.getRunId()
-                    );
+            );
             BackupPolicy fallbackPolicy = fallbackBackupPolicyTuple.y();
 
             logger.logInfoWithTracker(request.isDryRun(),
@@ -263,15 +271,17 @@ public class Configurator {
             // the last_backup_at needs to be checked to determine if we should take a backup in this run
             // the last_xyz_uri fields need to be propagated to the Tagger service so that they are not lost on each run
             if (attachedBackupPolicy != null && attachedBackupPolicy.getConfigSource().equals(BackupConfigSource.SYSTEM)) {
-                return BackupPolicy.BackupPolicyBuilder
+                return Tuple.of(BackupPolicy.BackupPolicyBuilder
                         .from(fallbackPolicy)
                         .setLastBackupAt(attachedBackupPolicy.getLastBackupAt())
                         .setLastGcsSnapshotStorageUri(attachedBackupPolicy.getLastGcsSnapshotStorageUri())
                         .setLastBqSnapshotStorageUri(attachedBackupPolicy.getLastBqSnapshotStorageUri())
-                        .build();
+                        .build(),
+                        String.format("System attached fallback policy on level '%s' with timestamps from previous run", fallbackBackupPolicyTuple.x())
+                        );
             } else {
                 // if there is no attached policy, use fallback one
-                return fallbackPolicy;
+                return Tuple.of(fallbackPolicy, String.format("System attached fallback policy on level '%s'", fallbackBackupPolicyTuple.x()));
             }
         }
     }
@@ -431,11 +441,15 @@ public class Configurator {
         }
 
         // API CALL (or cache)
-        String folderId = resourceScanner.getParentFolderId(tableSpec.getProject(), runId);
-        if (folderId != null) {
+        Tuple<String, String> folderLookupTuple = resourceScanner.getParentFolderId(tableSpec.getProject(), runId);
+        if (folderLookupTuple != null) {
+
+            String folderId = folderLookupTuple.x();
             BackupPolicy folderLevel = fallbackBackupPolicy.getFolderOverrides().get(folderId);
+
             if (folderLevel != null) {
-                return Tuple.of("folder", folderLevel);
+                // source is folder-cache or folder-api to trace and debug cache performance
+                return Tuple.of(String.format("folder-from-%s", folderLookupTuple.y()), folderLevel);
             }
         }
 

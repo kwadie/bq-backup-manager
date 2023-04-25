@@ -1,7 +1,9 @@
 package com.google.cloud.pso.bq_snapshot_manager.services;
 
 import com.google.api.gax.rpc.UnimplementedException;
+import com.google.cloud.Tuple;
 import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
+import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.services.scan.ResourceScanner;
 import com.google.cloud.pso.bq_snapshot_manager.services.scan.ResourceScannerImpl;
 import com.google.common.collect.Lists;
@@ -50,15 +52,15 @@ public class ResourceScannerTestImpl implements ResourceScanner {
             default: return new ArrayList<>();
         }
     }
-
+    
     @Override
-    public String getParentFolderId(String project, String runId) throws IOException {
+    public Tuple<String, String> getParentFolderId(String project, String runId) throws IOException {
         switch(project){
-            case "p1": return "500";
-            case "p2": return "600";
+            case "p1": return Tuple.of("500", "stub");
+            case "p2": return Tuple.of("600", "stub");
             case "p3":
             case "p4":
-                return "700";
+                return Tuple.of("700", "stub");
             default: return null;
         }
     }

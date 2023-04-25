@@ -10,6 +10,8 @@ import com.google.cloud.pso.bq_snapshot_manager.services.pubsub.PubSubPublishRes
 public class ConfiguratorResponse extends TableOperationRequestResponse {
 
     private final BackupPolicy backupPolicy;
+
+    private final String backupPolicySource;
     private final Timestamp refTs;
 
     // If the table should be backed up this run based on the backup cron only
@@ -23,9 +25,10 @@ public class ConfiguratorResponse extends TableOperationRequestResponse {
     private final PubSubPublishResults bigQueryBackupPublishingResults;
     private final PubSubPublishResults gcsBackupPublishingResults;
 
-    public ConfiguratorResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy backupPolicy, Timestamp refTs,boolean  isBackupCronTime, boolean  isTableCreatedBeforeTimeTravel, boolean isBackupTime, SnapshoterRequest bqSnapshoterRequest, SnapshoterRequest gcsSnapshoterRequest, PubSubPublishResults bigQueryBackupPublishingResults, PubSubPublishResults gcsBackupPublishingResults) {
+    public ConfiguratorResponse(TableSpec targetTable, String runId, String trackingId, boolean isDryRun, BackupPolicy backupPolicy, String backupPolicySource, Timestamp refTs,boolean  isBackupCronTime, boolean  isTableCreatedBeforeTimeTravel, boolean isBackupTime, SnapshoterRequest bqSnapshoterRequest, SnapshoterRequest gcsSnapshoterRequest, PubSubPublishResults bigQueryBackupPublishingResults, PubSubPublishResults gcsBackupPublishingResults) {
         super(targetTable, runId, trackingId, isDryRun);
         this.backupPolicy = backupPolicy;
+        this.backupPolicySource = backupPolicySource;
         this.refTs = refTs;
         this.isBackupCronTime = isBackupCronTime;
         this.isTableCreatedBeforeTimeTravel = isTableCreatedBeforeTimeTravel;
