@@ -157,6 +157,7 @@ resource "google_bigquery_table" "view_run_summary_counts" {
       dataset = var.dataset
       v_run_summary = google_bigquery_table.view_run_summary.table_id
       v_run_duration = google_bigquery_table.view_run_duration.table_id
+      v_backed_up_tables = google_bigquery_table.view_backed_up_tables.table_id
     }
     )
   }
@@ -244,6 +245,26 @@ resource "google_bigquery_table" "view_run_duration" {
   labels = var.common_labels
 }
 
+
+resource "google_bigquery_table" "view_backed_up_tables" {
+  dataset_id = google_bigquery_dataset.results_dataset.dataset_id
+  table_id = "v_backed_up_tables"
+
+  deletion_protection = false
+
+  view {
+    use_legacy_sql = false
+    query = templatefile("modules/bigquery/views/v_backed_up_tables.tpl",
+      {
+        project = var.project
+        dataset = var.dataset
+        v_audit_log_by_table = google_bigquery_table.view_audit_log_by_table.table_id
+      }
+    )
+  }
+
+  labels = var.common_labels
+}
 
 ########## External tables #####################################
 
