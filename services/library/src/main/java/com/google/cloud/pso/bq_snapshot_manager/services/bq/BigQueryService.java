@@ -21,6 +21,7 @@ import com.google.cloud.Timestamp;
 import com.google.cloud.bigquery.Job;
 import com.google.cloud.bigquery.TableId;
 import com.google.cloud.bigquery.TableResult;
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.TimeTravelOffsetDays;
@@ -51,5 +52,5 @@ public interface BigQueryService {
             Map<String, String> jobLabels
     ) throws InterruptedException;
 
-    Long getTableCreationTime(TableSpec table);
+    Long getTableCreationTime(TableSpec table) throws NonRetryableApplicationException;
 }

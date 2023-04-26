@@ -19,6 +19,7 @@ package com.google.cloud.pso.bq_snapshot_manager.services.bq;
 import com.google.cloud.Timestamp;
 import com.google.cloud.Tuple;
 import com.google.cloud.bigquery.*;
+import com.google.cloud.pso.bq_snapshot_manager.entities.NonRetryableApplicationException;
 import com.google.cloud.pso.bq_snapshot_manager.entities.TableSpec;
 import com.google.cloud.pso.bq_snapshot_manager.entities.backup_policy.GCSSnapshotFormat;
 
@@ -104,7 +105,12 @@ public class BigQueryServiceImpl implements BigQueryService {
     }
 
     @Override
-    public Long getTableCreationTime(TableSpec table) {
-        return bigQuery.getTable(table.toTableId()).getCreationTime();
+    public Long getTableCreationTime(TableSpec tableSpec) throws NonRetryableApplicationException {
+        Table table = bigQuery.getTable(tableSpec.toTableId());
+        if(table != null){
+            return table.getCreationTime();
+        }else{
+            throw new NonRetryableApplicationException(String.format("Requested table %s is not found. The table might have been deleted.", tableSpec.toSqlString()));
+        }
     }
 }

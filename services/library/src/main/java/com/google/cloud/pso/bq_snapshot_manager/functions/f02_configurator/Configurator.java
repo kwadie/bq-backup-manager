@@ -115,6 +115,14 @@ public class Configurator {
         // enough time to apply the desired time travel. Otherwise, skip the backup this run
         boolean isBackupTime = isBackupTime(request.isForceRun(), isBackupCronTime, isTableCreatedBeforeTimeTravel);
 
+        logger.logInfoWithTracker(
+                request.isDryRun(),
+                request.getTrackingId(),
+                request.getTargetTable(),
+                String.format("isBackupTime for this run is '%s'. Calculated based on isForceRun=%s, isBackupCronTime=%s, isTableCreatedBeforeTimeTravel=%s ",
+                        isBackupTime, request.isForceRun(), isBackupCronTime, isTableCreatedBeforeTimeTravel)
+        );
+
         // 3. Prepare and send the backup request(s) if required
         SnapshoterRequest bqSnapshotRequest = null;
         SnapshoterRequest gcsSnapshotRequest = null;
